@@ -61,7 +61,6 @@ bf16_ready = (
 )
 
 
-
 import colorama
 from colorama import Fore, Back, Style
 
@@ -69,6 +68,7 @@ colorama.init(autoreset=True)  # reset after every line
 
 # some globals
 g_gigabyte_unit_size = 1024**3
+
 
 def print_model(model, file_name, local_rank):
     if local_rank != 0:
@@ -83,8 +83,9 @@ def print_model(model, file_name, local_rank):
 
 
 def setup():
-    """ we use torchrun for init so no params needed here """
+    """we use torchrun for init so no params needed here"""
     dist.init_process_group("nccl")
+
 
 def setup_environ_flags(cfg, rank):
     os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
@@ -108,7 +109,7 @@ def clear_gpu_cache(rank=None):
 def setup_tasks(rank, world_size, cfg):
     """keep the basic setup list here"""
     setup()
-    clear_gpu_cache(rank) # need to call torch set device first?
+    clear_gpu_cache(rank)  # need to call torch set device first?
     # set_printing()
     setup_environ_flags(cfg, rank)
 
@@ -129,16 +130,15 @@ def fsdp_main():
     torch.cuda.manual_seed(cfg.seed)
     torch.manual_seed(cfg.seed)
 
-
     # torchrun specific
     local_rank = int(os.environ["LOCAL_RANK"])
     rank = int(os.environ["RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
 
-    if rank==0:
+    if rank == 0:
         print(f"--> World Size = {world_size}\n")
         print(f"--> running with these defaults {cfg}")
-        #time_of_run = get_date_of_run()
+        # time_of_run = get_date_of_run()
 
     setup_tasks(rank, world_size, cfg)
 
@@ -159,11 +159,11 @@ def fsdp_main():
     log_every = cfg.log_every
     model = build_model(cfg.model_name)
 
-    if local_rank==0:
+    if local_rank == 0:
         num_params = sum(p.numel() for p in model.parameters())
         print(f"built model with {num_params / 1e6}M params")
 
-#   Setup Mixed Precision --------------
+    #   Setup Mixed Precision --------------
     # === leverage FSDP Mixed Precision
     bfSixteen = MixedPrecision(
         # Param precision
@@ -189,13 +189,11 @@ def fsdp_main():
     if local_rank == 0:
         init_start = time.perf_counter()
 
-
-
     model = FSDP(
         model,
         auto_wrap_policy=my_auto_wrap_policy,
         mixed_precision=mp_policy,
-        #backward_prefetch=prefetch_policy,
+        # backward_prefetch=prefetch_policy,
         device_id=torch.cuda.current_device(),
         sharding_strategy=ShardingStrategy.FULL_SHARD,  # Zero2
         # cpu_offload= cpu_policy,
@@ -207,11 +205,9 @@ def fsdp_main():
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
     """
-    if local_rank==0:
+    if local_rank == 0:
         init_time = time.perf_counter() - init_start
-        print(
-            f"local rank {local_rank} init time = {init_time}"
-        )
+        print(f"local rank {local_rank} init time = {init_time}")
 
     # optimizer ----------
     optimizer = torch.optim.Adam(
@@ -237,18 +233,18 @@ def fsdp_main():
     torch_profiler = None
     if cfg.run_profiler:
         with torch.profiler.profile(
-        activities=[
-            torch.profiler.ProfilerActivity.CPU,
-            torch.profiler.ProfilerActivity.CUDA,
-        ],
-        schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
-        on_trace_ready=torch.profiler.tensorboard_trace_handler(
-            "fsdp_a100/profile_traces"
-        ),
-        profile_memory=True,
-        with_stack=False,
-        record_shapes=True,
-    ) as torch_profiler:
+            activities=[
+                torch.profiler.ProfilerActivity.CPU,
+                torch.profiler.ProfilerActivity.CUDA,
+            ],
+            schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                "fsdp_a100/profile_traces"
+            ),
+            profile_memory=True,
+            with_stack=False,
+            record_shapes=True,
+        ) as torch_profiler:
             for batch_index, (inputs, target) in enumerate(data_loader, start=1):
                 inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
                     target.to(torch.cuda.current_device()), -1
@@ -260,6 +256,10 @@ def fsdp_main():
                 loss.backward()
                 optimizer.step()
                 torch_profiler.step()
+
+                if batch_index > cfg.total_steps_to_run:
+                    break
+
     else:
         t0 = time.perf_counter()
         for batch_index, (inputs, target) in enumerate(data_loader, start=1):
@@ -272,13 +272,17 @@ def fsdp_main():
             loss = loss_function(outputs, targets)
             loss.backward()
             optimizer.step()
-            
+
             # update durations and memory tracking
             if local_rank == 0:
                 mini_batch_time = time.perf_counter() - t0
                 tracking_duration.append(mini_batch_time)
-                tracking_mem_allocs.append(torch.cuda.memory_allocated() / g_gigabyte_unit_size)
-                tracking_mem_reserved.append(torch.cuda.memory_reserved() / g_gigabyte_unit_size)
+                tracking_mem_allocs.append(
+                    torch.cuda.memory_allocated() / g_gigabyte_unit_size
+                )
+                tracking_mem_reserved.append(
+                    torch.cuda.memory_reserved() / g_gigabyte_unit_size
+                )
 
             if (
                 batch_index % log_every == 0
@@ -302,17 +306,24 @@ def fsdp_main():
             stable_avg = stable_sum / cfg.total_steps_to_run
             stable_avg = round(stable_avg, 4)
 
-            print(Fore.GREEN + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds")
+            print(
+                Fore.GREEN
+                + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
+            )
             print(Fore.YELLOW + f"\nSagemaker Time to Beat: 8 seconds")
             gain = (8.00 - stable_avg) / stable_avg
             gain = round(gain, 4)
-            print(Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%")
+            print(
+                Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%"
+            )
             print(Fore.LIGHTBLUE_EX + f"\n--> Model Size = ? Params")
             # print(f"batch size = {batch_size_training}")
             # print(f"minibatch durations: {tracking_duration}")
             print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
             print(f"running mem Reserved: {tracking_mem_reserved}")
-            print(f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}")
+            print(
+                f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
+            )
 
     cleanup()
 
@@ -332,6 +343,7 @@ class GeneratedDataset(Dataset):
         rand_image = torch.randn(self._input_shape, dtype=self._input_type)
         label = torch.tensor(data=[index % self._num_classes], dtype=torch.int64)
         return rand_image, label
+
 
 def build_model(model_size: str):
     model_args = dict()
