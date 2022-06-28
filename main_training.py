@@ -236,58 +236,85 @@ def fsdp_main():
         tracking_mem_reserved = []
         tracking_duration = []
 
-    t0 = time.perf_counter()
-    for batch_index, (inputs, target) in enumerate(data_loader, start=1):
-        inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
-            target.to(torch.cuda.current_device()), -1
-        )
-        optimizer.zero_grad()
-        # with torch.cuda.amp.autocast(mixed_precision):
-        outputs = model(inputs)
-        loss = loss_function(outputs, targets)
-        loss.backward()
-        optimizer.step()
-
-        # update durations and memory tracking
-        if local_rank == 0:
-            mini_batch_time = time.perf_counter() - t0
-            tracking_duration.append(mini_batch_time)
-            tracking_mem_allocs.append(torch.cuda.memory_allocated() / g_gigabyte_unit_size)
-            tracking_mem_reserved.append(torch.cuda.memory_reserved() / g_gigabyte_unit_size)
-
-        if (
-            batch_index % log_every == 0
-            and torch.distributed.get_rank() == 0
-            and batch_index > 1
-        ):
-            print(
-                f"step: {batch_index-1}: time taken for the last {log_every} steps is {mini_batch_time}"
-            )
-
-        # reset timer
+    torch_profiler = None
+    if cfg.run_profiler:
+        with torch.profiler.profile(
+        activities=[
+            torch.profiler.ProfilerActivity.CPU,
+            torch.profiler.ProfilerActivity.CUDA,
+        ],
+        schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
+        on_trace_ready=torch.profiler.tensorboard_trace_handler(
+            "fsdp_a100/profile_traces"
+        ),
+        profile_memory=True,
+        with_stack=False,
+        record_shapes=True,
+    ) as torch_profiler:
+            for batch_index, (inputs, target) in enumerate(data_loader, start=1):
+                inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
+                    target.to(torch.cuda.current_device()), -1
+                )
+                optimizer.zero_grad()
+                # with torch.cuda.amp.autocast(mixed_precision):
+                outputs = model(inputs)
+                loss = loss_function(outputs, targets)
+                loss.backward()
+                optimizer.step()
+                torch_profiler.step()
+    else:
         t0 = time.perf_counter()
-        if batch_index > cfg.total_steps_to_run:
-            break
+        for batch_index, (inputs, target) in enumerate(data_loader, start=1):
+            inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
+                target.to(torch.cuda.current_device()), -1
+            )
+            optimizer.zero_grad()
+            # with torch.cuda.amp.autocast(mixed_precision):
+            outputs = model(inputs)
+            loss = loss_function(outputs, targets)
+            loss.backward()
+            optimizer.step()
+            
+            # update durations and memory tracking
+            if local_rank == 0:
+                mini_batch_time = time.perf_counter() - t0
+                tracking_duration.append(mini_batch_time)
+                tracking_mem_allocs.append(torch.cuda.memory_allocated() / g_gigabyte_unit_size)
+                tracking_mem_reserved.append(torch.cuda.memory_reserved() / g_gigabyte_unit_size)
 
-    # memory summary
-    if local_rank == 0:
-        # print(f"--> checkpoint wrapped {layer_count} layers")
+            if (
+                batch_index % log_every == 0
+                and torch.distributed.get_rank() == 0
+                and batch_index > 1
+            ):
+                print(
+                    f"step: {batch_index-1}: time taken for the last {log_every} steps is {mini_batch_time}"
+                )
 
-        stable_sum = sum(tracking_duration[1:])
-        stable_avg = stable_sum / cfg.total_steps_to_run
-        stable_avg = round(stable_avg, 4)
+            # reset timer
+            t0 = time.perf_counter()
+            if batch_index > cfg.total_steps_to_run:
+                break
 
-        print(Fore.GREEN + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds")
-        print(Fore.YELLOW + f"\nSagemaker Time to Beat: 8 seconds")
-        gain = (8.00 - stable_avg) / stable_avg
-        gain = round(gain, 4)
-        print(Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%")
-        print(Fore.LIGHTBLUE_EX + f"\n--> Model Size = ? Params")
-        # print(f"batch size = {batch_size_training}")
-        # print(f"minibatch durations: {tracking_duration}")
-        print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
-        print(f"running mem Reserved: {tracking_mem_reserved}")
-        print(f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}")
+        # memory summary
+        if local_rank == 0:
+            # print(f"--> checkpoint wrapped {layer_count} layers")
+
+            stable_sum = sum(tracking_duration[1:])
+            stable_avg = stable_sum / cfg.total_steps_to_run
+            stable_avg = round(stable_avg, 4)
+
+            print(Fore.GREEN + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds")
+            print(Fore.YELLOW + f"\nSagemaker Time to Beat: 8 seconds")
+            gain = (8.00 - stable_avg) / stable_avg
+            gain = round(gain, 4)
+            print(Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%")
+            print(Fore.LIGHTBLUE_EX + f"\n--> Model Size = ? Params")
+            # print(f"batch size = {batch_size_training}")
+            # print(f"minibatch durations: {tracking_duration}")
+            print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
+            print(f"running mem Reserved: {tracking_mem_reserved}")
+            print(f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}")
 
     cleanup()
 

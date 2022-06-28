@@ -21,6 +21,8 @@ class train_config:
     # how many mini batches to time with
     total_steps_to_run: int = 5
 
+    run_profiler: bool = False
+
     # log
     log_every: int = 1
 
