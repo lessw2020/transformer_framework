@@ -48,6 +48,7 @@ from datetime import datetime
 import tqdm
 
 import config
+from typing import Dict, Union, Any, Tuple
 
 bf16_ready = (
     torch.version.cuda
@@ -156,13 +157,13 @@ def fsdp_main():
         },
     )
 
-    dataset = FakeDataset()
+    dataset = GeneratedDataset()
 
     log_every = cfg.log_every
 
     
 
-    model = build_model(args.model_size)
+    model = build_model(cfg.model_name)
 
 #   Setup Mixed Precision --------------
     # === leverage FSDP Mixed Precision
@@ -291,7 +292,7 @@ def fsdp_main():
     cleanup()
 
 
-class FakeDataset(Dataset):
+class GeneratedDataset(Dataset):
     def __init__(self, **kwargs) -> None:
         super()
         self._input_shape = kwargs.get("input_shape", [3, 256, 256])
