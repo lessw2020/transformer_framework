@@ -65,7 +65,7 @@ from colorama import Fore, Back, Style
 colorama.init(autoreset=True)  # reset after every line
 
 # some globals
-g_gigabyte = 1024**3
+g_gigabyte_unit_size = 1024**3
 
 def print_model(model, file_name, local_rank):
     if local_rank != 0:
@@ -185,11 +185,13 @@ def fsdp_main():
             if local_rank == 0:
                 print(f"--> Warning - bf16 support not available.  Reverting to fp32")
 
+    log_every = cfg.log_every
 
     if local_rank == 0:
-        init_timer = time.perf_counter()
+        init_start = time.perf_counter()
     
     
+
     model = FSDP(
         model,
         auto_wrap_policy=my_auto_wrap_policy,
@@ -206,18 +208,21 @@ def fsdp_main():
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
     """
+    if local_rank==0:
+        init_time = time.perf_counter() - init_start
+        print(
+            f"local rank {local_rank} init time = {init_time}"
+        )
 
-    init_time = time.perf_counter() - init_start
-    print(
-        f"local rank {local_rank} init time = {init_time}"
-    )
-
+    # optimizer ----------
     optimizer = torch.optim.Adam(
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     if local_rank == 0:
         print(f"==> optimizer = Adam\n")
+
+    # data loader -------------
 
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=cfg.batch_size_training, num_workers=8, pin_memory=False
@@ -246,8 +251,8 @@ def fsdp_main():
         if local_rank == 0:
             mini_batch_time = time.perf_counter() - t0
             tracking_duration.append(mini_batch_time)
-            tracking_mem_allocs.append(torch.cuda.memory_allocated() / gb_unit_size)
-            tracking_mem_reserved.append(torch.cuda.memory_reserved() / gb_unit_size)
+            tracking_mem_allocs.append(torch.cuda.memory_allocated() / g_gigabyte_unit_size)
+            tracking_mem_reserved.append(torch.cuda.memory_reserved() / g_gigabyte_unit_size)
 
         if (
             batch_index % log_every == 0
