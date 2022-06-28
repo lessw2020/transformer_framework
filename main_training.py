@@ -1,4 +1,4 @@
- import os
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,6 +13,8 @@ import torch.distributed as dist
 # from torch.nn.parallel import DistributedDataParallel as DDP
 
 from torch.utils.data.distributed import DistributedSampler
+from torch.utils.data import Dataset
+
 
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
@@ -82,7 +84,7 @@ def print_model(model, file_name, local_rank):
 
 def setup():
     """ we use torchrun for init so no params needed here """
-    dist.init_process_group("nccl")  
+    dist.init_process_group("nccl")
 
 def setup_environ_flags(cfg, rank):
     os.environ["TORCH_SHOW_CPP_STACKTRACES"] = str(1)
@@ -106,14 +108,14 @@ def clear_gpu_cache(rank=None):
 def setup_tasks(rank, world_size, cfg):
     """keep the basic setup list here"""
     setup()
-    clear_gpu_cache(rank) - need to call torch set device first?
+    clear_gpu_cache(rank) # need to call torch set device first?
     # set_printing()
-    setup_environ_flags()
+    setup_environ_flags(cfg, rank)
 
 
 def format_metrics_to_gb(item):
     """quick function to format numbers to gigabyte and round to 4 digit precision"""
-    metric_num = item / g_gigabyte
+    metric_num = item / g_gigabyte_unit_size
     metric_num = round(metric_num, ndigits=4)
     return metric_num
 
@@ -143,11 +145,6 @@ def fsdp_main():
     if torch.distributed.is_initialized():
         torch.cuda.set_device(local_rank)
 
-    if local_rank==0:
-        num_params = sum(p.numel() for p in model.parameters())
-        print(f"built model with {num_params / 1e6}M params")
-
-    
     # ====   use new transformer wrapper
 
     my_auto_wrap_policy = functools.partial(
@@ -160,10 +157,11 @@ def fsdp_main():
     dataset = GeneratedDataset()
 
     log_every = cfg.log_every
-
-    
-
     model = build_model(cfg.model_name)
+
+    if local_rank==0:
+        num_params = sum(p.numel() for p in model.parameters())
+        print(f"built model with {num_params / 1e6}M params")
 
 #   Setup Mixed Precision --------------
     # === leverage FSDP Mixed Precision
@@ -190,8 +188,8 @@ def fsdp_main():
 
     if local_rank == 0:
         init_start = time.perf_counter()
-    
-    
+
+
 
     model = FSDP(
         model,
@@ -361,7 +359,7 @@ def build_model(model_size: str):
             "dropout": 0.1,
             "emb_dropout": 0.1,
         }
-    
+
     if model_size == "1.5B":
         model_args = {
             "image_size": 256,
