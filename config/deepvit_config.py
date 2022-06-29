@@ -27,11 +27,15 @@ class train_config:
     log_every: int = 1
 
     # save models
-    save_model: bool = False
+    save_checkpoints: bool = True
     save_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
+
+    # load checkpoints
+    load_checkpoint: bool = True
+    checkpoint_name: str = "test.pt"
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD

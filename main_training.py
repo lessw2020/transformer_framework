@@ -51,6 +51,8 @@ import tqdm
 
 import config
 from typing import Dict, Union, Any, Tuple
+import model_checkpointing
+
 
 bf16_ready = (
     torch.version.cuda
@@ -188,6 +190,10 @@ def fsdp_main():
 
     if local_rank == 0:
         init_start = time.perf_counter()
+    
+    # preload checkpoint if desired
+    if cfg.load_checkpoint:
+        model_checkpointing.load_checkpoint(model, rank, cfg)
 
     model = FSDP(
         model,
@@ -205,6 +211,8 @@ def fsdp_main():
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
     """
+    
+
     if local_rank == 0:
         init_time = time.perf_counter() - init_start
         print(f"local rank {local_rank} init time = {init_time}")
@@ -297,6 +305,11 @@ def fsdp_main():
             t0 = time.perf_counter()
             if batch_index > cfg.total_steps_to_run:
                 break
+
+        if cfg.save_checkpoints:
+            model_checkpointing.save_checkpoint(model,rank, cfg)
+
+
 
         # memory summary
         if local_rank == 0:
