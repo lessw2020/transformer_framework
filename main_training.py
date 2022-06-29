@@ -196,8 +196,8 @@ def fsdp_main():
         model_checkpointing.load_checkpoint(model, rank, cfg)
 
     # postload checkpoint if desired
-    if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
-        model_checkpointing.load_checkpoint(model, rank, cfg)
+    #if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
+    #    model_checkpointing.load_checkpoint(model, rank, cfg)
 
     # ----- main FSDP init -----------
     model = FSDP(

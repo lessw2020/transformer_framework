@@ -34,7 +34,8 @@ def save_checkpoint(model, rank, cfg, epoch=1, verbose=True):
     #fullstate_save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         # create writer to current path
-        writer = FileSystemWriter(Path.cwd())
+        save_dir = Path.cwd()/'dist_checkpoint'
+        writer = FileSystemWriter(save_dir)
             
         with FSDP.state_dict_type(model, StateDictType.LOCAL_STATE_DICT, ):
             state_dict = model.state_dict()
