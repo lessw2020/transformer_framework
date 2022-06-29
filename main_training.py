@@ -192,9 +192,14 @@ def fsdp_main():
         init_start = time.perf_counter()
     
     # preload checkpoint if desired
-    if cfg.load_checkpoint:
+    if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.FULL_STATE_DICT:
         model_checkpointing.load_checkpoint(model, rank, cfg)
 
+    # postload checkpoint if desired
+    if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
+        model_checkpointing.load_checkpoint(model, rank, cfg)
+
+    # ----- main FSDP init -----------
     model = FSDP(
         model,
         auto_wrap_policy=my_auto_wrap_policy,
@@ -211,7 +216,10 @@ def fsdp_main():
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
     """
-    
+    # postload checkpoint if desired
+    if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
+        model_checkpointing.load_checkpoint(model, rank, cfg)
+
 
     if local_rank == 0:
         init_time = time.perf_counter() - init_start

@@ -1,6 +1,13 @@
 from dataclasses import dataclass
 from torch.distributed.fsdp import ShardingStrategy
 
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    StateDictType,
+    FullStateDictConfig, # general model non-sharded, non-flattened params
+    LocalStateDictConfig, # flattened params, usable only by FSDP
+    #ShardedStateDictConfig, # un-flattened param but shards, usable by other parallel schemes.
+)
 
 @dataclass
 class train_config:
@@ -28,6 +35,7 @@ class train_config:
 
     # save models
     save_checkpoints: bool = True
+    checkpoint_type = StateDictType.LOCAL_STATE_DICT
     save_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss

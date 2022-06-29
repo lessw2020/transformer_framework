@@ -5,6 +5,7 @@ __pycache__/
 
 # model files
 *.pt
+dist_checkpoint
 
 # C extensions
 *.so
