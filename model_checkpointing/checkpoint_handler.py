@@ -65,6 +65,9 @@ def save_checkpoint(
         return  # we break to avoid hitting default full state
 
     # saving with rank0 cpu
+    if not cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
+        print(f" unable to handle checkpoint type {cfg.checkpoint_type}, aborting")
+
     with FSDP.state_dict_type(
         model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
     ):
@@ -76,11 +79,12 @@ def save_checkpoint(
     if rank == 0:
         print(f"--> saving model ...")
         save_dir = Path.cwd() / cfg.checkpoint_folder
-        save_name = "test" + "-" + ".pt"
-        save_dir += save_name
-        torch.save(cpu_state, save_name)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        save_name = cfg.model_save_name + "-" + str(epoch) + ".pt"
+        save_full_path = str(save_dir) + "/" + save_name
+        torch.save(cpu_state, save_full_path)
 
-        print(f"--> saved {save_name} to disk")
+        print(f"--> saved {save_full_path} to disk")
 
 
 def load_checkpoint(model, rank, cfg, verbose=True):
@@ -98,12 +102,16 @@ def load_checkpoint(model, rank, cfg, verbose=True):
             model.load_state_dict(state_dict)
 
         print(f"--> local state loaded on rank {rank}")
-    return
+        return
 
     if rank != 0:
         return
 
-    full_state_dict = torch.load(cfg.checkpoint_name)
-    model.load_state_dict(full_state_dict)
+    full_state_dict_model_path = (
+        Path.cwd() / cfg.checkpoint_folder / cfg.checkpoint_model_filename
+    )
+
+    model_checkpoint = torch.load(full_state_dict_model_path)
+    model.load_state_dict(model_checkpoint)
     if verbose:
         print(f"checkpoint loaded to rank0 cpu")
