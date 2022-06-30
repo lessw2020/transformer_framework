@@ -55,15 +55,43 @@ def save_model_checkpoint(
 
     if rank == 0:
         print(f"--> saving model ...")
+        # create save path
         save_dir = Path.cwd() / cfg.checkpoint_folder
         save_dir.mkdir(parents=True, exist_ok=True)
         save_name = cfg.model_save_name + "-" + str(epoch) + ".pt"
         save_full_path = str(save_dir) + "/" + save_name
 
+        # save model
         torch.save(cpu_state, save_full_path)
 
         if cfg.verbose:
             print(f"model checkpoint saved for epoch {epoch} at {save_full_path}")
+
+
+def load_model_checkpoint(model, rank, cfg, verbose=True):
+    """load local checkpoint to rank0 cpu
+    must be called * before * passing to FSDP"""
+
+    if rank != 0:
+        return
+
+    # where is the checkpoint at...
+    full_state_dict_model_path = (
+        Path.cwd() / cfg.checkpoint_folder / cfg.checkpoint_model_filename
+    )
+    # is it present...
+    if not full_state_dict_model_path.is_file():
+        print(
+            f"model checkpoint {full_state_dict_model_path} not present. Returning..."
+        )
+        return
+    # load the checkpoint
+    model_checkpoint = torch.load(full_state_dict_model_path)
+    # integrate into loaded model
+    model.load_state_dict(model_checkpoint)
+
+    if cfg.verbose:
+        print(f"model checkpoint loaded to rank0 cpu")
 
 
 def save_optimizer_checkpoint(model, optimizer, rank, cfg, epoch=1):
@@ -126,28 +154,6 @@ def load_optimizer_checkpoint(model, optimizer, rank, cfg):
     # optimizer.load_state_dict(sharded_osd)
     # sharded_osd = FSDP.shard_full_optim_state_dict(full_osd, model)
     # optimizer.load_state_dict(sharded_osd)
-
-
-def load_model_checkpoint(model, rank, cfg, verbose=True):
-    """load local checkpoint to rank0 cpu"""
-
-    if rank != 0:
-        return
-
-    full_state_dict_model_path = (
-        Path.cwd() / cfg.checkpoint_folder / cfg.checkpoint_model_filename
-    )
-
-    if not full_state_dict_model_path.is_file():
-        print(
-            f"model checkpoint {full_state_dict_model_path} not present. Returning..."
-        )
-        return
-
-    model_checkpoint = torch.load(full_state_dict_model_path)
-    model.load_state_dict(model_checkpoint)
-    if verbose:
-        print(f"checkpoint loaded to rank0 cpu")
 
 
 def load_distributed_model_checkpoint(model, rank, cfg):
