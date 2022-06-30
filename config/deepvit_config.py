@@ -36,7 +36,8 @@ class train_config:
     log_every: int = 1
 
     # checkpoint models
-    save_checkpoints: bool = True
+    save_model_checkpoint: bool = True
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.FULL_STATE_DICT
     model_save_name = "t5-"
     checkpoint_folder = "training_checkpoints"
@@ -47,11 +48,9 @@ class train_config:
     # optimizers load and save
     save_optimizer: bool = True
     load_optimizer: bool = True
-    optimizer_name: str = "Adam_"
+    optimizer_name: str = "Adam"
     optimizer_checkpoint_file: str = "Adam_opt_1.pt"
 
-    # load checkpoints
-    load_checkpoint: bool = False
     checkpoint_model_filename: str = "test-1.pt"
 
     # sharding policy

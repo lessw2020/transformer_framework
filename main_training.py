@@ -159,6 +159,8 @@ def fsdp_main():
     dataset = GeneratedDataset()
 
     log_every = cfg.log_every
+
+    # build model
     model = build_model(cfg.model_name)
 
     if local_rank == 0:
@@ -192,12 +194,11 @@ def fsdp_main():
         init_start = time.perf_counter()
 
     # preload checkpoint if desired
-    # if cfg.load_checkpoint and cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
-    #    model_checkpointing.load_model_checkpoint(model, rank, cfg)
-
-    # postload checkpoint if desired
-    # if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
-    #    model_checkpointing.load_checkpoint(model, rank, cfg)
+    if (
+        cfg.load_model_checkpoint
+        and cfg.checkpoint_type == StateDictType.FULL_STATE_DICT
+    ):
+        model_checkpointing.load_model_checkpoint(model, rank, cfg)
 
     # ----- main FSDP init -----------
     model = FSDP(
@@ -217,7 +218,10 @@ def fsdp_main():
             print(f"--> FSDP activation checkpointing in use")
     """
     # postload checkpoint if desired
-    if cfg.load_checkpoint and cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
+    if (
+        cfg.load_model_checkpoint
+        and cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT
+    ):
         model_checkpointing.load_model_checkpoint(model, rank, cfg)
 
     if local_rank == 0:
@@ -233,7 +237,6 @@ def fsdp_main():
         print(f"==> optimizer = Adam\n")
 
     # load optimizer checkpoint
-
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
 
@@ -319,7 +322,10 @@ def fsdp_main():
                 break
 
         # checkpointing for model and optimizer
-        if cfg.save_checkpoints:
+        if (
+            cfg.save_model_checkpoint
+            and cfg.checkpoint_type == StateDictType.FULL_STATE_DICT
+        ):
             model_checkpointing.save_model_checkpoint(
                 model, optimizer, rank, cfg, epoch=1
             )
@@ -341,12 +347,12 @@ def fsdp_main():
                 Fore.GREEN
                 + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
             )
-            print(Fore.YELLOW + f"\nSagemaker Time to Beat: 8 seconds")
-            gain = (8.00 - stable_avg) / stable_avg
-            gain = round(gain, 4)
-            print(
-                Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%"
-            )
+            # print(Fore.YELLOW + f"\nSagemaker Time to Beat: 8 seconds")
+            # gain = (8.00 - stable_avg) / stable_avg
+            # gain = round(gain, 4)
+            # print(
+            #    Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%"
+            # )
             print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
             # print(f"batch size = {batch_size_training}")
             # print(f"minibatch durations: {tracking_duration}")
