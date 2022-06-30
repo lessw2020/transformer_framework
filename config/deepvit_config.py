@@ -48,6 +48,7 @@ class train_config:
     save_optimizer: bool = True
     load_optimizer: bool = True
     optimizer_name: str = "Adam_"
+    optimizer_checkpoint_file: str = "Adam_opt_1.pt"
 
     # load checkpoints
     load_checkpoint: bool = False

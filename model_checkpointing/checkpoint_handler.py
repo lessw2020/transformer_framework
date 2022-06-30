@@ -38,9 +38,6 @@ def save_model_checkpoint(
     rank,
     cfg,
     epoch=1,
-    curr_metric=None,
-    best_metric=None,
-    verbose=True,
 ):
     """saving model via rank0 cpu streaming and full_state_dict"""
 
@@ -48,19 +45,13 @@ def save_model_checkpoint(
     if not cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
         print(f" unable to handle checkpoint type {cfg.checkpoint_type}, aborting")
 
-    # with FSDP.state_dict_type(
-    #    model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
-    # ):
-    #    cpu_state = model.state_dict()
+    with FSDP.state_dict_type(
+        model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
+    ):
+        cpu_state = model.state_dict()
 
-    # optimizer call
-
-    print(
-        f"--> ready to save optim on rank {rank} and len optim_state == {len(optim_state)}"
-    )
-
-    # if verbose:
-    #    print(f"saving process: rank {rank}  done w state_dict")
+    if cfg.verbose:
+        print(f"saving process: rank {rank}  done w model state_dict")
 
     if rank == 0:
         print(f"--> saving model ...")
@@ -68,7 +59,11 @@ def save_model_checkpoint(
         save_dir.mkdir(parents=True, exist_ok=True)
         save_name = cfg.model_save_name + "-" + str(epoch) + ".pt"
         save_full_path = str(save_dir) + "/" + save_name
+
         torch.save(cpu_state, save_full_path)
+
+        if cfg.verbose:
+            print(f"model checkpoint saved for epoch {epoch} at {save_full_path}")
 
 
 def save_optimizer_checkpoint(model, optimizer, rank, cfg, epoch=1):
@@ -106,11 +101,18 @@ def load_optimizer_checkpoint(model, optimizer, rank, cfg):
     """load an fdsp optimizer full_state checkpoint using scatter method
     this ensures only rank 0 loads the optimizer state dict and scatters to other ranks"""
 
-    hardcoded = Path.cwd() / cfg.checkpoint_folder / "1_5Bopt.pt"
+    opt_file_path = Path.cwd() / cfg.checkpoint_folder / cfg.optimizer_checkpoint_file
+
+    if not opt_file_path.is_file():
+        print(
+            f"warning - optimizer checkpoint not present {opt_file_path}. Returning. "
+        )
+        return
+
     full_osd = None
 
     if rank == 0:
-        full_osd = torch.load(hardcoded)
+        full_osd = torch.load(opt_file_path)
 
         if cfg.verbose:
             print(f"loaded full osd on rank 0")
@@ -135,6 +137,12 @@ def load_model_checkpoint(model, rank, cfg, verbose=True):
     full_state_dict_model_path = (
         Path.cwd() / cfg.checkpoint_folder / cfg.checkpoint_model_filename
     )
+
+    if not full_state_dict_model_path.is_file():
+        print(
+            f"model checkpoint {full_state_dict_model_path} not present. Returning..."
+        )
+        return
 
     model_checkpoint = torch.load(full_state_dict_model_path)
     model.load_state_dict(model_checkpoint)
