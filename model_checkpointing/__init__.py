@@ -1,1 +1,6 @@
-from .checkpoint_handler import save_model_checkpoint, load_model_checkpoint
+from .checkpoint_handler import (
+    load_model_checkpoint,
+    save_model_checkpoint,
+    load_optimizer_checkpoint,
+    save_optimizer_checkpoint,
+)

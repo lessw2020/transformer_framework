@@ -26,6 +26,7 @@ class train_config:
     # 3B
     # 8B
 
+    verbose: bool = True  # how much info to show...
     # how many mini batches to time with
     total_steps_to_run: int = 5
 
@@ -34,25 +35,23 @@ class train_config:
     # log
     log_every: int = 1
 
-    # save models
+    # checkpoint models
     save_checkpoints: bool = True
     checkpoint_type = StateDictType.FULL_STATE_DICT
     model_save_name = "t5-"
-    optimizer_save_name = "t5-optim-"
-    # checkpoint_optimizer = True
     checkpoint_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
 
-    # save optimizers
+    # optimizers load and save
     save_optimizer: bool = True
-    optim_state_save_name: str = "Adam_"
+    load_optimizer: bool = True
+    optimizer_name: str = "Adam_"
 
     # load checkpoints
-    load_checkpoint: bool = True
+    load_checkpoint: bool = False
     checkpoint_model_filename: str = "test-1.pt"
-    load_optimizer_checkpoint: bool = True
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
