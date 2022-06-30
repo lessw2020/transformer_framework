@@ -81,14 +81,22 @@ def save_model_checkpoint(
     if not cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
         print(f" unable to handle checkpoint type {cfg.checkpoint_type}, aborting")
 
-    with FSDP.state_dict_type(
-        model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
-    ):
-        cpu_state = model.state_dict()
-        # was here...
+    # with FSDP.state_dict_type(
+    #    model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
+    # ):
+    #    cpu_state = model.state_dict()
 
-    if verbose:
-        print(f"saving process: rank {rank}  done w state_dict")
+    # optimizer call
+
+    print(f"--> optim state call on rank {rank}")
+    optim_state = FSDP.full_optim_state_dict(model, optimizer)
+
+    print(
+        f"--> ready to save optim on rank {rank} and len optim_state == {len(optim_state)}"
+    )
+
+    # if verbose:
+    #    print(f"saving process: rank {rank}  done w state_dict")
 
     if rank == 0:
         print(f"--> saving model ...")
@@ -96,15 +104,12 @@ def save_model_checkpoint(
         save_dir.mkdir(parents=True, exist_ok=True)
         save_name = cfg.model_save_name + "-" + str(epoch) + ".pt"
         save_full_path = str(save_dir) + "/" + save_name
-        torch.save(cpu_state, save_full_path)
+        # torch.save(cpu_state, save_full_path)
 
         # optimizer
         print(f"--> saving optimizer")
         opt_save_name = "optimizer-" + cfg.model_save_name + "-" + str(epoch) + ".pt"
         opt_save_full_path = save_dir / opt_save_name
-        print(f"--> optim state call")
-        optim_state = FSDP.full_optim_state_dict(model, optimizer)
-        print(f"--> ready to save optim")
 
         torch.save(optim_state, opt_save_full_path)
 
