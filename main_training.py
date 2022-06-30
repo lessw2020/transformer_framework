@@ -190,13 +190,13 @@ def fsdp_main():
 
     if local_rank == 0:
         init_start = time.perf_counter()
-    
+
     # preload checkpoint if desired
-    if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.FULL_STATE_DICT:
-        model_checkpointing.load_checkpoint(model, rank, cfg)
+    # if cfg.load_checkpoint and cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
+    #    model_checkpointing.load_model_checkpoint(model, rank, cfg)
 
     # postload checkpoint if desired
-    #if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
+    # if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
     #    model_checkpointing.load_checkpoint(model, rank, cfg)
 
     # ----- main FSDP init -----------
@@ -217,9 +217,8 @@ def fsdp_main():
             print(f"--> FSDP activation checkpointing in use")
     """
     # postload checkpoint if desired
-    if cfg.load_checkpoint and cfg.checkpoint_type==StateDictType.LOCAL_STATE_DICT:
-        model_checkpointing.load_checkpoint(model, rank, cfg)
-
+    if cfg.load_checkpoint and cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
+        model_checkpointing.load_model_checkpoint(model, rank, cfg)
 
     if local_rank == 0:
         init_time = time.perf_counter() - init_start
@@ -315,9 +314,7 @@ def fsdp_main():
                 break
 
         if cfg.save_checkpoints:
-            model_checkpointing.save_checkpoint(model,rank, cfg)
-
-
+            model_checkpointing.save_model_checkpoint(model, optimizer, rank, cfg)
 
         # memory summary
         if local_rank == 0:

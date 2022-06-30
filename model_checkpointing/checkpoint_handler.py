@@ -31,8 +31,15 @@ def get_date_of_run():
 fullstate_save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
 
 
-def save_checkpoint(
-    model, rank, cfg, epoch=1, curr_metric=None, best_metric=None, verbose=True
+def save_model_checkpoint(
+    model,
+    optimizer,
+    rank,
+    cfg,
+    epoch=1,
+    curr_metric=None,
+    best_metric=None,
+    verbose=True,
 ):
     """saving model via rank0 cpu streaming or distributed checkpointing"""
     # if a metric is passed in, confirm if we want to checkpoint based on new low or not
@@ -50,17 +57,23 @@ def save_checkpoint(
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         # create writer to current path
         save_dir = Path.cwd() / cfg.checkpoint_folder
+        save_dir_opt = Path.cwd() / "dist_opt_checkpoint"
         writer = FileSystemWriter(save_dir)
+        writer_opt = FileSystemWriter(save_dir_opt)
 
         with FSDP.state_dict_type(
             model,
             StateDictType.LOCAL_STATE_DICT,
         ):
             state_dict = model.state_dict()
-
+            osd = optimizer.state_dict()
         save_state_dict(state_dict, writer)
+        save_state_dict(osd, writer_opt)
+
         if rank == 0:
-            print(f"--> distributed checkpoint saved at {save_dir}")
+            print(
+                f"--> distributed checkpoint and opt saved at {save_dir} and {save_dir_opt}"
+            )
 
         return  # we break to avoid hitting default full state
 
@@ -72,6 +85,7 @@ def save_checkpoint(
         model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
     ):
         cpu_state = model.state_dict()
+        # was here...
 
     if verbose:
         print(f"saving process: rank {rank}  done w state_dict")
@@ -84,10 +98,20 @@ def save_checkpoint(
         save_full_path = str(save_dir) + "/" + save_name
         torch.save(cpu_state, save_full_path)
 
+        # optimizer
+        print(f"--> saving optimizer")
+        opt_save_name = "optimizer-" + cfg.model_save_name + "-" + str(epoch) + ".pt"
+        opt_save_full_path = save_dir / opt_save_name
+        print(f"--> optim state call")
+        optim_state = FSDP.full_optim_state_dict(model, optimizer)
+        print(f"--> ready to save optim")
+
+        torch.save(optim_state, opt_save_full_path)
+
         print(f"--> saved {save_full_path} to disk")
 
 
-def load_checkpoint(model, rank, cfg, verbose=True):
+def load_model_checkpoint(model, rank, cfg, verbose=True):
     """load local checkpoint to rank0 cpu"""
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         checkdir = Path.cwd() / "dist_checkpoint"

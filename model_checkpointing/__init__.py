@@ -1,1 +1,1 @@
-from .checkpoint_handler import save_checkpoint, load_checkpoint
+from .checkpoint_handler import save_model_checkpoint, load_model_checkpoint

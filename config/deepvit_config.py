@@ -39,15 +39,20 @@ class train_config:
     checkpoint_type = StateDictType.FULL_STATE_DICT
     model_save_name = "t5-"
     optimizer_save_name = "t5-optim-"
-    checkpoint_optimizer = True
+    # checkpoint_optimizer = True
     checkpoint_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
 
+    # save optimizers
+    save_optimizer: bool = True
+    optim_state_save_name: str = "Adam_"
+
     # load checkpoints
     load_checkpoint: bool = True
     checkpoint_model_filename: str = "test-1.pt"
+    load_optimizer_checkpoint: bool = True
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
