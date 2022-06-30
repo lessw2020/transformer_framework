@@ -162,8 +162,8 @@ def fsdp_main():
     model = build_model(cfg.model_name)
 
     if local_rank == 0:
-        num_params = sum(p.numel() for p in model.parameters())
-        print(f"built model with {num_params / 1e6}M params")
+        num_params = (sum(p.numel() for p in model.parameters())) / 1e6
+        print(f"built model with {num_params}M params")
 
     #   Setup Mixed Precision --------------
     # === leverage FSDP Mixed Precision
@@ -231,6 +231,11 @@ def fsdp_main():
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     if local_rank == 0:
         print(f"==> optimizer = Adam\n")
+
+    # load optimizer checkpoint
+
+    if cfg.load_optimizer:
+        model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
 
     # data loader -------------
 
@@ -313,8 +318,16 @@ def fsdp_main():
             if batch_index > cfg.total_steps_to_run:
                 break
 
+        # checkpointing for model and optimizer
         if cfg.save_checkpoints:
-            model_checkpointing.save_model_checkpoint(model, optimizer, rank, cfg)
+            model_checkpointing.save_model_checkpoint(
+                model, optimizer, rank, cfg, epoch=1
+            )
+
+        if cfg.save_optimizer:
+            model_checkpointing.save_optimizer_checkpoint(
+                model, optimizer, rank, cfg, epoch=1
+            )
 
         # memory summary
         if local_rank == 0:
@@ -334,7 +347,7 @@ def fsdp_main():
             print(
                 Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%"
             )
-            print(Fore.LIGHTBLUE_EX + f"\n--> Model Size = ? Params")
+            print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
             # print(f"batch size = {batch_size_training}")
             # print(f"minibatch durations: {tracking_duration}")
             print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
