@@ -51,7 +51,7 @@ def save_model_checkpoint(
         cpu_state = model.state_dict()
 
     if cfg.verbose:
-        print(f"saving process: rank {rank}  done w model state_dict")
+        print(f"saving process: rank {rank}  done w model state_dict\n")
 
     if rank == 0:
         print(f"--> saving model ...")
@@ -65,7 +65,7 @@ def save_model_checkpoint(
         torch.save(cpu_state, save_full_path)
 
         if cfg.verbose:
-            print(f"model checkpoint saved for epoch {epoch} at {save_full_path}")
+            print(f"model checkpoint saved for epoch {epoch} at {save_full_path}\n")
 
 
 def load_model_checkpoint(model, rank, cfg, verbose=True):
@@ -98,14 +98,14 @@ def save_optimizer_checkpoint(model, optimizer, rank, cfg, epoch=1):
     """save optimizer state via full state dict"""
 
     if cfg.verbose:
-        print(f"--> optim state call on rank {rank}")
+        print(f"--> optim state call on rank {rank}\n")
 
     # pull all sharded optimizer states to rank0 cpu...
 
     optim_state = FSDP.full_optim_state_dict(model, optimizer)
 
     if cfg.verbose:
-        print(f"optim state dict ready on {rank} and len of {len(optim_state)}")
+        print(f"optim state dict ready on {rank} and len of {len(optim_state)}\n")
 
     if rank == 0:
         save_dir = Path.cwd() / cfg.checkpoint_folder

@@ -229,7 +229,7 @@ def fsdp_main():
         print(f"local rank {local_rank} init time = {init_time}")
 
     # optimizer ----------
-    optimizer = torch.optim.Adam(
+    optimizer = torch.optim.AdamW(
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)

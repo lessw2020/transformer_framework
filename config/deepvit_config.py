@@ -37,7 +37,7 @@ class train_config:
 
     # checkpoint models
     save_model_checkpoint: bool = True
-    load_model_checkpoint: bool = False
+    load_model_checkpoint: bool = True
     checkpoint_type = StateDictType.FULL_STATE_DICT
     model_save_name = "t5-"
     checkpoint_folder = "training_checkpoints"
@@ -49,9 +49,9 @@ class train_config:
     save_optimizer: bool = True
     load_optimizer: bool = True
     optimizer_name: str = "Adam"
-    optimizer_checkpoint_file: str = "Adam_opt_1.pt"
+    optimizer_checkpoint_file: str = "Adam-t5--1.pt"
 
-    checkpoint_model_filename: str = "test-1.pt"
+    checkpoint_model_filename: str = "t5--1.pt"
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
