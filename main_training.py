@@ -200,15 +200,17 @@ def fsdp_main():
     ):
         model_checkpointing.load_model_checkpoint(model, rank, cfg)
 
+    prefetch_policy = cfg.backward_prefetch
+    print(f"backward prefetch set to {prefetch_policy}")
+
     # ----- main FSDP init -----------
     model = FSDP(
         model,
         auto_wrap_policy=my_auto_wrap_policy,
         mixed_precision=mp_policy,
-        # backward_prefetch=prefetch_policy,
+        backward_prefetch=prefetch_policy,
         device_id=torch.cuda.current_device(),
         sharding_strategy=ShardingStrategy.FULL_SHARD,  # Zero2
-        # cpu_offload= cpu_policy,
         forward_prefetch=True,
     )
 
@@ -358,6 +360,8 @@ def fsdp_main():
             # print(f"minibatch durations: {tracking_duration}")
             print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
             print(f"running mem Reserved: {tracking_mem_reserved}")
+            max_reserved = max(tracking_mem_reserved)
+            print(f"--> max memory = {max_reserved}")
             print(
                 f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
             )

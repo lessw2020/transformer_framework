@@ -3,6 +3,7 @@ from torch.distributed.fsdp import ShardingStrategy
 
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
+    BackwardPrefetch,
     StateDictType,
     FullStateDictConfig,  # general model non-sharded, non-flattened params
     LocalStateDictConfig,  # flattened params, usable only by FSDP
@@ -17,7 +18,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "500M"
+    model_name = "3B"
 
     # available models - name is ~ num params
     # 60M
@@ -32,12 +33,15 @@ class train_config:
 
     run_profiler: bool = False
 
+    # backward prefetch
+    backward_prefetch = BackwardPrefetch.BACKWARD_PRE
+
     # log
     log_every: int = 1
 
     # checkpoint models
-    save_model_checkpoint: bool = True
-    load_model_checkpoint: bool = True
+    save_model_checkpoint: bool = False
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.FULL_STATE_DICT
     model_save_name = "t5-"
     checkpoint_folder = "training_checkpoints"
@@ -46,8 +50,8 @@ class train_config:
     )
 
     # optimizers load and save
-    save_optimizer: bool = True
-    load_optimizer: bool = True
+    save_optimizer: bool = False
+    load_optimizer: bool = False
     optimizer_name: str = "Adam"
     optimizer_checkpoint_file: str = "Adam-t5--1.pt"
 
@@ -58,24 +62,24 @@ class train_config:
     print_sharding_plan: bool = False
 
     # dataloaders
-    num_workers_dataloader: int = 0
+    num_workers_dataloader: int = 8
 
     # policies
     use_mixed_precision: bool = True
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # datasets
     # dataset_train = "datasets_grammar/grammar_train.csv"
     # dataset_test = "datasets_grammar/grammar_validation.csv"
 
     # training
-    batch_size_training: int = 5
+    batch_size_training: int = 4
     num_epochs: int = 1
 
     # validation
-    run_validation: bool = True
+    run_validation: bool = False
     val_batch_size = 4
 
     # logging
