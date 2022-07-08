@@ -15,23 +15,26 @@ class Memory_Maximizer:
     def __init__(
         self,
     ):
-        current_free, total_gpu_mem = torch.cuda.mem_get_info()
-        m_total_gpu_mem = format_to_gb(total_gpu_mem)
 
-        m_reserved_memory_list = []
+        current_free, full_gpu_mem = torch.cuda.mem_get_info()
 
-        m_total_ooms = 0
-        m_num_retries = 0
-        m_max_reserved = 0
+        self.m_total_gpu_memory = format_to_gb(full_gpu_mem)
+
+        print(f"--> total memory per gpu (GB) = {self.m_total_gpu_memory}")
+
+        self.m_reserved_memory_list = []
+        self.m_total_ooms = 0
+        self.m_num_retries = 0
+        self.m_max_reserved = 0
 
     def start(self):
         """start memory tracking, reset any current info"""
 
         torch.cuda.reset_peak_memory_stats()
-        m_reserved_memory_list = []
-        m_num_retries = 0
-        m_total_ooms = 0
-        m_max_reserved = 0
+        self.m_reserved_memory_list = []
+        self.m_num_retries = 0
+        self.m_total_ooms = 0
+        self.m_max_reserved = 0
 
         print(f"reserved and peak memory stats reset, ready to track")
 
@@ -48,11 +51,13 @@ class Memory_Maximizer:
     ):
         """end of training...get various stats and display"""
 
+        print(f"reserved memory = {self.m_reserved_memory_list}")
+
         cuda_max_reserved = format_to_gb(torch.cuda.max_memory_reserved())
         print(f"--> cuda max reserved memory = {cuda_max_reserved}")
-        print(
-            f"--> max reserved percentage = {round(cuda_max_reserved/self.m_available_gpu_mem,4)}"
-        )
+        res_percentage = cuda_max_reserved / self.m_total_gpu_memory
+
+        print(f"--> max reserved percentage = {round(res_percentage,4)}")
 
         cuda_info = torch.cuda.memory_stats()
 

@@ -71,6 +71,8 @@ colorama.init(autoreset=True)  # reset after every line
 # some globals
 g_gigabyte_unit_size = 1024**3
 
+import performance
+
 
 def print_model(model, file_name, local_rank):
     if local_rank != 0:
@@ -146,6 +148,10 @@ def fsdp_main():
 
     if torch.distributed.is_initialized():
         torch.cuda.set_device(local_rank)
+
+    # setup memory tracking for perf
+    if rank == 0:
+        memmax = performance.Memory_Maximizer()
 
     # ====   use new transformer wrapper
 
@@ -251,10 +257,12 @@ def fsdp_main():
 
     # memory and timing tracking
     if local_rank == 0:
-        torch.cuda.reset_peak_memory_stats()
-        print(f"peak memory stats reset")
+        memmax.start()
+
+        # torch.cuda.reset_peak_memory_stats()
+        # print(f"peak memory stats reset")
         tracking_mem_allocs = []
-        tracking_mem_reserved = []
+        # tracking_mem_reserved = []
         tracking_duration = []
 
     torch_profiler = None
@@ -307,9 +315,10 @@ def fsdp_main():
                 tracking_mem_allocs.append(
                     torch.cuda.memory_allocated() / g_gigabyte_unit_size
                 )
-                tracking_mem_reserved.append(
-                    torch.cuda.memory_reserved() / g_gigabyte_unit_size
-                )
+                # tracking_mem_reserved.append(
+                #    torch.cuda.memory_reserved() / g_gigabyte_unit_size
+                # )
+                memmax.update()
 
             if (
                 batch_index % log_every == 0
@@ -343,6 +352,8 @@ def fsdp_main():
         if local_rank == 0:
 
             # start of customized memory monitor
+            memmax.stop()  # stop and display info
+
             cuda_max_reserved = format_metrics_to_gb(torch.cuda.max_memory_reserved())
             print(f"--> cuda max reserved = {cuda_max_reserved}")
 
@@ -377,9 +388,9 @@ def fsdp_main():
             # print(f"batch size = {batch_size_training}")
             # print(f"minibatch durations: {tracking_duration}")
             print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
-            print(f"running mem Reserved: {tracking_mem_reserved}")
-            max_reserved = max(tracking_mem_reserved)
-            print(f"--> max memory = {max_reserved}")
+            # print(f"running mem Reserved: {tracking_mem_reserved}")
+            # max_reserved = max(tracking_mem_reserved)
+            # print(f"--> max memory = {max_reserved}")
             print(
                 f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
             )
