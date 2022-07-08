@@ -210,7 +210,7 @@ def fsdp_main():
         mixed_precision=mp_policy,
         backward_prefetch=prefetch_policy,
         device_id=torch.cuda.current_device(),
-        sharding_strategy=ShardingStrategy.FULL_SHARD,  # Zero2
+        sharding_strategy=ShardingStrategy.SHARD_GRAD_OP,
         forward_prefetch=True,
     )
 

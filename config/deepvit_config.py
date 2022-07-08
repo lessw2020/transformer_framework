@@ -18,7 +18,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "3B"
+    model_name = "1.5B"
 
     # available models - name is ~ num params
     # 60M
@@ -58,7 +58,7 @@ class train_config:
     checkpoint_model_filename: str = "t5--1.pt"
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
+    sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
     print_sharding_plan: bool = False
 
     # dataloaders
@@ -68,7 +68,7 @@ class train_config:
     use_mixed_precision: bool = True
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = False
+    fsdp_activation_checkpointing: bool = True
 
     # datasets
     # dataset_train = "datasets_grammar/grammar_train.csv"
