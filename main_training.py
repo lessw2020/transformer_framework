@@ -13,7 +13,9 @@ from colorama import Fore
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     MixedPrecision,
+    StateDictType,
 )
+
 import model_checkpointing
 
 bf16_ready = (
