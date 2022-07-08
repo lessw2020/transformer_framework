@@ -1,3 +1,4 @@
+from turtle import update
 import torch
 
 gigabyte_size = 1073741824
@@ -23,6 +24,7 @@ class Memory_Maximizer:
         print(f"--> total memory per gpu (GB) = {self.m_total_gpu_memory}")
 
         self.m_reserved_memory_list = []
+        self.m_reserved_memory_pct = []
         self.m_total_ooms = 0
         self.m_num_retries = 0
         self.m_max_reserved = 0
@@ -32,6 +34,7 @@ class Memory_Maximizer:
 
         torch.cuda.reset_peak_memory_stats()
         self.m_reserved_memory_list = []
+        self.m_reserved_memory_pct = []
         self.m_num_retries = 0
         self.m_total_ooms = 0
         self.m_max_reserved = 0
@@ -44,28 +47,33 @@ class Memory_Maximizer:
         """update reserved memory for this epoch"""
         updated_reserved = torch.cuda.memory_reserved()
         updated_reserved = format_to_gb(updated_reserved)
+
         self.m_reserved_memory_list.append(updated_reserved)
+        self.m_reserved_memory_pct.append(
+            round(100 * (updated_reserved / self.m_total_gpu_memory), 2)
+        )
 
     def stop(
         self,
     ):
         """end of training...get various stats and display"""
 
-        print(f"reserved memory = {self.m_reserved_memory_list}")
+        print(f"\nreserved memory = {self.m_reserved_memory_list}")
+        print(f"memory % = {self.m_reserved_memory_pct}\n")
 
         cuda_max_reserved = format_to_gb(torch.cuda.max_memory_reserved())
         print(f"--> cuda max reserved memory = {cuda_max_reserved}")
-        res_percentage = cuda_max_reserved / self.m_total_gpu_memory
+        res_percentage = 100 * cuda_max_reserved / self.m_total_gpu_memory
 
-        print(f"--> max reserved percentage = {round(res_percentage,4)}")
+        print(f"--> max reserved percentage = {round(res_percentage,4)}%\n")
 
         cuda_info = torch.cuda.memory_stats()
 
         self.m_num_retries = cuda_info.get("num_alloc_retries", 0)
         self.m_cuda_ooms = cuda_info.get("num_ooms", 0)
 
-        print(f"cuda retries = {self.m_num_retries}")
-        print(f"cuda OOM = {self.m_cuda_ooms}")
+        print(f"cudaMalloc retries = {self.m_num_retries}")
+        print(f"cuda OOM = {self.m_cuda_ooms}\n")
         if self.m_num_retries > 0:
             print(
                 f"--> Recommend decreasing batch size...cuda retries can greatly degrade perf!"

@@ -354,19 +354,19 @@ def fsdp_main():
             # start of customized memory monitor
             memmax.stop()  # stop and display info
 
-            cuda_max_reserved = format_metrics_to_gb(torch.cuda.max_memory_reserved())
-            print(f"--> cuda max reserved = {cuda_max_reserved}")
+            # cuda_max_reserved = format_metrics_to_gb(torch.cuda.max_memory_reserved())
+            # print(f"--> cuda max reserved = {cuda_max_reserved}")
 
-            cuda_info = torch.cuda.memory_stats()
+            # cuda_info = torch.cuda.memory_stats()
 
-            cuda_retries = cuda_info.get("num_alloc_retries", 0)
-            cuda_ooms = cuda_info.get("num_ooms", 0)
+            # cuda_retries = cuda_info.get("num_alloc_retries", 0)
+            # cuda_ooms = cuda_info.get("num_ooms", 0)
 
-            print(f"cuda retries = {cuda_retries}")
-            print(f"cuda OOM = {cuda_ooms}")
-            print(f"device specs = {torch.cuda.mem_get_info()}")
-            acc_specs = torch.cuda.mem_get_info()
-            print(type(acc_specs))
+            # print(f"cuda retries = {cuda_retries}")
+            # print(f"cuda OOM = {cuda_ooms}")
+            # print(f"device specs = {torch.cuda.mem_get_info()}")
+            # acc_specs = torch.cuda.mem_get_info()
+            # print(type(acc_specs))
 
             # print(f"--> checkpoint wrapped {layer_count} layers")
 
@@ -387,7 +387,7 @@ def fsdp_main():
             print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
             # print(f"batch size = {batch_size_training}")
             # print(f"minibatch durations: {tracking_duration}")
-            print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
+            # print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
             # print(f"running mem Reserved: {tracking_mem_reserved}")
             # max_reserved = max(tracking_mem_reserved)
             # print(f"--> max memory = {max_reserved}")
