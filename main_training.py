@@ -221,7 +221,7 @@ def fsdp_main():
     )
 
     """if cfg.fsdp_activation_checkpointing:
-        policies.fsdp_checkpointing(model)
+        policies.fsdp_checkpointing(model)l
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
     """
@@ -242,7 +242,7 @@ def fsdp_main():
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     if local_rank == 0:
-        print(f"==> optimizer = Adam\n")
+        print(f"==> optimizer = AdamW\n")
 
     # load optimizer checkpoint
     if cfg.load_optimizer:
@@ -260,9 +260,6 @@ def fsdp_main():
         memmax.start()
 
         # torch.cuda.reset_peak_memory_stats()
-        # print(f"peak memory stats reset")
-        tracking_mem_allocs = []
-        # tracking_mem_reserved = []
         tracking_duration = []
 
     torch_profiler = None
@@ -312,12 +309,7 @@ def fsdp_main():
             if local_rank == 0:
                 mini_batch_time = time.perf_counter() - t0
                 tracking_duration.append(mini_batch_time)
-                tracking_mem_allocs.append(
-                    torch.cuda.memory_allocated() / g_gigabyte_unit_size
-                )
-                # tracking_mem_reserved.append(
-                #    torch.cuda.memory_reserved() / g_gigabyte_unit_size
-                # )
+
                 memmax.update()
 
             if (
@@ -351,24 +343,8 @@ def fsdp_main():
         # memory summary
         if local_rank == 0:
 
-            # start of customized memory monitor
+            # memory monitor
             memmax.stop()  # stop and display info
-
-            # cuda_max_reserved = format_metrics_to_gb(torch.cuda.max_memory_reserved())
-            # print(f"--> cuda max reserved = {cuda_max_reserved}")
-
-            # cuda_info = torch.cuda.memory_stats()
-
-            # cuda_retries = cuda_info.get("num_alloc_retries", 0)
-            # cuda_ooms = cuda_info.get("num_ooms", 0)
-
-            # print(f"cuda retries = {cuda_retries}")
-            # print(f"cuda OOM = {cuda_ooms}")
-            # print(f"device specs = {torch.cuda.mem_get_info()}")
-            # acc_specs = torch.cuda.mem_get_info()
-            # print(type(acc_specs))
-
-            # print(f"--> checkpoint wrapped {layer_count} layers")
 
             stable_sum = sum(tracking_duration[1:])
             stable_avg = stable_sum / cfg.total_steps_to_run
@@ -385,12 +361,7 @@ def fsdp_main():
             #    Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%"
             # )
             print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
-            # print(f"batch size = {batch_size_training}")
-            # print(f"minibatch durations: {tracking_duration}")
-            # print(f"\nrunning mem Allocs: {tracking_mem_allocs}")
-            # print(f"running mem Reserved: {tracking_mem_reserved}")
-            # max_reserved = max(tracking_mem_reserved)
-            # print(f"--> max memory = {max_reserved}")
+
             print(
                 f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
             )
