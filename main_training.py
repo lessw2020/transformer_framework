@@ -210,7 +210,7 @@ def fsdp_main():
         mixed_precision=mp_policy,
         backward_prefetch=prefetch_policy,
         device_id=torch.cuda.current_device(),
-        sharding_strategy=ShardingStrategy.SHARD_GRAD_OP,
+        sharding_strategy=cfg.sharding_strategy,
         forward_prefetch=True,
     )
 
@@ -251,6 +251,8 @@ def fsdp_main():
 
     # memory and timing tracking
     if local_rank == 0:
+        torch.cuda.reset_peak_memory_stats()
+        print(f"peak memory stats reset")
         tracking_mem_allocs = []
         tracking_mem_reserved = []
         tracking_duration = []
@@ -339,6 +341,22 @@ def fsdp_main():
 
         # memory summary
         if local_rank == 0:
+
+            # start of customized memory monitor
+            cuda_max_reserved = format_metrics_to_gb(torch.cuda.max_memory_reserved())
+            print(f"--> cuda max reserved = {cuda_max_reserved}")
+
+            cuda_info = torch.cuda.memory_stats()
+
+            cuda_retries = cuda_info.get("num_alloc_retries", 0)
+            cuda_ooms = cuda_info.get("num_ooms", 0)
+
+            print(f"cuda retries = {cuda_retries}")
+            print(f"cuda OOM = {cuda_ooms}")
+            print(f"device specs = {torch.cuda.mem_get_info()}")
+            acc_specs = torch.cuda.mem_get_info()
+            print(type(acc_specs))
+
             # print(f"--> checkpoint wrapped {layer_count} layers")
 
             stable_sum = sum(tracking_duration[1:])
