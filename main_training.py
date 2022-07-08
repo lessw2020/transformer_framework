@@ -1,58 +1,22 @@
 import os
+import time
+from distutils.version import LooseVersion
+
+import colorama
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-
-import functools
-from torch.optim.lr_scheduler import StepLR
-import torch.nn.functional as F
-import torch.distributed as dist
-
-# import torch.multiprocessing as mp
-# from torch.nn.parallel import DistributedDataParallel as DDP
-
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data import Dataset
-
-
-from torch.distributed.fsdp import (
-    FullyShardedDataParallel as FSDP,
-    CPUOffload,
-    MixedPrecision,
-    BackwardPrefetch,
-    ShardingStrategy,
-    FullStateDictConfig,
-    StateDictType,
-)
-
-
-from torch.distributed.fsdp.wrap import (
-    transformer_auto_wrap_policy,
-    enable_wrap,
-    wrap,
-)
-
-from vit_pytorch.deepvit import DeepViT, Residual
-from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
-
 
 # bfloat16 support verification imports (network and gpu native support)
 import torch.cuda.nccl as nccl
-from distutils.version import LooseVersion
+import torch.distributed as dist
+from colorama import Fore
 
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    MixedPrecision,
+    StateDictType,
+)
 
-from torch.utils.data import DataLoader
-from pathlib import Path
-
-import time
-from datetime import datetime
-import tqdm
-
-import config
-from typing import Dict, Union, Any, Tuple
 import model_checkpointing
-
 
 bf16_ready = (
     torch.version.cuda
@@ -61,10 +25,6 @@ bf16_ready = (
     and dist.is_nccl_available()
     and nccl.version() >= (2, 10)
 )
-
-
-import colorama
-from colorama import Fore, Back, Style
 
 colorama.init(autoreset=True)  # reset after every line
 
@@ -155,19 +115,11 @@ def fsdp_main():
 
     # ====   use new transformer wrapper
 
-    my_auto_wrap_policy = functools.partial(
-        transformer_auto_wrap_policy,
-        transformer_layer_cls={
-            Residual,
-        },
-    )
-
-    dataset = GeneratedDataset()
+    my_auto_wrap_policy = config.get_policy()
+    dataset = config.GeneratedDataset()
 
     log_every = cfg.log_every
-
-    # build model
-    model = build_model(cfg.model_name)
+    model = config.build_model(cfg.model_name)
 
     if local_rank == 0:
         num_params = (sum(p.numel() for p in model.parameters())) / 1e6
@@ -269,7 +221,8 @@ def fsdp_main():
                 torch.profiler.ProfilerActivity.CPU,
                 torch.profiler.ProfilerActivity.CUDA,
             ],
-            schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
+            schedule=torch.profiler.schedule(
+                wait=1, warmup=2, active=3, repeat=1),
             on_trace_ready=torch.profiler.tensorboard_trace_handler(
                 "fsdp_a100/profile_traces"
             ),
@@ -369,90 +322,6 @@ def fsdp_main():
     cleanup()
 
 
-class GeneratedDataset(Dataset):
-    def __init__(self, **kwargs) -> None:
-        super()
-        self._input_shape = kwargs.get("input_shape", [3, 256, 256])
-        self._input_type = kwargs.get("input_type", torch.float32)
-        self._len = kwargs.get("len", 1000000)
-        self._num_classes = kwargs.get("num_classes", 1000)
-
-    def __len__(self):
-        return self._len
-
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        rand_image = torch.randn(self._input_shape, dtype=self._input_type)
-        label = torch.tensor(data=[index % self._num_classes], dtype=torch.int64)
-        return rand_image, label
-
-
-def build_model(model_size: str):
-    model_args = dict()
-    if model_size == "60M":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": 1000,
-            "dim": 1024,
-            "depth": 1,
-            "heads": 1,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "500M":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": 1000,
-            "dim": 1024,
-            "depth": 59,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-
-    if model_size == "1.5B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": 1000,
-            "dim": 1024,
-            "depth": 177,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "3B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": 1000,
-            "dim": 1024,
-            "depth": 357,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "8B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": 1000,
-            "dim": 1024,
-            "depth": 952,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    model = DeepViT(**model_args)
-
-    return model
-
-
 if __name__ == "__main__":
+    import config.deepvit_config as config
     fsdp_main()
