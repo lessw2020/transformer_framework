@@ -65,11 +65,11 @@ class train_config:
     checkpoint_model_filename: str = "t5--1.pt"
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
+    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
 
     # dataloaders
-    num_workers_dataloader: int = 8
+    num_workers_dataloader: int = 2
 
     # policies
     use_mixed_precision: bool = True

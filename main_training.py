@@ -22,7 +22,7 @@ import model_checkpointing
 bf16_ready = (
     torch.version.cuda
     and torch.cuda.is_bf16_supported()
-    and LooseVersion(torch.version.cuda) >= "11.0"
+    # and LooseVersion(torch.version.cuda) >= "11.0"
     and dist.is_nccl_available()
     and nccl.version() >= (2, 10)
 )
@@ -79,13 +79,6 @@ def setup_tasks(rank, world_size, cfg):
     setup_environ_flags(cfg, rank)
 
 
-def format_metrics_to_gb(item):
-    """quick function to format numbers to gigabyte and round to 4 digit precision"""
-    metric_num = item / g_gigabyte_unit_size
-    metric_num = round(metric_num, ndigits=4)
-    return metric_num
-
-
 # ------ main code loop -----------------
 def fsdp_main():
     """main process,  within each rank process"""
@@ -139,13 +132,14 @@ def fsdp_main():
 
     mp_policy = None
 
-    if bf16_ready:
+    if cfg.use_mixed_precision and bf16_ready:
+        print(f"bf16 check passed")
         mp_policy = bfSixteen  # set to None to run with fp32
         if local_rank == 0:
-            print(f"--> Running with bfloat16 mixed precision")
-        else:
-            if local_rank == 0:
-                print(f"--> Warning - bf16 support not available.  Reverting to fp32")
+            print(f"\n--> Running with bfloat16 mixed precision\n")
+    else:
+        if local_rank == 0:
+            print(f"--> Warning - bf16 support not available.  Using fp32")
 
     log_every = cfg.log_every
 
@@ -160,7 +154,9 @@ def fsdp_main():
         model_checkpointing.load_model_checkpoint(model, rank, cfg)
 
     prefetch_policy = cfg.backward_prefetch
-    print(f"backward prefetch set to {prefetch_policy}")
+    if rank == 0:
+        print(f"backward prefetch set to {prefetch_policy}")
+        print(f"sharding set to {cfg.sharding_strategy}")
 
     # ----- main FSDP init -----------
     model = FSDP(
@@ -195,7 +191,7 @@ def fsdp_main():
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
     if local_rank == 0:
-        print(f"==> optimizer = AdamW\n")
+        print(f"==> optimizer = Adam\n")
 
     # load optimizer checkpoint
     if cfg.load_optimizer:
@@ -204,7 +200,10 @@ def fsdp_main():
     # data loader -------------
 
     data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=cfg.batch_size_training, num_workers=8, pin_memory=False
+        dataset,
+        batch_size=cfg.batch_size_training,
+        num_workers=cfg.num_workers_dataloader,
+        pin_memory=False,
     )
     loss_function = torch.nn.CrossEntropyLoss()
 
@@ -324,4 +323,5 @@ def fsdp_main():
 
 if __name__ == "__main__":
     import config.deepvit_config as config
+
     fsdp_main()
