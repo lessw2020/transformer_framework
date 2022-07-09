@@ -25,7 +25,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "1B"
+    model_name = "1.5B"
 
     # available models - name is ~ num params
     # 60M
@@ -65,7 +65,7 @@ class train_config:
     checkpoint_model_filename: str = "t5--1.pt"
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
+    sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
     print_sharding_plan: bool = False
 
     # dataloaders
@@ -194,7 +194,7 @@ class GeneratedDataset(Dataset):
 
 
 def get_policy():
-    functools.partial(
+    return functools.partial(
         transformer_auto_wrap_policy,
         transformer_layer_cls={
             Residual,
