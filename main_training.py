@@ -29,9 +29,6 @@ bf16_ready = (
 
 colorama.init(autoreset=True)  # reset after every line
 
-# some globals
-g_gigabyte_unit_size = 1024**3
-
 import performance
 
 
@@ -67,7 +64,8 @@ def cleanup():
 
 
 def clear_gpu_cache(rank=None):
-    print(f"clearing cache for rank {rank}")
+    if rank == 0:
+        print(f"clearing gpu cache for all ranks")
     torch.cuda.empty_cache()
 
 
