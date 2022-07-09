@@ -18,6 +18,7 @@ from torch.distributed.fsdp import (
 
 import model_checkpointing
 
+
 bf16_ready = (
     torch.version.cuda
     and torch.cuda.is_bf16_supported()
@@ -189,7 +190,7 @@ def fsdp_main():
         print(f"local rank {local_rank} init time = {init_time}")
 
     # optimizer ----------
-    optimizer = torch.optim.AdamW(
+    optimizer = torch.optim.Adam(
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
@@ -221,8 +222,7 @@ def fsdp_main():
                 torch.profiler.ProfilerActivity.CPU,
                 torch.profiler.ProfilerActivity.CUDA,
             ],
-            schedule=torch.profiler.schedule(
-                wait=1, warmup=2, active=3, repeat=1),
+            schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
             on_trace_ready=torch.profiler.tensorboard_trace_handler(
                 "fsdp_a100/profile_traces"
             ),
@@ -235,7 +235,7 @@ def fsdp_main():
                     target.to(torch.cuda.current_device()), -1
                 )
                 optimizer.zero_grad()
-                # with torch.cuda.amp.autocast(mixed_precision):
+
                 outputs = model(inputs)
                 loss = loss_function(outputs, targets)
                 loss.backward()
@@ -252,7 +252,7 @@ def fsdp_main():
                 target.to(torch.cuda.current_device()), -1
             )
             optimizer.zero_grad()
-            # with torch.cuda.amp.autocast(mixed_precision):
+
             outputs = model(inputs)
             loss = loss_function(outputs, targets)
             loss.backward()

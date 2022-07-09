@@ -177,8 +177,7 @@ class GeneratedDataset(Dataset):
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         rand_image = torch.randn(self._input_shape, dtype=self._input_type)
-        label = torch.tensor(
-            data=[index % self._num_classes], dtype=torch.int64)
+        label = torch.tensor(data=[index % self._num_classes], dtype=torch.int64)
         return rand_image, label
 
 
