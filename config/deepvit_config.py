@@ -25,12 +25,14 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "1.5B"
+    model_name = "2B"
 
     # available models - name is ~ num params
     # 60M
     # 500M
+    # 1B
     # 1.5B
+    # 2B
     # 3B
     # 8B
 
@@ -147,6 +149,19 @@ def build_model(model_size: str):
             "dropout": 0.1,
             "emb_dropout": 0.1,
         }
+    if model_size == "2B":
+        model_args = {
+            "image_size": 256,
+            "patch_size": 32,
+            "num_classes": 1000,
+            "dim": 1024,
+            "depth": 236,
+            "heads": 16,
+            "mlp_dim": 2048,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+        }
+
     if model_size == "3B":
         model_args = {
             "image_size": 256,
