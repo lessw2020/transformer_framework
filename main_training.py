@@ -131,7 +131,8 @@ def fsdp_main():
     mp_policy = None
 
     if cfg.use_mixed_precision and bf16_ready:
-        print(f"bf16 check passed")
+        if rank == 0:
+            print(f"bf16 check passed")
         mp_policy = bfSixteen  # set to None to run with fp32
         if local_rank == 0:
             print(f"\n--> Running with bfloat16 mixed precision\n")

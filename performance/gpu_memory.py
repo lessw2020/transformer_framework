@@ -1,4 +1,46 @@
-from turtle import update
+# Copyright (c) 2022 Meta Platforms, Inc. and its affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the Apache-style license found in the
+# LICENSE file in the root directory of this source tree.
+
+# Summary:
+# the utility class Memory_Maximizer tracks reserved per epoch or per minibatch reserved GPU memory, in GB and as % of GPU VRAM,
+# and most importantly programmatically confirms if any cudaMalloc retries took place.
+
+# cudaMalloc retries can significantly lower performance (likely due to resetting the cache), but are otherwise
+# not normally visible as an actual 'error' the way OOM is.
+
+# usage - create instance,
+# start() to reset internal stats, and begin,
+# update() at end of epoch or minibatch,
+# stop() to stop and print details.
+
+# adjust batch size until you no longer see any cudaMalloc retries for best performance/memory maximization.
+
+"""
+example usage:
+
+from gpu_memory import Memory_Maximizer
+
+if rank == 0:
+        memmax = Memory_Maximizer()
+
+# memory and timing tracking
+    if local_rank == 0:
+        memmax.start()  # start will reset all tracking points
+
+# in training loop - at minibatch or epoch end point:
+    # update durations and memory tracking
+    if local_rank == 0:
+        memmax.update()
+
+# at end of training - stop and print stats
+    # memory summary
+    if local_rank == 0:
+        memmax.stop()  # stop and display info  
+"""
+
 import torch
 
 gigabyte_size = 1073741824
