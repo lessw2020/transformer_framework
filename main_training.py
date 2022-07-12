@@ -156,6 +156,7 @@ def fsdp_main():
     if rank == 0:
         print(f"backward prefetch set to {prefetch_policy}")
         print(f"sharding set to {cfg.sharding_strategy}")
+        print(f"--> Batch Size = {cfg.batch_size_training}")
 
     # ----- main FSDP init -----------
     model = FSDP(
@@ -163,8 +164,8 @@ def fsdp_main():
         auto_wrap_policy=my_auto_wrap_policy,
         mixed_precision=mp_policy,
         backward_prefetch=prefetch_policy,
-        device_id=torch.cuda.current_device(),
         sharding_strategy=cfg.sharding_strategy,
+        device_id=torch.cuda.current_device(),
         forward_prefetch=True,
     )
 
