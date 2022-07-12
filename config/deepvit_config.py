@@ -25,7 +25,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "2B"
+    model_name = "750M"
 
     # available models - name is ~ num params
     # 60M
@@ -39,6 +39,14 @@ class train_config:
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
     total_steps_to_run: int = 5
+
+    # training
+    batch_size_training: int = 15
+    num_epochs: int = 1
+
+    # sharding policy
+    sharding_strategy: ShardingStrategy = ShardingStrategy.NO_SHARD
+    print_sharding_plan: bool = False
 
     run_profiler: bool = False
 
@@ -66,10 +74,6 @@ class train_config:
 
     checkpoint_model_filename: str = "t5--1.pt"
 
-    # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.SHARD_GRAD_OP
-    print_sharding_plan: bool = False
-
     # dataloaders
     num_workers_dataloader: int = 2
 
@@ -82,10 +86,6 @@ class train_config:
     # datasets
     # dataset_train = "datasets_grammar/grammar_train.csv"
     # dataset_test = "datasets_grammar/grammar_validation.csv"
-
-    # training
-    batch_size_training: int = 17
-    num_epochs: int = 1
 
     # validation
     run_validation: bool = False
@@ -124,6 +124,18 @@ def build_model(model_size: str):
             "dropout": 0.1,
             "emb_dropout": 0.1,
         }
+    if model_size == "750M":
+        model_args = {
+            "image_size": 256,
+            "patch_size": 32,
+            "num_classes": 1000,
+            "dim": 1024,
+            "depth": 89,
+            "heads": 16,
+            "mlp_dim": 2048,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+        }
 
     if model_size == "1B":
         model_args = {
@@ -156,6 +168,19 @@ def build_model(model_size: str):
             "num_classes": 1000,
             "dim": 1024,
             "depth": 236,
+            "heads": 16,
+            "mlp_dim": 2048,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+        }
+
+    if model_size == "2.5B":
+        model_args = {
+            "image_size": 256,
+            "patch_size": 32,
+            "num_classes": 1000,
+            "dim": 1024,
+            "depth": 296,
             "heads": 16,
             "mlp_dim": 2048,
             "dropout": 0.1,
