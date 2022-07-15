@@ -1,13 +1,11 @@
 import os
 import time
-from distutils.version import LooseVersion
+
 
 import colorama
 import torch
 
-# bfloat16 support verification imports (network and gpu native support)
-import torch.cuda.nccl as nccl
-import torch.distributed as dist
+
 from colorama import Fore
 
 from torch.distributed.fsdp import (
@@ -18,14 +16,12 @@ from torch.distributed.fsdp import (
 
 import model_checkpointing
 
+import torch.distributed as dist
 
-bf16_ready = (
-    torch.version.cuda
-    and torch.cuda.is_bf16_supported()
-    # and LooseVersion(torch.version.cuda) >= "11.0"
-    and dist.is_nccl_available()
-    and nccl.version() >= (2, 10)
-)
+import environment
+
+bf16_ready = environment.verify_bfloat_support
+
 
 colorama.init(autoreset=True)  # reset after every line
 
@@ -108,6 +104,7 @@ def fsdp_main():
     # ====   use new transformer wrapper
 
     my_auto_wrap_policy = config.get_policy()
+
     dataset = config.GeneratedDataset()
 
     log_every = cfg.log_every
@@ -168,6 +165,7 @@ def fsdp_main():
         device_id=torch.cuda.current_device(),
         forward_prefetch=True,
     )
+
 
     """if cfg.fsdp_activation_checkpointing:
         policies.fsdp_checkpointing(model)l

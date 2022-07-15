@@ -6,6 +6,7 @@ from torch.distributed.fsdp import ShardingStrategy
 from torch.utils.data import Dataset
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from typing import Tuple
+
 from vit_pytorch.deepvit import DeepViT, Residual
 
 from torch.distributed.fsdp import (
@@ -25,7 +26,7 @@ class train_config:
     seed: int = 2022
 
     # model
-    model_name = "750M"
+    model_name = "1B"
 
     # available models - name is ~ num params
     # 60M
@@ -41,11 +42,11 @@ class train_config:
     total_steps_to_run: int = 5
 
     # training
-    batch_size_training: int = 15
+    batch_size_training: int = 4
     num_epochs: int = 1
 
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.NO_SHARD
+    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
 
     run_profiler: bool = False
