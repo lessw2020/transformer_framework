@@ -89,6 +89,9 @@ def fsdp_main():
 
     if rank == 0:
         print(f"--> World Size = {world_size}\n")
+        assert (
+            torch.cuda.device_count() == world_size
+        ), f"world size {world_size} is not equal to torch.cuda.device_count {torch.cuda.device_count()}"
         print(f"--> running with these defaults {cfg}")
         # time_of_run = get_date_of_run()
 
@@ -100,14 +103,16 @@ def fsdp_main():
     # setup memory tracking for perf
     if rank == 0:
         memmax = performance.Memory_Maximizer()
+    else:
+        memmax = None
 
     # ====   use new transformer wrapper
 
     my_auto_wrap_policy = config.get_policy()
+    if rank == 0:
+        print(f"policy is {my_auto_wrap_policy}")
+    dataset = config.get_dataset()
 
-    dataset = config.GeneratedDataset()
-
-    log_every = cfg.log_every
     model = config.build_model(cfg.model_name)
 
     if local_rank == 0:
@@ -137,8 +142,6 @@ def fsdp_main():
         if local_rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
 
-    log_every = cfg.log_every
-
     if local_rank == 0:
         init_start = time.perf_counter()
 
@@ -166,7 +169,6 @@ def fsdp_main():
         forward_prefetch=True,
     )
 
-
     """if cfg.fsdp_activation_checkpointing:
         policies.fsdp_checkpointing(model)l
         if local_rank==0:
@@ -183,6 +185,28 @@ def fsdp_main():
         init_time = time.perf_counter() - init_start
         print(f"local rank {local_rank} init time = {init_time}")
 
+    # data loader -------------
+    data_loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=cfg.batch_size_training,
+        num_workers=cfg.num_workers_dataloader,
+        pin_memory=False,
+    )
+
+    # memory and timing tracking
+    if local_rank == 0:
+        memmax.start()
+        # torch.cuda.reset_peak_memory_stats()
+        tracking_duration = []
+    else:
+        tracking_duration = None
+
+    # warmup, this is only used in the non-recusive ParamExecOrderPolicy
+    config.train(model, data_loader, None, None, memmax, local_rank, tracking_duration, 1)
+    if local_rank == 0:
+        print("Finish warm up")
+    model.zero_grad()
+
     # optimizer ----------
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
@@ -195,22 +219,6 @@ def fsdp_main():
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
 
-    # data loader -------------
-
-    data_loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=cfg.batch_size_training,
-        num_workers=cfg.num_workers_dataloader,
-        pin_memory=False,
-    )
-    loss_function = torch.nn.CrossEntropyLoss()
-
-    # memory and timing tracking
-    if local_rank == 0:
-        memmax.start()
-
-        # torch.cuda.reset_peak_memory_stats()
-        tracking_duration = []
 
     torch_profiler = None
     if cfg.run_profiler:
@@ -227,55 +235,9 @@ def fsdp_main():
             with_stack=False,
             record_shapes=True,
         ) as torch_profiler:
-            for batch_index, (inputs, target) in enumerate(data_loader, start=1):
-                inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
-                    target.to(torch.cuda.current_device()), -1
-                )
-                optimizer.zero_grad()
-
-                outputs = model(inputs)
-                loss = loss_function(outputs, targets)
-                loss.backward()
-                optimizer.step()
-                torch_profiler.step()
-
-                if batch_index > cfg.total_steps_to_run:
-                    break
-
+            config.train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
     else:
-        t0 = time.perf_counter()
-        for batch_index, (inputs, target) in enumerate(data_loader, start=1):
-            inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
-                target.to(torch.cuda.current_device()), -1
-            )
-            optimizer.zero_grad()
-
-            outputs = model(inputs)
-            loss = loss_function(outputs, targets)
-            loss.backward()
-            optimizer.step()
-
-            # update durations and memory tracking
-            if local_rank == 0:
-                mini_batch_time = time.perf_counter() - t0
-                tracking_duration.append(mini_batch_time)
-
-                memmax.update()
-
-            if (
-                batch_index % log_every == 0
-                and torch.distributed.get_rank() == 0
-                and batch_index > 1
-            ):
-                print(
-                    f"step: {batch_index-1}: time taken for the last {log_every} steps is {mini_batch_time}"
-                )
-
-            # reset timer
-            t0 = time.perf_counter()
-            if batch_index > cfg.total_steps_to_run:
-                break
-
+        config.train(model, data_loader, None, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
         # checkpointing for model and optimizer
         if (
             cfg.save_model_checkpoint
@@ -290,36 +252,29 @@ def fsdp_main():
                 model, optimizer, rank, cfg, epoch=1
             )
 
-        # memory summary
-        if local_rank == 0:
+    # memory summary
+    if local_rank == 0:
 
-            # memory monitor
-            memmax.stop()  # stop and display info
+        # memory monitor
+        memmax.stop()  # stop and display info
 
-            stable_sum = sum(tracking_duration[1:])
-            stable_avg = stable_sum / cfg.total_steps_to_run
-            stable_avg = round(stable_avg, 4)
-
-            print(
-                Fore.GREEN
-                + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
-            )
-            # print(Fore.YELLOW + f"\nSagemaker Time to Beat: 8 seconds")
-            # gain = (8.00 - stable_avg) / stable_avg
-            # gain = round(gain, 4)
-            # print(
-            #    Fore.LIGHTGREEN_EX + f"Net FSDP Speed Gain over SageMaker: {gain*100}%"
-            # )
-            print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
-
-            print(
-                f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
-            )
+        stable_sum = sum(tracking_duration[1:])
+        stable_avg = stable_sum / cfg.total_steps_to_run
+        stable_avg = round(stable_avg, 4)
+        print(
+            Fore.GREEN
+            + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
+        )
+        print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
+        print(
+            f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
+        )
 
     cleanup()
 
 
 if __name__ == "__main__":
-    import config.deepvit_config as config
+    # import config.deepvit_config as config
+    import config.t5_config as config
 
     fsdp_main()

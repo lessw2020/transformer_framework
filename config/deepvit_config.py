@@ -1,29 +1,21 @@
 import functools
+import time
 import torch
-
 from dataclasses import dataclass
-from torch.distributed.fsdp import ShardingStrategy
-from torch.utils.data import Dataset
-from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from typing import Tuple
 
-from vit_pytorch.deepvit import DeepViT, Residual
-
-from torch.distributed.fsdp import (
-    FullyShardedDataParallel as FSDP,
-    BackwardPrefetch,
-    StateDictType,
-    FullStateDictConfig,  # general model non-sharded, non-flattened params
-    LocalStateDictConfig,  # flattened params, usable only by FSDP
-    # ShardedStateDictConfig, # un-flattened param but shards, usable by other parallel schemes.
+from torch.utils.data import Dataset
+from torch.distributed.fsdp.wrap import (
+    always_wrap_policy,
+    transformer_auto_wrap_policy,
 )
+from torch.distributed.fsdp import StateDictType
+from vit_pytorch.deepvit import DeepViT, Residual
+from .base_config import base_config
 
 
 @dataclass
-class train_config:
-
-    # seed
-    seed: int = 2022
+class train_config(base_config):
 
     # model
     model_name = "1B"
@@ -31,37 +23,19 @@ class train_config:
     # available models - name is ~ num params
     # 60M
     # 500M
+    # 750M
     # 1B
     # 1.5B
     # 2B
+    # 2.5B
     # 3B
     # 8B
-
-    verbose: bool = True  # how much info to show...
-    # how many mini batches to time with
-    total_steps_to_run: int = 5
-
-    # training
-    batch_size_training: int = 4
-    num_epochs: int = 1
-
-    # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
-    print_sharding_plan: bool = False
-
-    run_profiler: bool = False
-
-    # backward prefetch
-    backward_prefetch = BackwardPrefetch.BACKWARD_PRE
-
-    # log
-    log_every: int = 1
 
     # checkpoint models
     save_model_checkpoint: bool = False
     load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.FULL_STATE_DICT
-    model_save_name = "t5-"
+    model_save_name = "deepvit-"
     checkpoint_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
@@ -71,32 +45,9 @@ class train_config:
     save_optimizer: bool = False
     load_optimizer: bool = False
     optimizer_name: str = "Adam"
-    optimizer_checkpoint_file: str = "Adam-t5--1.pt"
+    optimizer_checkpoint_file: str = "Adam-deepvit--1.pt"
 
-    checkpoint_model_filename: str = "t5--1.pt"
-
-    # dataloaders
-    num_workers_dataloader: int = 2
-
-    # policies
-    use_mixed_precision: bool = True
-
-    # activation checkpointing
-    fsdp_activation_checkpointing: bool = True
-
-    # datasets
-    # dataset_train = "datasets_grammar/grammar_train.csv"
-    # dataset_test = "datasets_grammar/grammar_validation.csv"
-
-    # validation
-    run_validation: bool = False
-    val_batch_size = 4
-
-    # logging
-    track_memory = True
-    memory_report: bool = True
-    nccl_debug_handler: bool = True
-    distributed_debug: bool = True
+    checkpoint_model_filename: str = "deepvit--1.pt"
 
 
 def build_model(model_size: str):
@@ -234,10 +185,65 @@ class GeneratedDataset(Dataset):
         return rand_image, label
 
 
+def get_dataset():
+    return GeneratedDataset()
+
+
 def get_policy():
-    return functools.partial(
+    recursive_policy = functools.partial(
         transformer_auto_wrap_policy,
         transformer_layer_cls={
             Residual,
         },
     )
+    return recursive_policy
+    # The ParamExecOrderPolicy that is in development
+    # from torch.distributed.fsdp.wrap import (
+    #     ParamExecOrderPolicy,
+    #     HandleInitMode,
+    # )
+    # return ParamExecOrderPolicy(
+    #     handle_init_mode=HandleInitMode.MODULE_LEVEL,
+    #     bucket_size=int(17000000 * 2 + 1),
+    #     module_level_group_policy=recursive_policy,
+    # )
+
+
+def train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, total_steps_to_run):
+    cfg = train_config()
+    loss_function = torch.nn.CrossEntropyLoss()
+    t0 = time.perf_counter()
+    for batch_index, (inputs, target) in enumerate(data_loader, start=1):
+        inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
+            target.to(torch.cuda.current_device()), -1
+        )
+        if optimizer:
+            optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = loss_function(outputs, targets)
+        loss.backward()
+        if optimizer:
+            optimizer.step()
+
+        # update durations and memory tracking
+        if local_rank == 0:
+            mini_batch_time = time.perf_counter() - t0
+            tracking_duration.append(mini_batch_time)
+            if memmax:
+                memmax.update()
+
+        if (
+            batch_index % cfg.log_every == 0
+            and torch.distributed.get_rank() == 0
+            and batch_index > 1
+        ):
+            print(
+                f"step: {batch_index-1}: time taken for the last {cfg.log_every} steps is {mini_batch_time}, loss is {loss}"
+            )
+
+        # reset timer
+        t0 = time.perf_counter()
+        if torch_profiler is not None:
+            torch_profiler.step()
+        if batch_index > total_steps_to_run:
+            break
