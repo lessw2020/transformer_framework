@@ -35,7 +35,8 @@ class train_config(base_config):
     save_model_checkpoint: bool = True
     load_model_checkpoint: bool = True
     checkpoint_type = StateDictType.LOCAL_STATE_DICT
-    dist_checkpoint_folder = "DeepVit_Distributed_Checkpoint"
+    dist_checkpoint_root_folder="distributed_checkpoints"
+    dist_checkpoint_folder = "DeepVit_local_checkpoint"
     model_save_name = "deepvit-"
     checkpoint_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (

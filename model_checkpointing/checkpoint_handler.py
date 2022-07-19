@@ -160,9 +160,14 @@ def load_distributed_model_checkpoint(model, rank, cfg):
 
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         print(f"loading distributed checkpoint, rank {rank}...")
-        folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
+        folder_name = cfg.dist_checkpoint_root_folder+"/"+cfg.dist_checkpoint_folder+"-"+cfg.model_name
 
         checkdir = Path.cwd() / folder_name
+
+        if not checkdir.exists():
+            if rank==0:
+                print(f"No checkpoint directory found...skipping")
+            return
 
         if rank == 0:
             
@@ -199,8 +204,8 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
     # confirm type of checkpoint and save
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         # create writer to current path
-        folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
-        
+        #folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
+        folder_name = cfg.dist_checkpoint_root_folder+"/"+cfg.dist_checkpoint_folder+"-"+cfg.model_name
         save_dir = Path.cwd() / folder_name
 
         writer = FileSystemWriter(save_dir)
