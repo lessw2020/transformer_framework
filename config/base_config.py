@@ -15,7 +15,7 @@ class base_config:
     total_steps_to_run: int = 5
 
     # training
-    batch_size_training: int = 4
+    batch_size_training: int = 15
     num_epochs: int = 1
 
     # sharding policy

@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 
@@ -273,8 +274,28 @@ def fsdp_main():
     cleanup()
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="PyTorch experiments with FSDP")
+    parser.add_argument(
+        '--model',
+        default="deepvit",
+        metavar='string',
+        choices=['deepvit', 't5', 'regnet'],
+        help=
+        'choose model to run, available: `deepvit`, `t5`, `regnet` (default: deepvit)'
+    )
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    # import config.deepvit_config as config
-    import config.t5_config as config
+    args = parse_args()
+    assert args.model in ['deepvit', 't5', 'regnet']
+    if args.model == 'deepvit':
+        import config.deepvit_config as config
+    elif args.model == 't5':
+        import config.t5_config as config
+    elif args.model == 'regnet':
+        import config.regnet_config as config
 
     fsdp_main()
