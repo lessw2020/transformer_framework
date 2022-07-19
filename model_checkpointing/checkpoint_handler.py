@@ -2,6 +2,7 @@ from pathlib import Path
 from datetime import datetime
 import torch
 import time
+import performance
 
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
@@ -45,6 +46,9 @@ def save_model_checkpoint(
     if not cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
         print(f" unable to handle checkpoint type {cfg.checkpoint_type}, aborting")
 
+    if rank==0:
+        save_timer = Timer()
+        save_timer.start()
     with FSDP.state_dict_type(
         model, StateDictType.FULL_STATE_DICT, fullstate_save_policy
     ):
@@ -52,6 +56,8 @@ def save_model_checkpoint(
 
     if cfg.verbose:
         print(f"saving process: rank {rank}  done w model state_dict\n")
+    if rank==0:
+        save_timer.interval(name="full state ranks accumulation")
 
     if rank == 0:
         print(f"--> saving model ...")
@@ -66,6 +72,7 @@ def save_model_checkpoint(
 
         if cfg.verbose:
             print(f"model checkpoint saved for epoch {epoch} at {save_full_path}\n")
+        save_timer.stop()
 
 
 def load_model_checkpoint(model, rank, cfg, verbose=True):
@@ -86,9 +93,15 @@ def load_model_checkpoint(model, rank, cfg, verbose=True):
         )
         return
     # load the checkpoint
+    load_timer = Timer()
+    load_timer.start()
+
     model_checkpoint = torch.load(full_state_dict_model_path)
     # integrate into loaded model
+    load_timer.interval(name="checkpoint loading ")
     model.load_state_dict(model_checkpoint)
+
+    load_timer.stop()
 
     if cfg.verbose:
         print(f"model checkpoint loaded to rank0 cpu")
@@ -170,8 +183,8 @@ def load_distributed_model_checkpoint(model, rank, cfg):
             return
 
         if rank == 0:
-            
-            timer_start_load = time.perf_counter()
+            load_timer = Timer()
+            load_timer.start()
 
         reader = FileSystemReader(checkdir)
 
@@ -181,15 +194,15 @@ def load_distributed_model_checkpoint(model, rank, cfg):
         ):
             state_dict = model.state_dict()
             load_state_dict(state_dict, reader)
+            if rank==0:
+                load_timer.interval(name="load of state dict ")
             model.load_state_dict(state_dict)
 
         print(f"--> local state loaded on rank {rank}")
         if rank == 0:
+            load_timer.stop()
 
-            timer_stop_loading = time.perf_counter()
-            print(
-                f"loading time for dist checkpoint = {timer_stop_loading-timer_start_load}"
-            )
+            
 
         return
 
@@ -199,7 +212,8 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
 
     if rank == 0:
         print(f"Starting distributed checkpoint save...")
-        save_time_start = time.perf_counter()
+        save_timer = Timer()
+        save_timer.start()
 
     # confirm type of checkpoint and save
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
@@ -215,13 +229,14 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
             StateDictType.LOCAL_STATE_DICT,
         ):
             state_dict = model.state_dict()
+        if rank==0:
+            save_timer.interval(name="local state dict accum completed ")
 
         # write out distributed checkpoint
         save_state_dict(state_dict, writer)
 
         if rank == 0:
-            save_time_stop = time.perf_counter()
-            print(f"total save time = {save_time_stop - save_time_start}")
+            save_timer.stop()
             print(f"--> distributed checkpoint saved at {save_dir}")
 
         return  
