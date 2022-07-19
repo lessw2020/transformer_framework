@@ -157,8 +157,17 @@ def load_optimizer_checkpoint(model, optimizer, rank, cfg):
 
 
 def load_distributed_model_checkpoint(model, rank, cfg):
+
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
-        checkdir = Path.cwd() / "dist_folder"
+        print(f"loading distributed checkpoint, rank {rank}...")
+        folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
+
+        checkdir = Path.cwd() / folder_name
+
+        if rank == 0:
+            
+            timer_start_load = time.perf_counter()
+
         reader = FileSystemReader(checkdir)
 
         with FSDP.state_dict_type(
@@ -170,20 +179,31 @@ def load_distributed_model_checkpoint(model, rank, cfg):
             model.load_state_dict(state_dict)
 
         print(f"--> local state loaded on rank {rank}")
+        if rank == 0:
+
+            timer_stop_loading = time.perf_counter()
+            print(
+                f"loading time for dist checkpoint = {timer_stop_loading-timer_start_load}"
+            )
+
         return
 
 
 def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
-    # if a metric is passed in, confirm if we want to checkpoint based on new low or not
-    # and update best metric
+    # distributed checkpoint saving
+
+    if rank == 0:
+        print(f"Starting distributed checkpoint save...")
+        save_time_start = time.perf_counter()
 
     # confirm type of checkpoint and save
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         # create writer to current path
-        save_dir = Path.cwd() / cfg.checkpoint_folder
-        # save_dir_opt = Path.cwd() / "dist_opt_checkpoint"
+        folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
+        
+        save_dir = Path.cwd() / folder_name
+
         writer = FileSystemWriter(save_dir)
-        # writer_opt = FileSystemWriter(save_dir_opt)
 
         with FSDP.state_dict_type(
             model,
@@ -195,8 +215,8 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
         save_state_dict(state_dict, writer)
 
         if rank == 0:
-            print(
-                f"--> distributed checkpoint and opt saved at {save_dir} and {save_dir_opt}"
-            )
+            save_time_stop = time.perf_counter()
+            print(f"total save time = {save_time_stop - save_time_start}")
+            print(f"--> distributed checkpoint saved at {save_dir}")
 
-        return  # we break to avoid hitting default full state
+        return  

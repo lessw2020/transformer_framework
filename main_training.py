@@ -95,6 +95,7 @@ def fsdp_main():
         ), f"world size {world_size} is not equal to torch.cuda.device_count {torch.cuda.device_count()}"
         print(f"--> running with these defaults {cfg}")
         # time_of_run = get_date_of_run()
+        
 
     setup_tasks(rank, world_size, cfg)
 
@@ -113,10 +114,14 @@ def fsdp_main():
     if rank == 0:
         print(f"policy is {my_auto_wrap_policy}")
     dataset = config.get_dataset()
-
+    
+    if local_rank==0:
+        print(f"\n--> Prepping {cfg.model_name} model ...\n")
     model = config.build_model(cfg.model_name)
 
+
     if local_rank == 0:
+        print(f"--> {cfg.model_name} built.")
         num_params = (sum(p.numel() for p in model.parameters())) / 1e6
         print(f"built model with {num_params}M params")
 
@@ -180,7 +185,8 @@ def fsdp_main():
         cfg.load_model_checkpoint
         and cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT
     ):
-        model_checkpointing.load_model_checkpoint(model, rank, cfg)
+        model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
+    
 
     if local_rank == 0:
         init_time = time.perf_counter() - init_start
@@ -202,7 +208,7 @@ def fsdp_main():
     else:
         tracking_duration = None
 
-    # warmup, this is only used in the non-recusive ParamExecOrderPolicy
+    # warmup, this is only used in the non-recursive ParamExecOrderPolicy
     config.train(model, data_loader, None, None, memmax, local_rank, tracking_duration, 1)
     if local_rank == 0:
         print("Finish warm up")
@@ -239,14 +245,18 @@ def fsdp_main():
             config.train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
     else:
         config.train(model, data_loader, None, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
+        
         # checkpointing for model and optimizer
-        if (
-            cfg.save_model_checkpoint
-            and cfg.checkpoint_type == StateDictType.FULL_STATE_DICT
-        ):
-            model_checkpointing.save_model_checkpoint(
-                model, optimizer, rank, cfg, epoch=1
-            )
+        if cfg.save_model_checkpoint:
+            
+            if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
+
+                model_checkpointing.save_model_checkpoint(
+                    model, optimizer, rank, cfg, epoch=1
+                )
+            elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
+                model_checkpointing.save_distributed_model_checkpoint(model, rank, cfg)
+
 
         if cfg.save_optimizer:
             model_checkpointing.save_optimizer_checkpoint(
@@ -297,7 +307,6 @@ if __name__ == "__main__":
         import config.t5_config as config
     elif args.model == 'regnet':
         import config.regnet_config as config
-        
-    print(f"\n--> Prepping {args.model} model ...\n")
+
 
     fsdp_main()
