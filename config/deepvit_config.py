@@ -18,7 +18,7 @@ from .base_config import base_config
 class train_config(base_config):
 
     # model
-    model_name = "1B"
+    model_name = "500M"
 
     # available models - name is ~ num params
     # 60M

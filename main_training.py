@@ -297,5 +297,7 @@ if __name__ == "__main__":
         import config.t5_config as config
     elif args.model == 'regnet':
         import config.regnet_config as config
+        
+    print(f"\n--> Prepping {args.model} model ...\n")
 
     fsdp_main()
