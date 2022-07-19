@@ -18,7 +18,7 @@ class Timer:
             print(f"timer has not started...")
             return
 
-        current_timing = self.start_time - time.perf_counter()
+        current_timing = time.perf_counter() - self.start_time  
         print(f"timing for {name} = {round(current_timing,4)}")
 
     def stop(self,):
@@ -27,7 +27,7 @@ class Timer:
             return
         self.stop_time = time.perf_counter()
 
-        self.latest_time = round(self.start_time - self.stop_time,6)
+        self.latest_time = round(self.stop_time - self.start_time ,6)
         print(f"completion time = {self.latest_time}")
 
     def reset(self,):

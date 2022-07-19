@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 import torch
 import time
-import performance
+from performance import Timer
 
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
