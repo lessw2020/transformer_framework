@@ -1,17 +1,12 @@
-import functools
 import time
 import torch
 from dataclasses import dataclass
 from typing import Tuple
 
 from torch.utils.data import Dataset
-from torch.distributed.fsdp.wrap import (
-    always_wrap_policy,
-    transformer_auto_wrap_policy,
-)
 from torch.distributed.fsdp import StateDictType
 from vit_pytorch.deepvit import DeepViT, Residual
-from .base_config import base_config
+from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
 
 @dataclass
@@ -192,23 +187,11 @@ def get_dataset():
 
 
 def get_policy():
-    recursive_policy = functools.partial(
-        transformer_auto_wrap_policy,
-        transformer_layer_cls={
-            Residual,
-        },
-    )
-    return recursive_policy
-    # The ParamExecOrderPolicy that is in development
-    # from torch.distributed.fsdp.wrap import (
-    #     ParamExecOrderPolicy,
-    #     HandleInitMode,
-    # )
-    # return ParamExecOrderPolicy(
-    #     handle_init_mode=HandleInitMode.MODULE_LEVEL,
-    #     bucket_size=int(17000000 * 2 + 1),
-    #     module_level_group_policy=recursive_policy,
-    # )
+    return get_policy_base({Residual})
+
+
+def fsdp_checkpointing(model):
+    return fsdp_checkpointing_base(model, Residual)
 
 
 def train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, total_steps_to_run):

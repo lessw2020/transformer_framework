@@ -1,9 +1,17 @@
+import functools
 from dataclasses import dataclass
 
+from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
+    checkpoint_wrapper,
+    CheckpointImpl,
+    apply_activation_checkpointing_wrapper,
+)
 from torch.distributed.fsdp import (
     ShardingStrategy,
     BackwardPrefetch,
 )
+from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
+
 
 @dataclass
 class base_config:
@@ -27,6 +35,10 @@ class base_config:
     # backward prefetch
     backward_prefetch = BackwardPrefetch.BACKWARD_PRE
 
+    # disable forward_prefetch since it currently doesn't work with activation
+    # checkpointing for several cases
+    forward_prefetch = False
+
     # log
     log_every: int = 1
 
@@ -48,3 +60,37 @@ class base_config:
     memory_report: bool = True
     nccl_debug_handler: bool = True
     distributed_debug: bool = True
+
+
+def get_policy_base(blocks):
+    recursive_policy = functools.partial(
+        transformer_auto_wrap_policy,
+        transformer_layer_cls=blocks,
+    )
+    return recursive_policy
+    # The ParamExecOrderPolicy that is in development
+    # from torch.distributed.fsdp.wrap import (
+    #     always_wrap_policy,
+    #     ParamExecOrderPolicy,
+    #     HandleInitMode,
+    # )
+    # return ParamExecOrderPolicy(
+    #     handle_init_mode=HandleInitMode.MODULE_LEVEL,
+    #     bucket_size=int(17000000 * 2 + 1),
+    #     module_level_group_policy=recursive_policy,
+    # )
+
+
+def fsdp_checkpointing_base(model, blocks):
+    """apply activation checkpointing to model
+    returns None as model is updated directly
+    """
+    non_reentrant_wrapper = functools.partial(
+        checkpoint_wrapper,
+        offload_to_cpu=False,
+        checkpoint_impl=CheckpointImpl.NO_REENTRANT,
+    )
+    check_fn = lambda submodule: isinstance(submodule, blocks)
+    apply_activation_checkpointing_wrapper(
+        model, checkpoint_wrapper_fn=non_reentrant_wrapper, check_fn=check_fn
+    )

@@ -1,18 +1,13 @@
-import functools
 import time
 import tqdm
 import torch
 from dataclasses import dataclass
 
 from torch.distributed.fsdp import StateDictType
-from torch.distributed.fsdp.wrap import (
-    always_wrap_policy,
-    transformer_auto_wrap_policy,
-)
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from transformers.models.t5.modeling_t5 import T5Block
 import datasets_grammar as dg
-from .base_config import base_config
+from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
 
 @dataclass
@@ -65,23 +60,11 @@ def get_dataset():
 
 
 def get_policy():
-    recursive_policy = functools.partial(
-        transformer_auto_wrap_policy,
-        transformer_layer_cls={
-            T5Block,
-        },
-    )
-    return recursive_policy
-    # The ParamExecOrderPolicy that is in development
-    # from torch.distributed.fsdp.wrap import (
-    #     ParamExecOrderPolicy,
-    #     HandleInitMode,
-    # )
-    # return ParamExecOrderPolicy(
-    #     handle_init_mode=HandleInitMode.MODULE_LEVEL,
-    #     bucket_size=20000000 * 4 + 1,
-    #     module_level_group_policy=recursive_policy,
-    # )
+    return get_policy_base({T5Block})
+
+
+def fsdp_checkpointing(model):
+    return fsdp_checkpointing_base(model, T5Block)
 
 
 def train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, total_steps_to_run):
