@@ -167,14 +167,16 @@ def fsdp_main():
         backward_prefetch=prefetch_policy,
         sharding_strategy=cfg.sharding_strategy,
         device_id=torch.cuda.current_device(),
-        forward_prefetch=True,
+        forward_prefetch=cfg.forward_prefetch,
     )
 
-    """if cfg.fsdp_activation_checkpointing:
-        policies.fsdp_checkpointing(model)l
+    if cfg.fsdp_activation_checkpointing:
+        config.fsdp_checkpointing(model)
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
-    """
+    if local_rank == 0:
+        print(model)
+
     # postload checkpoint if desired
     if (
         cfg.load_model_checkpoint
