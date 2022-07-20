@@ -46,7 +46,10 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # policies
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
+    # this is only for fp32 scenario...
+    use_tf32: bool = False
+
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True

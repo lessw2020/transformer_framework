@@ -148,6 +148,12 @@ def fsdp_main():
         if local_rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
 
+    # if not using mixed precision, turn on TF32 for matmul?
+    if not cfg.use_mixed_precision and cfg.use_tf32:
+        torch.backends.cuda.matmul.allow_tf32 = True
+        if rank==0:
+            print(f"--> TF32 support for matmul enabled. ")       
+
     if local_rank == 0:
         init_start = time.perf_counter()
 
@@ -179,7 +185,9 @@ def fsdp_main():
         config.fsdp_checkpointing(model)
         if local_rank==0:
             print(f"--> FSDP activation checkpointing in use")
-    if local_rank == 0:
+    
+    # print sharding plan? 
+    if local_rank == 0 and cfg.print_sharding_plan:
         print(model)
 
     # postload checkpoint if desired
