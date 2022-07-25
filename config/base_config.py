@@ -30,7 +30,7 @@ class base_config:
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
 
-    run_profiler: bool = True
+    run_profiler: bool = False
     profile_folder: str = "fsdp/profile_tracing"
 
     # backward prefetch
