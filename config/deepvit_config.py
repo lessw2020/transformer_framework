@@ -13,7 +13,7 @@ from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 class train_config(base_config):
 
     # model
-    model_name = "500M"
+    model_name = "60M"
 
     # available models - name is ~ num params
     # 60M
@@ -26,11 +26,13 @@ class train_config(base_config):
     # 3B
     # 8B
 
+    # mixed precision
+    use_mixed_precision: bool = True
     # checkpoint models
-    save_model_checkpoint: bool = True
-    load_model_checkpoint: bool = True
+    save_model_checkpoint: bool = False
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.FULL_STATE_DICT
-    dist_checkpoint_root_folder="distributed_checkpoints"
+    dist_checkpoint_root_folder = "distributed_checkpoints"
     dist_checkpoint_folder = "DeepVit_local_checkpoint"
     model_save_name = "deepvit-"
     checkpoint_folder = "training_checkpoints"
@@ -194,7 +196,16 @@ def fsdp_checkpointing(model):
     return fsdp_checkpointing_base(model, Residual)
 
 
-def train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, total_steps_to_run):
+def train(
+    model,
+    data_loader,
+    torch_profiler,
+    optimizer,
+    memmax,
+    local_rank,
+    tracking_duration,
+    total_steps_to_run,
+):
     cfg = train_config()
     loss_function = torch.nn.CrossEntropyLoss()
     t0 = time.perf_counter()

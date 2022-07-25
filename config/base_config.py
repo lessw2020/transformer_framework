@@ -23,21 +23,22 @@ class base_config:
     total_steps_to_run: int = 5
 
     # training
-    batch_size_training: int = 15
+    batch_size_training: int = 70
     num_epochs: int = 1
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     print_sharding_plan: bool = False
 
-    run_profiler: bool = False
+    run_profiler: bool = True
+    profile_folder: str = "fsdp/profile_tracing"
 
     # backward prefetch
     backward_prefetch = BackwardPrefetch.BACKWARD_PRE
 
     # disable forward_prefetch since it currently doesn't work with activation
     # checkpointing for several cases
-    forward_prefetch = False
+    forward_prefetch = True
 
     # log
     log_every: int = 1
@@ -46,10 +47,9 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # policies
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
     # this is only for fp32 scenario...
     use_tf32: bool = False
-
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True
