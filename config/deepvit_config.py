@@ -27,8 +27,8 @@ class train_config(base_config):
     # 8B
 
     # checkpoint models
-    save_model_checkpoint: bool = True
-    load_model_checkpoint: bool = True
+    save_model_checkpoint: bool = False
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.FULL_STATE_DICT
     dist_checkpoint_root_folder="distributed_checkpoints"
     dist_checkpoint_folder = "DeepVit_local_checkpoint"

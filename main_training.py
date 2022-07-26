@@ -29,8 +29,8 @@ colorama.init(autoreset=True)  # reset after every line
 import performance
 
 
-def print_model(model, file_name, local_rank):
-    if local_rank != 0:
+def print_model(model, file_name, rank):
+    if rank != 0:
         return
 
     fn = file_name
@@ -90,12 +90,10 @@ def fsdp_main():
 
     if rank == 0:
         print(f"--> World Size = {world_size}\n")
-        assert (
-            torch.cuda.device_count() == world_size
-        ), f"world size {world_size} is not equal to torch.cuda.device_count {torch.cuda.device_count()}"
+        print(f"--> Device_count = {torch.cuda.device_count()}")
         print(f"--> running with these defaults {cfg}")
         # time_of_run = get_date_of_run()
-        
+
 
     setup_tasks(rank, world_size, cfg)
 
@@ -103,7 +101,7 @@ def fsdp_main():
         torch.cuda.set_device(local_rank)
 
     # setup memory tracking for perf
-    if rank == 0:
+    if local_rank == 0:
         memmax = performance.Memory_Maximizer()
     else:
         memmax = None
@@ -114,14 +112,12 @@ def fsdp_main():
     if rank == 0:
         print(f"policy is {my_auto_wrap_policy}")
     dataset = config.get_dataset()
-    
+
     if local_rank==0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
     model = config.build_model(cfg.model_name)
 
-
-    if local_rank == 0:
-        print(f"--> {cfg.model_name} built.")
+    if rank == 0:
         num_params = (sum(p.numel() for p in model.parameters())) / 1e6
         print(f"built model with {num_params}M params")
 
@@ -142,17 +138,17 @@ def fsdp_main():
         if rank == 0:
             print(f"bf16 check passed")
         mp_policy = bfSixteen  # set to None to run with fp32
-        if local_rank == 0:
+        if rank == 0:
             print(f"\n--> Running with bfloat16 mixed precision\n")
     else:
-        if local_rank == 0:
+        if rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
 
     # if not using mixed precision, turn on TF32 for matmul?
     if not cfg.use_mixed_precision and cfg.use_tf32:
         torch.backends.cuda.matmul.allow_tf32 = True
-        if rank==0:
-            print(f"--> TF32 support for matmul enabled. ")       
+        if rank == 0:
+            print(f"--> TF32 support for matmul enabled. ")
 
     if local_rank == 0:
         init_start = time.perf_counter()
@@ -183,11 +179,11 @@ def fsdp_main():
 
     if cfg.fsdp_activation_checkpointing:
         config.fsdp_checkpointing(model)
-        if local_rank==0:
+        if rank==0:
             print(f"--> FSDP activation checkpointing in use")
-    
-    # print sharding plan? 
-    if local_rank == 0 and cfg.print_sharding_plan:
+
+    # print sharding plan?
+    if rank == 0 and cfg.print_sharding_plan:
         print(model)
 
     # postload checkpoint if desired
@@ -196,7 +192,7 @@ def fsdp_main():
         and cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT
     ):
         model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
-    
+
 
     if local_rank == 0:
         init_time = time.perf_counter() - init_start
@@ -220,7 +216,7 @@ def fsdp_main():
 
     # warmup, this is only used in the non-recursive ParamExecOrderPolicy
     config.train(model, data_loader, None, None, memmax, local_rank, tracking_duration, 1)
-    if local_rank == 0:
+    if rank == 0:
         print("Finish warm up")
     model.zero_grad()
 
@@ -229,7 +225,7 @@ def fsdp_main():
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    if local_rank == 0:
+    if rank == 0:
         print(f"==> optimizer = Adam\n")
 
     # load optimizer checkpoint
@@ -255,10 +251,9 @@ def fsdp_main():
             config.train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
     else:
         config.train(model, data_loader, None, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
-        
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
-            
+
             if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
 
                 model_checkpointing.save_model_checkpoint(
@@ -317,6 +312,5 @@ if __name__ == "__main__":
         import config.t5_config as config
     elif args.model == 'regnet':
         import config.regnet_config as config
-
 
     fsdp_main()
