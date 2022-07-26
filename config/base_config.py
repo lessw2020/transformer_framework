@@ -30,10 +30,11 @@ class base_config:
     print_sharding_plan: bool = False
 
     run_profiler: bool = False
+    profile_folder: str = "fsdp/profile_tracing"
 
     # disable forward_prefetch since it currently doesn't work with activation
     # checkpointing for several cases
-    forward_prefetch = False
+    forward_prefetch = True
 
     # log
     log_every: int = 1
@@ -45,7 +46,6 @@ class base_config:
     use_mixed_precision: bool = True
     # this is only for fp32 scenario...
     use_tf32: bool = False
-
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True

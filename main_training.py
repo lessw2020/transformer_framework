@@ -94,7 +94,6 @@ def fsdp_main():
         print(f"--> running with these defaults {cfg}")
         # time_of_run = get_date_of_run()
 
-
     setup_tasks(rank, world_size, cfg)
 
     if torch.distributed.is_initialized():
@@ -113,11 +112,12 @@ def fsdp_main():
         print(f"policy is {my_auto_wrap_policy}")
     dataset = config.get_dataset()
 
-    if local_rank==0:
+    if local_rank == 0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
     model = config.build_model(cfg.model_name)
 
-    if rank == 0:
+    if local_rank == 0:
+        print(f"--> {cfg.model_name} built.")
         num_params = (sum(p.numel() for p in model.parameters())) / 1e6
         print(f"built model with {num_params}M params")
 
@@ -137,9 +137,8 @@ def fsdp_main():
     if cfg.use_mixed_precision and bf16_ready:
         if rank == 0:
             print(f"bf16 check passed")
-        mp_policy = bfSixteen  # set to None to run with fp32
-        if rank == 0:
             print(f"\n--> Running with bfloat16 mixed precision\n")
+        mp_policy = bfSixteen  # set to None to run with fp32
     else:
         if rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
@@ -175,11 +174,12 @@ def fsdp_main():
         sharding_strategy=cfg.sharding_strategy,
         device_id=torch.cuda.current_device(),
         forward_prefetch=cfg.forward_prefetch,
+        # run_with_synch=True,
     )
 
     if cfg.fsdp_activation_checkpointing:
         config.fsdp_checkpointing(model)
-        if rank==0:
+        if rank == 0:
             print(f"--> FSDP activation checkpointing in use")
 
     # print sharding plan?
@@ -192,7 +192,6 @@ def fsdp_main():
         and cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT
     ):
         model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
-
 
     if local_rank == 0:
         init_time = time.perf_counter() - init_start
@@ -215,7 +214,9 @@ def fsdp_main():
         tracking_duration = None
 
     # warmup, this is only used in the non-recursive ParamExecOrderPolicy
-    config.train(model, data_loader, None, None, memmax, local_rank, tracking_duration, 1)
+    config.train(
+        model, data_loader, None, None, memmax, local_rank, tracking_duration, 1
+    )
     if rank == 0:
         print("Finish warm up")
     model.zero_grad()
@@ -232,25 +233,42 @@ def fsdp_main():
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
 
-
     torch_profiler = None
-    if cfg.run_profiler:
+    if cfg.run_profiler and rank == 0:
+        print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
+
         with torch.profiler.profile(
             activities=[
                 torch.profiler.ProfilerActivity.CPU,
                 torch.profiler.ProfilerActivity.CUDA,
             ],
             schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
-            on_trace_ready=torch.profiler.tensorboard_trace_handler(
-                "fsdp_a100/profile_traces"
-            ),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(cfg.profile_folder),
             profile_memory=True,
             with_stack=False,
             record_shapes=True,
         ) as torch_profiler:
-            config.train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
+            config.train(
+                model,
+                data_loader,
+                torch_profiler,
+                optimizer,
+                memmax,
+                local_rank,
+                tracking_duration,
+                cfg.total_steps_to_run,
+            )
     else:
-        config.train(model, data_loader, None, optimizer, memmax, local_rank, tracking_duration, cfg.total_steps_to_run)
+        config.train(
+            model,
+            data_loader,
+            None,
+            optimizer,
+            memmax,
+            local_rank,
+            tracking_duration,
+            cfg.total_steps_to_run,
+        )
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
 
@@ -261,7 +279,6 @@ def fsdp_main():
                 )
             elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
                 model_checkpointing.save_distributed_model_checkpoint(model, rank, cfg)
-
 
         if cfg.save_optimizer:
             model_checkpointing.save_optimizer_checkpoint(
@@ -282,9 +299,7 @@ def fsdp_main():
             + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
         )
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
-        print(
-            f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
-        )
+        print(f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}")
 
     cleanup()
 
@@ -292,12 +307,11 @@ def fsdp_main():
 def parse_args():
     parser = argparse.ArgumentParser(description="PyTorch experiments with FSDP")
     parser.add_argument(
-        '--model',
+        "--model",
         default="deepvit",
-        metavar='string',
-        choices=['deepvit', 't5', 'regnet'],
-        help=
-        'choose model to run, available: `deepvit`, `t5`, `regnet` (default: deepvit)'
+        metavar="string",
+        choices=["deepvit", "t5", "regnet"],
+        help="choose model to run, available: `deepvit`, `t5`, `regnet` (default: deepvit)",
     )
     args = parser.parse_args()
     return args
@@ -305,12 +319,12 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    assert args.model in ['deepvit', 't5', 'regnet']
-    if args.model == 'deepvit':
+    assert args.model in ["deepvit", "t5", "regnet"]
+    if args.model == "deepvit":
         import config.deepvit_config as config
-    elif args.model == 't5':
+    elif args.model == "t5":
         import config.t5_config as config
-    elif args.model == 'regnet':
+    elif args.model == "regnet":
         import config.regnet_config as config
 
     fsdp_main()

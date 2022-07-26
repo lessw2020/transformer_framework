@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# profile traces
+fsdp/
+
 # model files
 *.pt
 dist_checkpoint
