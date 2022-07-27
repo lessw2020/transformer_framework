@@ -48,8 +48,13 @@ class train_config(base_config):
     dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
+    use_real_data = False
+
 
 def build_model(model_name: str):
+    cfg = train_config()
+    if cfg.use_real_data:
+        return AutoModelForSeq2SeqLM.from_pretrained(model_name)
     if model_name == "google/t5-v1_1-small":
         configure = T5Config(
             d_ff=1024,
@@ -182,6 +187,12 @@ class GeneratedDataset(Dataset):
 
 
 def get_dataset():
+    cfg = train_config()
+    if cfg.use_real_data:
+        train_name = cfg.dataset_train
+        tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer, model_max_length=512)
+        train_dataset = dg.get_dataset(tokenizer, train_name, 512, 512, True)
+        return train_dataset
     return GeneratedDataset()
 
 
