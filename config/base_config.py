@@ -34,11 +34,11 @@ class base_config:
     profile_folder: str = "fsdp/profile_tracing"
 
     # backward prefetch
-    backward_prefetch = BackwardPrefetch.BACKWARD_PRE
+    backward_prefetch = None  # BackwardPrefetch.BACKWARD_PRE
 
     # disable forward_prefetch since it currently doesn't work with activation
     # checkpointing for several cases
-    forward_prefetch = True
+    forward_prefetch = False
 
     # log
     log_every: int = 1
@@ -55,7 +55,7 @@ class base_config:
     fsdp_activation_checkpointing: bool = True
 
     # validation
-    run_validation: bool = False
+    run_validation: bool = True
     val_batch_size = 4
 
     # logging

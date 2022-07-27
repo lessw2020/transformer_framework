@@ -30,6 +30,9 @@ class train_config(base_config):
     use_mixed_precision: bool = True
     # checkpoint models
     save_model_checkpoint: bool = False
+    # only for local dist
+    single_file_per_rank = True
+
     load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.FULL_STATE_DICT
     dist_checkpoint_root_folder = "distributed_checkpoints"

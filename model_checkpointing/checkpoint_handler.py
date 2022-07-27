@@ -46,7 +46,7 @@ def save_model_checkpoint(
     if not cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
         print(f" unable to handle checkpoint type {cfg.checkpoint_type}, aborting")
 
-    if rank==0:
+    if rank == 0:
         save_timer = Timer()
         save_timer.start()
     with FSDP.state_dict_type(
@@ -56,7 +56,7 @@ def save_model_checkpoint(
 
     if cfg.verbose:
         print(f"saving process: rank {rank}  done w model state_dict\n")
-    if rank==0:
+    if rank == 0:
         save_timer.interval(name="full state ranks accumulation")
 
     if rank == 0:
@@ -173,12 +173,18 @@ def load_distributed_model_checkpoint(model, rank, cfg):
 
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         print(f"loading distributed checkpoint, rank {rank}...")
-        folder_name = cfg.dist_checkpoint_root_folder+"/"+cfg.dist_checkpoint_folder+"-"+cfg.model_name
+        folder_name = (
+            cfg.dist_checkpoint_root_folder
+            + "/"
+            + cfg.dist_checkpoint_folder
+            + "-"
+            + cfg.model_name
+        )
 
         checkdir = Path.cwd() / folder_name
 
         if not checkdir.exists():
-            if rank==0:
+            if rank == 0:
                 print(f"No checkpoint directory found...skipping")
             return
 
@@ -194,15 +200,13 @@ def load_distributed_model_checkpoint(model, rank, cfg):
         ):
             state_dict = model.state_dict()
             load_state_dict(state_dict, reader)
-            if rank==0:
+            if rank == 0:
                 load_timer.interval(name="load of state dict ")
             model.load_state_dict(state_dict)
 
         print(f"--> local state loaded on rank {rank}")
         if rank == 0:
             load_timer.stop()
-
-            
 
         return
 
@@ -218,18 +222,29 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
     # confirm type of checkpoint and save
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         # create writer to current path
-        #folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
-        folder_name = cfg.dist_checkpoint_root_folder+"/"+cfg.dist_checkpoint_folder+"-"+cfg.model_name
+        # folder_name = cfg.dist_checkpoint_folder+"-"+cfg.model_name
+        folder_name = (
+            cfg.dist_checkpoint_root_folder
+            + "/"
+            + cfg.dist_checkpoint_folder
+            + "-"
+            + cfg.model_name
+        )
         save_dir = Path.cwd() / folder_name
 
-        writer = FileSystemWriter(save_dir)
+        writer = FileSystemWriter(
+            save_dir,
+            single_file_per_rank=cfg.single_file_per_rank,
+            # per_thread_copy_ahead=5000000,
+            thread_count=2,
+        )
 
         with FSDP.state_dict_type(
             model,
             StateDictType.LOCAL_STATE_DICT,
         ):
             state_dict = model.state_dict()
-        if rank==0:
+        if rank == 0:
             save_timer.interval(name="local state dict accum completed ")
 
         # write out distributed checkpoint
@@ -239,4 +254,4 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
             save_timer.stop()
             print(f"--> distributed checkpoint saved at {save_dir}")
 
-        return  
+        return

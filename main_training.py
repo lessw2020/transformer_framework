@@ -224,6 +224,7 @@ def fsdp_main():
     model.zero_grad()
 
     # optimizer ----------
+    
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
     )
