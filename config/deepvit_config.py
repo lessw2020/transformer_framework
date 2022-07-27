@@ -234,10 +234,9 @@ def train(
         if (
             batch_index % cfg.log_every == 0
             and torch.distributed.get_rank() == 0
-            and batch_index > 1
         ):
             print(
-                f"step: {batch_index-1}: time taken for the last {cfg.log_every} steps is {mini_batch_time}, loss is {loss}"
+                f"step: {batch_index}: time taken for the last {cfg.log_every} steps is {mini_batch_time}, loss is {loss}"
             )
 
         # reset timer
