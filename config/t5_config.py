@@ -15,7 +15,7 @@ from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 class train_config(base_config):
 
     # model
-    model_name = "google/t5-v1_1-small"
+    model_name = "google/t5-v1_1-large"
     # available models
     # t5-base
     # google/t5-v1_1-small
@@ -24,7 +24,7 @@ class train_config(base_config):
     # google/t5-v1_1-xl  #2b
     # google/t5-v1_1-xxl #8b
     # t5-11b
-    tokenizer = "t5-small"
+    tokenizer = "t5-large"
 
     # checkpoint models
     save_model_checkpoint: bool = False
@@ -36,6 +36,9 @@ class train_config(base_config):
         2  # number of 'best' checkpoints to save based on val loss
     )
 
+    # use bfloat_optimizer
+    use_bfloat_optimizer: bool = True
+    
     # optimizers load and save
     save_optimizer: bool = False
     load_optimizer: bool = False
@@ -204,7 +207,16 @@ def fsdp_checkpointing(model):
     return fsdp_checkpointing_base(model, T5Block)
 
 
-def train(model, data_loader, torch_profiler, optimizer, memmax, local_rank, tracking_duration, total_steps_to_run):
+def train(
+    model,
+    data_loader,
+    torch_profiler,
+    optimizer,
+    memmax,
+    local_rank,
+    tracking_duration,
+    total_steps_to_run,
+):
     cfg = train_config()
     model.train()
     if local_rank == 0:
