@@ -23,7 +23,6 @@ class base_config:
     total_steps_to_run: int = 5
 
     # training
-    batch_size_training: int = 70
     num_epochs: int = 1
 
     # sharding policy
@@ -32,9 +31,6 @@ class base_config:
 
     run_profiler: bool = False
     profile_folder: str = "fsdp/profile_tracing"
-
-    # backward prefetch
-    backward_prefetch = None  # BackwardPrefetch.BACKWARD_PRE
 
     # disable forward_prefetch since it currently doesn't work with activation
     # checkpointing for several cases
@@ -64,24 +60,35 @@ class base_config:
     nccl_debug_handler: bool = True
     distributed_debug: bool = True
 
+    batch_size_training: int = 15
+
+    # use_non_recursive_wrapping: bool = True
+    # backward_prefetch = None
+
+    use_non_recursive_wrapping: bool = False
+    backward_prefetch = None  # BackwardPrefetch.BACKWARD_PRE
+
 
 def get_policy_base(blocks):
+    cfg = base_config()
     recursive_policy = functools.partial(
         transformer_auto_wrap_policy,
         transformer_layer_cls=blocks,
     )
-    return recursive_policy
-    # The ParamExecOrderPolicy that is in development
-    # from torch.distributed.fsdp.wrap import (
-    #     always_wrap_policy,
-    #     ParamExecOrderPolicy,
-    #     HandleInitMode,
-    # )
-    # return ParamExecOrderPolicy(
-    #     handle_init_mode=HandleInitMode.MODULE_LEVEL,
-    #     bucket_size=int(17000000 * 2 + 1),
-    #     module_level_group_policy=recursive_policy,
-    # )
+    if not cfg.use_non_recursive_wrapping:
+        return recursive_policy
+    else:
+        # The ParamExecOrderPolicy that is in development
+        from torch.distributed.fsdp.wrap import (
+            always_wrap_policy,
+            ParamExecOrderPolicy,
+            HandleInitMode,
+        )
+        return ParamExecOrderPolicy(
+            handle_init_mode=HandleInitMode.MODULE_LEVEL,
+            bucket_size=int(17000000 * 5 + 1),
+            module_level_group_policy=always_wrap_policy,
+        )
 
 
 def fsdp_checkpointing_base(model, blocks):

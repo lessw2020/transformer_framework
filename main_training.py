@@ -29,8 +29,8 @@ colorama.init(autoreset=True)  # reset after every line
 import performance
 
 
-def print_model(model, file_name, local_rank):
-    if local_rank != 0:
+def print_model(model, file_name, rank):
+    if rank != 0:
         return
 
     fn = file_name
@@ -90,9 +90,7 @@ def fsdp_main():
 
     if rank == 0:
         print(f"--> World Size = {world_size}\n")
-        assert (
-            torch.cuda.device_count() == world_size
-        ), f"world size {world_size} is not equal to torch.cuda.device_count {torch.cuda.device_count()}"
+        print(f"--> Device_count = {torch.cuda.device_count()}")
         print(f"--> running with these defaults {cfg}")
         # time_of_run = get_date_of_run()
 
@@ -102,7 +100,7 @@ def fsdp_main():
         torch.cuda.set_device(local_rank)
 
     # setup memory tracking for perf
-    if rank == 0:
+    if local_rank == 0:
         memmax = performance.Memory_Maximizer()
     else:
         memmax = None
@@ -142,7 +140,7 @@ def fsdp_main():
             print(f"\n--> Running with bfloat16 mixed precision\n")
         mp_policy = bfSixteen  # set to None to run with fp32
     else:
-        if local_rank == 0:
+        if rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
 
     # if not using mixed precision, turn on TF32 for matmul?
@@ -181,11 +179,11 @@ def fsdp_main():
 
     if cfg.fsdp_activation_checkpointing:
         config.fsdp_checkpointing(model)
-        if local_rank == 0:
+        if rank == 0:
             print(f"--> FSDP activation checkpointing in use")
 
     # print sharding plan?
-    if local_rank == 0 and cfg.print_sharding_plan:
+    if rank == 0 and cfg.print_sharding_plan:
         print(model)
 
     # postload checkpoint if desired
@@ -219,7 +217,7 @@ def fsdp_main():
     config.train(
         model, data_loader, None, None, memmax, local_rank, tracking_duration, 1
     )
-    if local_rank == 0:
+    if rank == 0:
         print("Finish warm up")
     model.zero_grad()
 
@@ -229,7 +227,7 @@ def fsdp_main():
         model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
     )
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    if local_rank == 0:
+    if rank == 0:
         print(f"==> optimizer = Adam\n")
 
     # load optimizer checkpoint
@@ -272,7 +270,6 @@ def fsdp_main():
             tracking_duration,
             cfg.total_steps_to_run,
         )
-
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
 
