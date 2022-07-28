@@ -9,10 +9,21 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     apply_activation_checkpointing_wrapper,
 )
 from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
     ShardingStrategy,
     BackwardPrefetch,
+    MixedPrecision
 )
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
+
+bf16_policy = MixedPrecision(
+        # Param precision
+        param_dtype=torch.bfloat16,
+        # Gradient communication precision.
+        reduce_dtype=torch.bfloat16,
+        # Buffer precision.
+        buffer_dtype=torch.bfloat16,
+    )
 
 ## FSDP Settings
 
@@ -31,11 +42,15 @@ class fsdp_config:
     fsdp_activation_checkpointing: bool = True
       
     use_mixed_precision: bool = True
+    mixed_precision_policy: MixedPrecision = bf16_policy
     # this is only for fp32 scenario...
     use_tf32: bool = False
       
 
 ## FSDP core functions -------------------
+
+def init_fsdp(model):
+    model = FSDP
       
 def fsdp_apply_checkpointing(model, blocks):
     """apply activation checkpointing to model
