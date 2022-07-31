@@ -27,16 +27,7 @@ bf16_policy = MixedPrecision(
 
 ## FSDP Settings
 
-@dataclass
-class fsdp_config:
-   # disable forward_prefetch since it currently doesn't work with activation
-   # checkpointing for several cases
-  forward_prefetch = False
-    
-  backward_prefetch = None  # BackwardPrefetch.BACKWARD_PRE
-  
-  # sharding policy
-  sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
+
     
   # activation checkpointing
     fsdp_activation_checkpointing: bool = True
