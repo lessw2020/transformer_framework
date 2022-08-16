@@ -33,14 +33,21 @@ class train_config(base_config):
     # optimizers load and save
     save_optimizer: bool = False
     load_optimizer: bool = False
-    optimizer_name: str = "Adam"
+    
     optimizer_checkpoint_file: str = "Adam-regnet--1.pt"
 
     checkpoint_model_filename: str = "regnet--1.pt"
 
 
 def build_model(model_name: str):
-    if model_name == "3B":
+    if model_name == "1B":
+        config = RegNetConfig(
+            num_labels=1000,
+            depths=[2, 7, 17, 1],
+            hidden_sizes=[1010, 2020, 3333, 1414],
+            groups_width=1010,
+        )
+    elif model_name == "3B":
         config = RegNetConfig(
             num_labels=1000,
             depths=[2, 7, 17, 1],

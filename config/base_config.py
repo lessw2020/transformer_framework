@@ -11,7 +11,7 @@ from torch.distributed.fsdp import (
     BackwardPrefetch,
 )
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
-
+import torch
 
 @dataclass
 class base_config:
@@ -24,6 +24,21 @@ class base_config:
 
     # training
     num_epochs: int = 1
+
+    model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
+
+    # policies
+    use_mixed_precision: bool = True
+    use_low_precision_gradient_policy: bool = False
+    # this is only for fp32 scenario...
+    use_tf32: bool = False
+    
+    # optimizer config
+    optimizer:str = 'AdamW'   # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
+
+    bff_optimizer_dtype = torch.bfloat16  # momentum and variance
+    bff_optimizer_use_kahan_summation: bool = False  
+
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -42,10 +57,7 @@ class base_config:
     # dataloaders
     num_workers_dataloader: int = 2
 
-    # policies
-    use_mixed_precision: bool = True
-    # this is only for fp32 scenario...
-    use_tf32: bool = False
+    
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True

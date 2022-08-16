@@ -24,6 +24,7 @@ import environment
 bf16_ready = environment.verify_bfloat_support
 
 
+
 colorama.init(autoreset=True)  # reset after every line
 
 import performance
@@ -130,15 +131,29 @@ def fsdp_main():
         reduce_dtype=torch.bfloat16,
         # Buffer precision.
         buffer_dtype=torch.bfloat16,
+
+    )
+
+    bfSixteen_cast_gradients = MixedPrecision(
+        param_dtype = torch.bfloat16,
+        reduce_dtype = torch.bfloat16,
+        buffer_dtype = torch.bfloat16,
+        keep_casted_gradients = True
     )
 
     mp_policy = None
 
     if cfg.use_mixed_precision and bf16_ready:
-        if rank == 0:
-            print(f"bf16 check passed")
-            print(f"\n--> Running with bfloat16 mixed precision\n")
-        mp_policy = bfSixteen  # set to None to run with fp32
+        if cfg.use_low_precision_gradient_policy==False:
+            mp_policy = bfSixteen  # set to None to run with fp32
+            if rank == 0:
+                print(f"bf16 check passed")
+                print(f"\n--> Running with bfloat16 mixed precision and FP32 gradients\n")
+        else:
+            mp_policy = bfSixteen_cast_gradients
+            if rank == 0:
+                print(f"bf16 check passed")
+                print(f"\n--> Running with bfloat16 mixed precision and ** CAST ** gradients\n")
     else:
         if rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
@@ -164,6 +179,13 @@ def fsdp_main():
         print(f"backward prefetch set to {prefetch_policy}")
         print(f"sharding set to {cfg.sharding_strategy}")
         print(f"--> Batch Size = {cfg.batch_size_training}")
+
+    # model weights to BF16?
+    if cfg.model_weights_bf16:
+        model = model.to(torch.bfloat16)
+        mp_policy = None
+        if rank == 0:
+            print(f"--> Model converted to BF16.\nRunning in ** PURE ** BFloat mode")
 
     # ----- main FSDP init -----------
     model = FSDP(
@@ -222,14 +244,33 @@ def fsdp_main():
     model.zero_grad()
 
     # optimizer ----------
-    
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=1e-3, weight_decay=0, amsgrad=True
-    )
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    if rank == 0:
-        print(f"==> optimizer = Adam\n")
+    optimizer = None 
+    lr = 8e-4
+    weight_decay = 0.0
 
+    if cfg.optimizer=='int8':
+        import bitsandbytes as bnb  
+        optimizer = bnb.optim.Adam8bit(model.parameters(), lr=lr, weight_decay=weight_decay, amsgrad=False)
+        if rank==0:
+            print(f"Running with 8 bit optimizer")
+    
+    elif cfg.optimizer=='BFF_AdamW':
+        import optimizers   
+        optimizer = BFF_AdamW(model.parameters(), lr= lr, weight_decay = weight_decay, 
+        momentum_dtype= cfg.bff_optimizer_dtypes, variance_dtype = cfg.bff_optimizer_dtypes,
+        use_kahan_summation = cfg.use_kahan_summation)
+        if rank==0:
+            print(f"Running with BFF Optimizer, kahan summation = {cfg.use_kahan_summation}")
+
+    else:
+        optimizer = torch.optim.AdamW(
+            model.parameters(), lr=lr, weight_decay=weight_decay, amsgrad=False
+        )
+        if rank==0:
+            print(f"Running with AdamW optimizer")
+    
+    # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    
     # load optimizer checkpoint
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)

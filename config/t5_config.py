@@ -36,13 +36,12 @@ class train_config(base_config):
         2  # number of 'best' checkpoints to save based on val loss
     )
 
-    # use bfloat_optimizer
-    use_bfloat_optimizer: bool = True
+
     
     # optimizers load and save
     save_optimizer: bool = False
     load_optimizer: bool = False
-    optimizer_name: str = "Adam"
+    
     optimizer_checkpoint_file: str = "Adam-t5--1.pt"
 
     checkpoint_model_filename: str = "t5--1.pt"

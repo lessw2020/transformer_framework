@@ -15,7 +15,7 @@ class train_config(base_config):
     # model
     model_name = "60M"
 
-    # available models - name is ~ num params
+    # available models -name is ~ num params
     # 60M
     # 500M
     # 750M
@@ -46,7 +46,7 @@ class train_config(base_config):
     # optimizers load and save
     save_optimizer: bool = False
     load_optimizer: bool = False
-    optimizer_name: str = "Adam"
+    
     optimizer_checkpoint_file: str = "Adam-deepvit--1.pt"
 
     checkpoint_model_filename: str = "deepvit--1.pt"
