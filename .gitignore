@@ -6,6 +6,9 @@ __pycache__/
 # profile traces
 fsdp/
 
+# datasets - vision ones are too large
+datasets_vision
+
 # model files
 *.pt
 dist_checkpoint

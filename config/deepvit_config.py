@@ -22,7 +22,7 @@ NUM_CLASSES = 10
 class train_config(base_config):
 
     # model
-    model_name = "60M"
+    model_name = "500M"
 
     # available models -name is ~ num params
     # 60M
@@ -36,9 +36,9 @@ class train_config(base_config):
     # 8B
 
     # use synthetic data
-    use_synthetic_data: bool = True
-    train_data_path = ""
-    val_data_path = ""
+    use_synthetic_data: bool = False
+    train_data_path = "datasets_vision/imagenette320/train" 
+    val_data_path = "datasets_vision/imagenette320/val"
 
     # mixed precision
     use_mixed_precision: bool = True
@@ -74,8 +74,20 @@ def build_model(model_size: str):
             "patch_size": 32,
             "num_classes": NUM_CLASSES,
             "dim": 1024,
-            "depth": 1,
-            "heads": 1,
+            "depth": 10,
+            "heads": 8,
+            "mlp_dim": 2048,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+        }
+    if model_size == "120M":
+        model_args = {
+            "image_size": 256,
+            "patch_size": 32,
+            "num_classes": NUM_CLASSES,
+            "dim": 1024,
+            "depth": 2,
+            "heads": 2,
             "mlp_dim": 2048,
             "dropout": 0.1,
             "emb_dropout": 0.1,
@@ -279,7 +291,7 @@ def train(
         t0 = time.perf_counter()
         if torch_profiler is not None:
             torch_profiler.step()
-        if batch_index > total_steps_to_run:
+        if total_steps_to_run is not None and batch_index > total_steps_to_run:
             break
 
 def validation(model, local_rank, rank, val_loader, world_size):
@@ -314,6 +326,6 @@ def validation(model, local_rank, rank, val_loader, world_size):
     epoch_val_loss, epoch_val_accuracy = metrics[0], metrics[1]
     if rank == 0:
         print(
-            f"val_loss : {epoch_val_loss:.4f} - val_acc: {epoch_val_accuracy:.4f}\n"
+            f"val_loss : {epoch_val_loss:.4f} :  val_acc: {epoch_val_accuracy:.4f}\n"
         )
     return

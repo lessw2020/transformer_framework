@@ -97,11 +97,13 @@ class Memory_Maximizer:
 
     def stop(
         self,
+        verbose=False,
     ):
         """end of training...get various stats and display"""
 
-        print(f"\nreserved memory = {self.m_reserved_memory_list}")
-        print(f"memory % = {self.m_reserved_memory_pct}\n")
+        if verbose:
+            print(f"\nreserved memory = {self.m_reserved_memory_list}")
+            print(f"memory % = {self.m_reserved_memory_pct}\n")
 
         cuda_max_reserved = format_to_gb(torch.cuda.max_memory_reserved())
         print(f"--> cuda max reserved memory = {cuda_max_reserved}")

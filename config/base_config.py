@@ -20,10 +20,10 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 5
+    total_steps_to_run: int = None
 
     # training
-    num_epochs: int = 1
+    num_epochs: int = 3
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 
@@ -37,7 +37,7 @@ class base_config:
     optimizer:str = 'AdamW'   # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
 
     bff_optimizer_dtype = torch.bfloat16  # momentum and variance
-    bff_optimizer_use_kahan_summation: bool = False  
+    bff_optimizer_use_kahan_summation: bool = True  
 
 
     # sharding policy
@@ -52,19 +52,20 @@ class base_config:
     forward_prefetch = False
 
     # log
-    log_every: int = 1
+    log_every: int = 5
 
     # dataloaders
     num_workers_dataloader: int = 2
 
-    
+    # training
+    batch_size_training: int = 60
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True
 
     # validation
     run_validation: bool = True
-    val_batch_size = 4
+    val_batch_size = 20
 
     # logging
     track_memory = True
@@ -72,7 +73,7 @@ class base_config:
     nccl_debug_handler: bool = True
     distributed_debug: bool = True
 
-    batch_size_training: int = 15
+    
 
     # use_non_recursive_wrapping: bool = True
     # backward_prefetch = None

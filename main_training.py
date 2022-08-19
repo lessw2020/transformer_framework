@@ -23,6 +23,7 @@ import environment
 
 bf16_ready = environment.verify_bfloat_support
 
+from torch.utils.data import DistributedSampler
 
 
 colorama.init(autoreset=True)  # reset after every line
@@ -112,6 +113,12 @@ def fsdp_main():
     if rank == 0:
         print(f"policy is {my_auto_wrap_policy}")
     dataset = config.get_dataset()
+    train_sampler = DistributedSampler(dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size(), shuffle=True)
+
+    if cfg.run_validation:
+        val_dataset = config.get_dataset(train=False)
+        val_sampler = DistributedSampler(val_dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size())
+
 
     if local_rank == 0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
@@ -138,7 +145,7 @@ def fsdp_main():
         param_dtype = torch.bfloat16,
         reduce_dtype = torch.bfloat16,
         buffer_dtype = torch.bfloat16,
-        keep_casted_gradients = True
+        #keep_casted_gradients = True
     )
 
     mp_policy = None
@@ -225,7 +232,18 @@ def fsdp_main():
         batch_size=cfg.batch_size_training,
         num_workers=cfg.num_workers_dataloader,
         pin_memory=False,
+        sampler = train_sampler,
     )
+
+    if cfg.run_validation:
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset,
+            batch_size=cfg.val_batch_size,
+        num_workers=cfg.num_workers_dataloader,
+        pin_memory=False,
+        sampler = val_sampler,
+
+        )
 
     # memory and timing tracking
     if local_rank == 0:
@@ -301,16 +319,20 @@ def fsdp_main():
                 cfg.total_steps_to_run,
             )
     else:
-        config.train(
-            model,
-            data_loader,
-            None,
-            optimizer,
-            memmax,
-            local_rank,
-            tracking_duration,
-            cfg.total_steps_to_run,
-        )
+        for i in range(1,cfg.num_epochs+1):
+            config.train(
+                model,
+                data_loader,
+                None,
+                optimizer,
+                memmax,
+                local_rank,
+                tracking_duration,
+                cfg.total_steps_to_run,
+            )
+            if cfg.run_validation:
+                config.validation(model, local_rank, rank, val_loader, world_size )
+
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
 
@@ -334,12 +356,13 @@ def fsdp_main():
         memmax.stop()  # stop and display info
 
         stable_sum = sum(tracking_duration[1:])
-        stable_avg = stable_sum / cfg.total_steps_to_run
-        stable_avg = round(stable_avg, 4)
-        print(
-            Fore.GREEN
-            + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
-        )
+        if cfg.total_steps_to_run is not None:
+            stable_avg = stable_sum / cfg.total_steps_to_run
+            stable_avg = round(stable_avg, 4)
+            print(
+                Fore.GREEN
+                + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
+            )
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
         print(f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}")
 
