@@ -5,7 +5,12 @@ from dataclasses import dataclass
 
 from torch.distributed.fsdp import StateDictType
 from torch.utils.data import Dataset
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5ForConditionalGeneration, T5Config
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM,
+    T5ForConditionalGeneration,
+    T5Config,
+)
 from transformers.models.t5.modeling_t5 import T5Block
 import datasets_grammar as dg
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
@@ -15,9 +20,10 @@ from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 class train_config(base_config):
 
     # model
-    model_name = "google/t5-v1_1-large"
+    model_name = "t5-small"
     # available models
-    # t5-base
+    # t5-small / base / large  - 1.0 pretrained
+    # or
     # google/t5-v1_1-small
     # google/t5-v1_1-base
     # google/t5-v1_1-large
@@ -25,6 +31,9 @@ class train_config(base_config):
     # google/t5-v1_1-xxl #8b
     # t5-11b
     tokenizer = "t5-large"
+
+    # important - if you want trackable loss stats, please ensure you use real data:
+    use_real_data = True
 
     # checkpoint models
     save_model_checkpoint: bool = False
@@ -36,12 +45,10 @@ class train_config(base_config):
         2  # number of 'best' checkpoints to save based on val loss
     )
 
-
-    
     # optimizers load and save
     save_optimizer: bool = False
     load_optimizer: bool = False
-    
+
     optimizer_checkpoint_file: str = "Adam-t5--1.pt"
 
     checkpoint_model_filename: str = "t5--1.pt"
@@ -49,8 +56,6 @@ class train_config(base_config):
     # datasets
     dataset_train = "datasets_grammar/grammar_train.csv"  # grammar_13k.csv
     dataset_test = "datasets_grammar/grammar_validation.csv"
-
-    use_real_data = False
 
 
 def build_model(model_name: str):
@@ -171,7 +176,7 @@ def build_model(model_name: str):
 class GeneratedDataset(Dataset):
     def __init__(self, **kwargs) -> None:
         super()
-        self._input_shape = kwargs.get("input_shape", (1024, ))
+        self._input_shape = kwargs.get("input_shape", (1024,))
         self._input_type = kwargs.get("input_type", torch.long)
         self._len = kwargs.get("len", 1000000)
         self._num_classes = kwargs.get("num_classes", 32000)
@@ -181,10 +186,18 @@ class GeneratedDataset(Dataset):
 
     def __getitem__(self, index: int):
         return {
-            "source_ids": torch.randint(1, self._num_classes, self._input_shape, dtype=self._input_type),
-            "source_mask": torch.randint(1, self._num_classes, self._input_shape, dtype=self._input_type),
-            "target_ids": torch.randint(1, self._num_classes, self._input_shape, dtype=self._input_type),
-            "target_mask": torch.randint(1, self._num_classes, self._input_shape, dtype=self._input_type),
+            "source_ids": torch.randint(
+                1, self._num_classes, self._input_shape, dtype=self._input_type
+            ),
+            "source_mask": torch.randint(
+                1, self._num_classes, self._input_shape, dtype=self._input_type
+            ),
+            "target_ids": torch.randint(
+                1, self._num_classes, self._input_shape, dtype=self._input_type
+            ),
+            "target_mask": torch.randint(
+                1, self._num_classes, self._input_shape, dtype=self._input_type
+            ),
         }
 
 

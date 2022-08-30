@@ -35,9 +35,7 @@ class base_config:
     use_tf32: bool = False
 
     # optimizer config
-    optimizer: str = (
-        "BFF_AdamW"  # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
-    )
+    optimizer: str = "AdamW"  # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
 
     bff_momentum_dtype = torch.float32  # momentum and variance
     bff_variance_dtype = torch.float32  # variance
