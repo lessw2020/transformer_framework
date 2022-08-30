@@ -23,7 +23,7 @@ class BFF_AdamW(Optimizer):
         betas=(0.9, 0.999),
         eps=1e-8,
         weight_decay=0.0,
-        use_kahan_summation=True,
+        use_kahan_summation=False,
         momentum_dtype=torch.bfloat16,
         variance_dtype=torch.bfloat16,
         compensation_buffer_dtype=torch.bfloat16,
@@ -114,14 +114,14 @@ class BFF_AdamW(Optimizer):
                     # momentum - EMA of gradient values
                     state["exp_avg"] = torch.zeros_like(
                         p,
-                        memory_format=torch.preserve_format,
+                        # memory_format=torch.preserve_format,
                         dtype=momentum_dtype,
                     )
 
                     # variance uncentered - EMA of squared gradient values
                     state["exp_avg_sq"] = torch.zeros_like(
                         p,
-                        memory_format=torch.preserve_format,
+                        # memory_format=torch.preserve_format,
                         dtype=variance_dtype,
                     )
 
@@ -129,7 +129,7 @@ class BFF_AdamW(Optimizer):
                     if use_kahan_summation:
                         state["compensation"] = torch.zeros_like(
                             p,
-                            memory_format=torch.preserve_format,
+                            # memory_format=torch.preserve_format,
                             dtype=compensation_buffer_dtype,
                         )
 

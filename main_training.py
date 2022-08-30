@@ -30,6 +30,8 @@ colorama.init(autoreset=True)  # reset after every line
 
 import performance
 
+# import optimizers
+
 
 def print_model(model, file_name, rank):
     if rank != 0:
@@ -113,12 +115,15 @@ def fsdp_main():
     if rank == 0:
         print(f"policy is {my_auto_wrap_policy}")
     dataset = config.get_dataset()
-    train_sampler = DistributedSampler(dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size(), shuffle=True)
+    train_sampler = DistributedSampler(
+        dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size(), shuffle=True
+    )
 
     if cfg.run_validation:
         val_dataset = config.get_dataset(train=False)
-        val_sampler = DistributedSampler(val_dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size())
-
+        val_sampler = DistributedSampler(
+            val_dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size()
+        )
 
     if local_rank == 0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
@@ -138,29 +143,32 @@ def fsdp_main():
         reduce_dtype=torch.bfloat16,
         # Buffer precision.
         buffer_dtype=torch.bfloat16,
-
     )
 
     bfSixteen_cast_gradients = MixedPrecision(
-        param_dtype = torch.bfloat16,
-        reduce_dtype = torch.bfloat16,
-        buffer_dtype = torch.bfloat16,
-        #keep_casted_gradients = True
+        param_dtype=torch.bfloat16,
+        reduce_dtype=torch.bfloat16,
+        buffer_dtype=torch.bfloat16,
+        # keep_casted_gradients = True
     )
 
     mp_policy = None
 
     if cfg.use_mixed_precision and bf16_ready:
-        if cfg.use_low_precision_gradient_policy==False:
+        if cfg.use_low_precision_gradient_policy == False:
             mp_policy = bfSixteen  # set to None to run with fp32
             if rank == 0:
                 print(f"bf16 check passed")
-                print(f"\n--> Running with bfloat16 mixed precision and FP32 gradients\n")
+                print(
+                    f"\n--> Running with bfloat16 mixed precision and FP32 gradients\n"
+                )
         else:
             mp_policy = bfSixteen_cast_gradients
             if rank == 0:
                 print(f"bf16 check passed")
-                print(f"\n--> Running with bfloat16 mixed precision and ** CAST ** gradients\n")
+                print(
+                    f"\n--> Running with bfloat16 mixed precision and ** CAST ** gradients\n"
+                )
     else:
         if rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
@@ -232,17 +240,16 @@ def fsdp_main():
         batch_size=cfg.batch_size_training,
         num_workers=cfg.num_workers_dataloader,
         pin_memory=False,
-        sampler = train_sampler,
+        sampler=train_sampler,
     )
 
     if cfg.run_validation:
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=cfg.val_batch_size,
-        num_workers=cfg.num_workers_dataloader,
-        pin_memory=False,
-        sampler = val_sampler,
-
+            num_workers=cfg.num_workers_dataloader,
+            pin_memory=False,
+            sampler=val_sampler,
         )
 
     # memory and timing tracking
@@ -262,33 +269,44 @@ def fsdp_main():
     model.zero_grad()
 
     # optimizer ----------
-    optimizer = None 
+    optimizer = None
     lr = 8e-4
     weight_decay = 0.0
 
-    if cfg.optimizer=='int8':
-        import bitsandbytes as bnb  
-        optimizer = bnb.optim.Adam8bit(model.parameters(), lr=lr, weight_decay=weight_decay, amsgrad=False)
-        if rank==0:
+    if cfg.optimizer == "int8":
+        import bitsandbytes as bnb
+
+        optimizer = bnb.optim.Adam8bit(
+            model.parameters(), lr=lr, weight_decay=weight_decay, amsgrad=False
+        )
+        if rank == 0:
             print(f"Running with 8 bit optimizer")
-    
-    elif cfg.optimizer=='BFF_AdamW':
-        import optimizers   
-        optimizer = BFF_AdamW(model.parameters(), lr= lr, weight_decay = weight_decay, 
-        momentum_dtype= cfg.bff_optimizer_dtypes, variance_dtype = cfg.bff_optimizer_dtypes,
-        use_kahan_summation = cfg.use_kahan_summation)
-        if rank==0:
-            print(f"Running with BFF Optimizer, kahan summation = {cfg.use_kahan_summation}")
+
+    elif cfg.optimizer == "BFF_AdamW":
+        import optimizers
+
+        optimizer = optimizers.BFF_AdamW(
+            model.parameters(),
+            lr=lr,
+            weight_decay=weight_decay,
+            momentum_dtype=cfg.bff_momentum_dtype,
+            variance_dtype=cfg.bff_variance_dtype,
+            use_kahan_summation=cfg.use_kahan_summation,
+        )
+        if rank == 0:
+            print(
+                f"Running with BFF Optimizer, kahan summation = {cfg.use_kahan_summation}"
+            )
 
     else:
         optimizer = torch.optim.AdamW(
             model.parameters(), lr=lr, weight_decay=weight_decay, amsgrad=False
         )
-        if rank==0:
+        if rank == 0:
             print(f"Running with AdamW optimizer")
-    
+
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    
+
     # load optimizer checkpoint
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
@@ -319,7 +337,7 @@ def fsdp_main():
                 cfg.total_steps_to_run,
             )
     else:
-        for i in range(1,cfg.num_epochs+1):
+        for i in range(1, cfg.num_epochs + 1):
             config.train(
                 model,
                 data_loader,
@@ -330,8 +348,11 @@ def fsdp_main():
                 tracking_duration,
                 cfg.total_steps_to_run,
             )
+            if cfg.total_steps_to_run is not None:
+                break
+
             if cfg.run_validation:
-                config.validation(model, local_rank, rank, val_loader, world_size )
+                config.validation(model, local_rank, rank, val_loader, world_size)
 
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:

@@ -16,13 +16,14 @@ import torchvision.models as models
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
-NUM_CLASSES = 10
+NUM_CLASSES = 10000
+
 
 @dataclass
 class train_config(base_config):
 
     # model
-    model_name = "500M"
+    model_name = "8B"
 
     # available models -name is ~ num params
     # 60M
@@ -36,8 +37,8 @@ class train_config(base_config):
     # 8B
 
     # use synthetic data
-    use_synthetic_data: bool = False
-    train_data_path = "datasets_vision/imagenette320/train" 
+    use_synthetic_data: bool = True
+    train_data_path = "datasets_vision/imagenette320/train"
     val_data_path = "datasets_vision/imagenette320/val"
 
     # mixed precision
@@ -212,6 +213,7 @@ class GeneratedDataset(Dataset):
         label = torch.tensor(data=[index % self._num_classes], dtype=torch.int64)
         return rand_image, label
 
+
 def get_dataset(train=True):
     cfg = train_config()
     if cfg.use_synthetic_data:
@@ -221,20 +223,24 @@ def get_dataset(train=True):
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
     )
     if train:
-        input_transform = transforms.Compose([
-            transforms.Resize((256, 256)),
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            normalize,
-        ])
+        input_transform = transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
     else:
-        input_transform = transforms.Compose([
-            transforms.Resize((256, 256)),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ])
+        input_transform = transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
     data_path = cfg.train_data_path if train else cfg.val_data_path
     return torchvision.datasets.ImageFolder(data_path, transform=input_transform)
 
@@ -279,10 +285,7 @@ def train(
             if memmax:
                 memmax.update()
 
-        if (
-            batch_index % cfg.log_every == 0
-            and torch.distributed.get_rank() == 0
-        ):
+        if batch_index % cfg.log_every == 0 and torch.distributed.get_rank() == 0:
             print(
                 f"step: {batch_index}: time taken for the last {cfg.log_every} steps is {mini_batch_time}, loss is {loss}"
             )
@@ -293,6 +296,7 @@ def train(
             torch_profiler.step()
         if total_steps_to_run is not None and batch_index > total_steps_to_run:
             break
+
 
 def validation(model, local_rank, rank, val_loader, world_size):
 
@@ -308,7 +312,9 @@ def validation(model, local_rank, rank, val_loader, world_size):
 
     with torch.no_grad():
         for batch_idx, (inputs, target) in enumerate(val_loader):
-            inputs, target = inputs.to(torch.cuda.current_device()), target.to(torch.cuda.current_device())
+            inputs, target = inputs.to(torch.cuda.current_device()), target.to(
+                torch.cuda.current_device()
+            )
             output = model(inputs)
             loss = loss_function(output, target)
 
@@ -320,12 +326,12 @@ def validation(model, local_rank, rank, val_loader, world_size):
             if rank == 0:
                 inner_pbar.update(1)
 
-    metrics = torch.tensor([epoch_val_loss, epoch_val_accuracy]).to(torch.cuda.current_device())
+    metrics = torch.tensor([epoch_val_loss, epoch_val_accuracy]).to(
+        torch.cuda.current_device()
+    )
     dist.all_reduce(metrics, op=dist.ReduceOp.SUM)
-    metrics /=world_size
+    metrics /= world_size
     epoch_val_loss, epoch_val_accuracy = metrics[0], metrics[1]
     if rank == 0:
-        print(
-            f"val_loss : {epoch_val_loss:.4f} :  val_acc: {epoch_val_accuracy:.4f}\n"
-        )
+        print(f"val_loss : {epoch_val_loss:.4f} :  val_acc: {epoch_val_accuracy:.4f}\n")
     return

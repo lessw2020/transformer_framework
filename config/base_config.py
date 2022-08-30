@@ -13,6 +13,7 @@ from torch.distributed.fsdp import (
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 import torch
 
+
 @dataclass
 class base_config:
 
@@ -20,7 +21,7 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = None
+    total_steps_to_run: int = 5
 
     # training
     num_epochs: int = 3
@@ -32,13 +33,16 @@ class base_config:
     use_low_precision_gradient_policy: bool = False
     # this is only for fp32 scenario...
     use_tf32: bool = False
-    
+
     # optimizer config
-    optimizer:str = 'AdamW'   # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
+    optimizer: str = (
+        "BFF_AdamW"  # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
+    )
 
-    bff_optimizer_dtype = torch.bfloat16  # momentum and variance
-    bff_optimizer_use_kahan_summation: bool = True  
+    bff_momentum_dtype = torch.float32  # momentum and variance
+    bff_variance_dtype = torch.float32  # variance
 
+    use_kahan_summation: bool = False
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -52,19 +56,19 @@ class base_config:
     forward_prefetch = False
 
     # log
-    log_every: int = 5
+    log_every: int = 1
 
     # dataloaders
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 60
+    batch_size_training: int = 10
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True
 
     # validation
-    run_validation: bool = True
+    run_validation: bool = False
     val_batch_size = 20
 
     # logging
@@ -72,8 +76,6 @@ class base_config:
     memory_report: bool = True
     nccl_debug_handler: bool = True
     distributed_debug: bool = True
-
-    
 
     # use_non_recursive_wrapping: bool = True
     # backward_prefetch = None
@@ -97,6 +99,7 @@ def get_policy_base(blocks):
             ParamExecOrderPolicy,
             HandleInitMode,
         )
+
         return ParamExecOrderPolicy(
             handle_init_mode=HandleInitMode.MODULE_LEVEL,
             bucket_size=int(17000000 * 5 + 1),
