@@ -1,5 +1,6 @@
 import functools
 from dataclasses import dataclass
+import policies
 
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper,
@@ -23,6 +24,9 @@ class base_config:
     # how many mini batches to time with
     total_steps_to_run: int = 3
 
+    # stats
+    print_memory_summary: bool = False
+
     # training
     num_epochs: int = 1
 
@@ -30,6 +34,8 @@ class base_config:
 
     # policies
     use_mixed_precision: bool = False
+    mp_policy = policies.bf16_policy
+
     use_low_precision_gradient_policy: bool = False
     # this is only for fp32 scenario...
     use_tf32: bool = False

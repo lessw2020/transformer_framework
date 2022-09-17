@@ -134,42 +134,15 @@ def fsdp_main():
         num_params = (sum(p.numel() for p in model.parameters())) / 1e6
         print(f"built model with {num_params}M params")
 
-    #   Setup Mixed Precision --------------
-    # === leverage FSDP Mixed Precision
-    bfSixteen = MixedPrecision(
-        # Param precision
-        param_dtype=torch.bfloat16,
-        # Gradient communication precision.
-        reduce_dtype=torch.bfloat16,
-        # Buffer precision.
-        buffer_dtype=torch.bfloat16,
-        keep_casted_gradients=True,
-    )
-
-    bfSixteen_cast_gradients = MixedPrecision(
-        param_dtype=torch.bfloat16,
-        reduce_dtype=torch.bfloat16,
-        buffer_dtype=torch.bfloat16,
-        # keep_casted_gradients = True
-    )
-
     mp_policy = None
 
     if cfg.use_mixed_precision and bf16_ready:
-        if cfg.use_low_precision_gradient_policy == False:
-            mp_policy = bfSixteen  # set to None to run with fp32
-            if rank == 0:
-                print(f"bf16 check passed")
-                print(
-                    f"\n--> Running with bfloat16 mixed precision and FP32 gradients\n"
-                )
-        else:
-            mp_policy = bfSixteen_cast_gradients
-            if rank == 0:
-                print(f"bf16 check passed")
-                print(
-                    f"\n--> Running with bfloat16 mixed precision and ** CAST ** gradients\n"
-                )
+        mp_policy = cfg.mp_policy
+
+        if rank == 0:
+            print(f"bf16 check passed")
+            print(f"\n--> Running with mixed precision {cfg.mp_policy} policy")
+
     else:
         if rank == 0:
             print(f"--> Warning - bf16 support not available.  Using fp32")
@@ -386,7 +359,10 @@ def fsdp_main():
                 + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
             )
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
-        print(f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}")
+        if cfg.print_memory_summary:
+            print(
+                f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
+            )
 
     cleanup()
 

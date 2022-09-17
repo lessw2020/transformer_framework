@@ -23,7 +23,7 @@ NUM_CLASSES = 10000
 class train_config(base_config):
 
     # model
-    model_name = "3B"
+    model_name = "1B"
 
     # available models -name is ~ num params
     # 60M
