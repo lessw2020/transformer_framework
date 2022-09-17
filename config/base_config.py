@@ -21,26 +21,28 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 5
+    total_steps_to_run: int = 3
 
     # training
-    num_epochs: int = 3
+    num_epochs: int = 1
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 
     # policies
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
     use_low_precision_gradient_policy: bool = False
     # this is only for fp32 scenario...
     use_tf32: bool = False
 
     # optimizer config
-    optimizer: str = "AdamW"  # [AdamW, BFF_AdamW, int8] (fp32, bf16, int8 optimizers)
+    optimizer: str = (
+        "AnyPrecision"  # [AdamW, AnyPrecision, int8] (fp32, bf16, int8 optimizers)
+    )
 
-    bff_momentum_dtype = torch.float32  # momentum and variance
-    bff_variance_dtype = torch.float32  # variance
+    ap_momentum_dtype = torch.float32  # momentum and variance
+    ap_variance_dtype = torch.float32  # variance
 
-    use_kahan_summation: bool = False
+    ap_use_kahan_summation: bool = False
 
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
@@ -60,14 +62,14 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 10
+    batch_size_training: int = 16
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True
 
     # validation
     run_validation: bool = False
-    val_batch_size = 20
+    val_batch_size = 18
 
     # logging
     track_memory = True

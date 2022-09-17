@@ -4,18 +4,23 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# BFF_Optimizer: a pure Bfloat16 AdamW optimizer with optional Kahan summation
+# AnyPrecisionAdamW: a flexible precision AdamW optimizer
+# with optional Kahan summation for high precision weight updates.
 # Allows direct control over momentum, variance and auxiliary compensation
 # buffer dtypes.
-# Optional Kahan summation is used to offset Bfloat16 precision reduction for
-# the weight updates. This allows full training in BFloat16 (with equal or
-# better than FP32 results) due to high precision weight upates.
+# Optional Kahan summation is used to enable high precision for
+# the weight updates. This allows sucessful training in pure BFloat16
+# (often equal or better than FP32 results) due to high precision weight
+# updates, while training with reduced GPU memory and
+# increased training speed.
 
 import torch
+import torch.cuda.nccl as nccl
+import torch.distributed as dist
 from torch.optim.optimizer import Optimizer
 
 
-class BFF_AdamW(Optimizer):
+class AnyPrecisionAdamW(Optimizer):
     def __init__(
         self,
         params,
@@ -24,7 +29,7 @@ class BFF_AdamW(Optimizer):
         eps=1e-8,
         weight_decay=0.0,
         use_kahan_summation=False,
-        momentum_dtype=torch.bfloat16,
+        momentum_dtype=torch.float32,
         variance_dtype=torch.bfloat16,
         compensation_buffer_dtype=torch.bfloat16,
     ):
@@ -39,23 +44,51 @@ class BFF_AdamW(Optimizer):
                     numerical stability (default: 1e-8)
                 weight_decay (float, optional): weight decay coefficient (default: 1e-2)
 
-                # BFF specific
-                use_kahan_summation = creates auxiliary buffer to ensure high precision
-                model param updates (default: True)
-                momentum_dtype = dtype for momentum  (default: BFloat16)
+                # AnyPrecision specific
+                use_kahan_summation = use auxiliary buffer to ensure high precision
+                model param updates (default: False)
+                momentum_dtype = dtype for momentum  (default: BFloat32)
                 variance_dtype = dtype for uncentered variance (default: BFloat16)
                 compensation_buffer_dtype  = dtype for Kahan summation
                                              buffer (default: BFloat16)
 
                 # Usage
-                This optimizer implements adaptive states, and Kahan summation
+                This optimizer implements optimizer states, and Kahan summation
                 for high precision updates, all in user controlled dtypes.
-                All defaults are BF16 in order to enable training in full BFloat16.
+                The high precision updates enable successful training in pure
+                BF16 with corresponding reductions in memory and increases in
+                training speed.
+
+                Defaults are Variance in BF16, Momentum in FP32.
                 This can be run in FSDP mixed precision, amp, or full precision,
                 depending on what training pipeline you wish to work with.
 
                 Setting to use_kahan_summation = False, and changing momentum and
                 variance dtypes to FP32, reverts this to a standard AdamW optimizer.
+
+                AnyPrecision will automatically verify proper support is present
+                for BF16, for both GPU and network (NCCL).
+
+                To train in pure BF16:
+                1 - use model.to(torch.bfloat16) to move your model
+                to BF16.
+                2 - Set momentum_dtype and variance_dtype to torch.bfloat16
+                3 - Set use_kahan_summation = True
+
+                Example:
+                # init model
+                my_model = build_model(config_args)
+
+                # ensure model is moved to all bf16
+                my_model.to(torch.bfloat16)
+
+                # setup AnyPrecision to run in pure BF16 with high precision updates
+                optimizer = AnyPrecisionAdamW(my_model.parameters(), lr=lr, ...,
+                                momentum_dtype=torch.bfloat16,
+                                variance_dtype=torch.bfloat16,
+                                use_kahan_summation=True
+                                )
+
 
         """
         defaults = dict(
@@ -70,6 +103,28 @@ class BFF_AdamW(Optimizer):
         )
 
         super().__init__(params, defaults)
+
+        # confirm bfloat16 support if applicable
+        if (
+            torch.bfloat16
+            in [
+                momentum_dtype,
+                variance_dtype,
+            ]
+            or torch.bfloat16 in [compensation_buffer_dtype]
+            and use_kahan_summation
+        ):
+            gpu_support, network_support = self._verify_bfloat_support()
+
+            if not gpu_support or not network_support:
+                reason = ""
+                if not gpu_support:
+                    reason += "Your GPU does not support native Bfloat16. "
+
+                if not network_support:
+                    reason += "Your NCCL version does not support BFloat16. "
+
+                raise ValueError(f"Missing BFloat16 support. Details: {reason}")
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -90,7 +145,6 @@ class BFF_AdamW(Optimizer):
             lr = group["lr"]
             weight_decay = group["weight_decay"]
             eps = group["eps"]
-            # BFF specifics
             use_kahan_summation = group["use_kahan_summation"]
 
             momentum_dtype = group["momentum_dtype"]
@@ -102,7 +156,9 @@ class BFF_AdamW(Optimizer):
                     continue
 
                 if p.grad.is_sparse:
-                    raise RuntimeError("BFF does not support sparse gradients")
+                    raise RuntimeError(
+                        "AnyPrecisionAdamW does not support sparse gradients"
+                    )
 
                 state = self.state[p]
 
@@ -114,14 +170,12 @@ class BFF_AdamW(Optimizer):
                     # momentum - EMA of gradient values
                     state["exp_avg"] = torch.zeros_like(
                         p,
-                        # memory_format=torch.preserve_format,
                         dtype=momentum_dtype,
                     )
 
                     # variance uncentered - EMA of squared gradient values
                     state["exp_avg_sq"] = torch.zeros_like(
                         p,
-                        # memory_format=torch.preserve_format,
                         dtype=variance_dtype,
                     )
 
@@ -129,7 +183,6 @@ class BFF_AdamW(Optimizer):
                     if use_kahan_summation:
                         state["compensation"] = torch.zeros_like(
                             p,
-                            # memory_format=torch.preserve_format,
                             dtype=compensation_buffer_dtype,
                         )
 
@@ -174,10 +227,33 @@ class BFF_AdamW(Optimizer):
 
                     # update weights with compensation (Kahan summation)
                     # save error back to compensation for next iteration
-                    temp_buffer = p.clone()
+                    temp_buffer = p.detach().clone()
                     p.data.add_(compensation)
                     compensation.add_(temp_buffer.sub_(p.data))
 
                 else:
                     # usual AdamW updates
                     p.data.addcdiv_(exp_avg, centered_variance, value=-step_size)
+
+    def _verify_bfloat_support(
+        self,
+    ):
+        """verify gpu and network support for BF16"""
+        # requires cuda >= 11.0
+        required_cuda_major = 11
+
+        # requires nccl >= 2.10
+        required_nccl_major = 2
+        required_nccl_minor = 10
+
+        gpu_support = torch.version.cuda and torch.cuda.is_bf16_supported()
+
+        cuda_version_major, _ = torch.version.cuda.split(".", maxsplit=1)
+
+        network_support = (
+            int(cuda_version_major) >= required_cuda_major
+            and dist.is_nccl_available()
+            and nccl.version() >= (required_nccl_major, required_nccl_minor)
+        )
+
+        return gpu_support, network_support

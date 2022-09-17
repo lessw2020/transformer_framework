@@ -23,7 +23,7 @@ NUM_CLASSES = 10000
 class train_config(base_config):
 
     # model
-    model_name = "8B"
+    model_name = "3B"
 
     # available models -name is ~ num params
     # 60M
@@ -175,6 +175,18 @@ def build_model(model_size: str):
             "num_classes": NUM_CLASSES,
             "dim": 1024,
             "depth": 357,
+            "heads": 16,
+            "mlp_dim": 2048,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+        }
+    if model_size == "3.5B":
+        model.args = {
+            "image_size": 256,
+            "patch_size": 32,
+            "num_classes": NUM_CLASSES,
+            "dim": 1024,
+            "depth": 404,
             "heads": 16,
             "mlp_dim": 2048,
             "dropout": 0.1,

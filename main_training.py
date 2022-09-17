@@ -143,6 +143,7 @@ def fsdp_main():
         reduce_dtype=torch.bfloat16,
         # Buffer precision.
         buffer_dtype=torch.bfloat16,
+        keep_casted_gradients=True,
     )
 
     bfSixteen_cast_gradients = MixedPrecision(
@@ -211,7 +212,7 @@ def fsdp_main():
         sharding_strategy=cfg.sharding_strategy,
         device_id=torch.cuda.current_device(),
         forward_prefetch=cfg.forward_prefetch,
-        # run_with_synch=True,
+        limit_all_gathers=True,
     )
 
     if cfg.fsdp_activation_checkpointing:
@@ -282,20 +283,20 @@ def fsdp_main():
         if rank == 0:
             print(f"Running with 8 bit optimizer")
 
-    elif cfg.optimizer == "BFF_AdamW":
+    elif cfg.optimizer == "AnyPrecision":
         import optimizers
 
-        optimizer = optimizers.BFF_AdamW(
+        optimizer = optimizers.AnyPrecisionAdamW(
             model.parameters(),
             lr=lr,
             weight_decay=weight_decay,
-            momentum_dtype=cfg.bff_momentum_dtype,
-            variance_dtype=cfg.bff_variance_dtype,
-            use_kahan_summation=cfg.use_kahan_summation,
+            momentum_dtype=cfg.ap_momentum_dtype,
+            variance_dtype=cfg.ap_variance_dtype,
+            use_kahan_summation=cfg.ap_use_kahan_summation,
         )
         if rank == 0:
             print(
-                f"Running with BFF Optimizer, kahan summation = {cfg.use_kahan_summation}"
+                f"Running with AnyPrecision Optimizer, momo={cfg.ap_momentum_dtype}, var = {cfg.ap_variance_dtype}, kahan summation =  {cfg.ap_use_kahan_summation}"
             )
 
     else:
