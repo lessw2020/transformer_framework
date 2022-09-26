@@ -249,8 +249,14 @@ def train(
         )
         loss = output["loss"]
         loss.backward()
+        assert optimizer
         if optimizer:
             optimizer.step()
+            if hasattr(model, '_averager'):
+                print(" -- averaging --")
+                model._averager.average_parameters(model.parameters())
+            else:
+                print(" --- NOT averaging --")
 
         if local_rank == 0:
             inner_pbar.update(1)
