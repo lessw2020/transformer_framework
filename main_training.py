@@ -157,11 +157,14 @@ def fsdp_main():
         init_start = time.perf_counter()
 
     # preload checkpoint if desired
-    if (
-        cfg.load_model_checkpoint
-        and cfg.checkpoint_type == StateDictType.FULL_STATE_DICT
-    ):
-        model_checkpointing.load_model_checkpoint(model, rank, cfg)
+    if cfg.load_model_checkpoint:
+        if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
+            model_checkpointing.load_model_checkpoint(model, rank, cfg)
+
+        elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
+            model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
+
+    
 
     prefetch_policy = cfg.backward_prefetch
     if rank == 0:
@@ -337,6 +340,7 @@ def fsdp_main():
                     model, optimizer, rank, cfg, epoch=1
                 )
             elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
+                print(f"Saving Model via Distributed Checkpoint")
                 model_checkpointing.save_distributed_model_checkpoint(model, rank, cfg)
 
         if cfg.save_optimizer:

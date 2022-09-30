@@ -23,7 +23,7 @@ NUM_CLASSES = 10000
 class train_config(base_config):
 
     # model
-    model_name = "1B"
+    model_name = "500M"
 
     # available models -name is ~ num params
     # 60M
@@ -43,13 +43,14 @@ class train_config(base_config):
 
     # mixed precision
     use_mixed_precision: bool = True
+    
     # checkpoint models
-    save_model_checkpoint: bool = False
+    save_model_checkpoint: bool = True
     # only for local dist
     single_file_per_rank = True
 
-    load_model_checkpoint: bool = False
-    checkpoint_type = StateDictType.FULL_STATE_DICT
+    load_model_checkpoint: bool = True
+    checkpoint_type = StateDictType.LOCAL_STATE_DICT
     dist_checkpoint_root_folder = "distributed_checkpoints"
     dist_checkpoint_folder = "DeepVit_local_checkpoint"
     model_save_name = "deepvit-"

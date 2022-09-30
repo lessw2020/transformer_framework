@@ -234,9 +234,7 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
 
         writer = FileSystemWriter(
             save_dir,
-            single_file_per_rank=cfg.single_file_per_rank,
-            # per_thread_copy_ahead=5000000,
-            thread_count=2,
+            
         )
 
         with FSDP.state_dict_type(
