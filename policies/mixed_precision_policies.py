@@ -14,7 +14,7 @@ fp16_policy = MixedPrecision(
 )
 
 bf16_policy = MixedPrecision(
-    param_dtype=torch.float32,
+    param_dtype=torch.bfloat16,
     # Gradient communication precision.
     reduce_dtype=torch.bfloat16,
     # Buffer precision.
@@ -22,7 +22,7 @@ bf16_policy = MixedPrecision(
 )
 
 bf16_grads_policy = MixedPrecision(
-    param_dtype=torch.float32,
+    param_dtype=torch.bfloat16,
     reduce_dtype=torch.bfloat16,
     buffer_dtype=torch.bfloat16,
 )
