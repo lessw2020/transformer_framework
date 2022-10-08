@@ -62,13 +62,19 @@ def load_model_sharded(model, rank, cfg, verbose=True):
 
     with FSDP.state_dict_type(model, StateDictType.SHARDED_STATE_DICT):
         checkpoint = model.state_dict()
+        if rank==0:
+            ck = checkpoint.keys()
+            print(f" checkpoint key len = {len(ck)} and \n keys =  {ck}")
         #if dist.get_rank() == 0:
         #    traverse_state_dict(checkpoint, print_sharded_tensor)
         dist_cp.load_state_dict(
             state_dict=checkpoint,
             storage_reader=reader,
         )
-
+        if rank==0:
+            print(f"checkpoint after load_state_dict()")
+            ck = checkpoint.keys()
+            print(f" checkpoint key len = {len(ck)} and \n keys =  {ck}")
         model.load_state_dict(checkpoint)
 
     #with FSDP.summon_full_params(model):

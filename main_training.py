@@ -164,8 +164,7 @@ def fsdp_main():
         elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
             model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
         
-        elif cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT:
-            model_checkpointing.load_model_sharded(model, rank, cfg)
+        
 
     
 
@@ -193,6 +192,9 @@ def fsdp_main():
         forward_prefetch=cfg.forward_prefetch,
         limit_all_gathers=True,
     )
+
+    if cfg.load_model_checkpoint and cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT:
+            model_checkpointing.load_model_sharded(model, rank, cfg)
 
     if cfg.fsdp_activation_checkpointing:
         config.fsdp_checkpointing(model)
