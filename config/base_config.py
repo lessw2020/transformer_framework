@@ -28,12 +28,12 @@ class base_config:
     print_memory_summary: bool = False
 
     # training
-    num_epochs: int = 1
+    num_epochs: int = 2
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 
     # policies
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
     mp_policy = policies.bf16_policy
 
     use_low_precision_gradient_policy: bool = False
