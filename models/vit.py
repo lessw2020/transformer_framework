@@ -196,6 +196,7 @@ class ViT(Module):
         assert p["image_size"] % p["patch_size"] == 0, err_str
         assert p["stem_type"] in ["patchify", "conv"], "Unexpected stem type"
         assert p["cls_type"] in ["token", "pooled"], "Unexpected classifier mode"
+
         if p["stem_type"] == "conv":
             err_str = "Conv stem layers mismatch"
             assert len(p["c_stem_dims"]) == len(p["c_stem_strides"]), err_str
@@ -214,7 +215,7 @@ class ViT(Module):
         elif p["stem_type"] == "conv":
             ks, ws, ss = p["c_stem_kernels"], p["c_stem_dims"], p["c_stem_strides"]
             self.stem = ViTStemConv(3, ks, ws, ss)
-        seq_len = (p["image_size"] // cfg.VIT.PATCH_SIZE) ** 2
+        seq_len = (p["image_size"] // p["patch_size"]) ** 2
         if p["cls_type"] == "token":
             self.class_token = Parameter(torch.zeros(1, 1, p["hidden_d"]))
             seq_len += 1
@@ -222,7 +223,7 @@ class ViT(Module):
             self.class_token = None
         self.pos_embedding = Parameter(torch.zeros(seq_len, 1, p["hidden_d"]))
         self.encoder = ViTEncoder(
-            p["n_layers"], p["hidden_d"], p["n_heads"], p["mlp_d"]
+            p["n_layers"], p["hidden_d"], p["n_heads"], p["mlp_dim"]
         )
         self.head = ViTHead(p["hidden_d"], p["num_classes"])
         init_weights_vit(self)

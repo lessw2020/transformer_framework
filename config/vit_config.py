@@ -11,8 +11,9 @@ from torch import distributed as dist
 from torch.distributed.fsdp import StateDictType
 from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
-#from vit_pytorch.deepvit import DeepViT, Residual
-#import torchvision.models as models
+
+# from vit_pytorch.deepvit import DeepViT, Residual
+# import torchvision.models as models
 from models.vit import ViT
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
@@ -22,7 +23,6 @@ NUM_CLASSES = 10000
 
 @dataclass
 class train_config(base_config):
-
     # model
     model_name = "500M"
 
@@ -44,7 +44,7 @@ class train_config(base_config):
 
     # mixed precision
     use_mixed_precision: bool = True
-    
+
     # checkpoint models
     save_model_checkpoint: bool = True
     # only for local dist
@@ -70,7 +70,7 @@ class train_config(base_config):
     checkpoint_model_filename: str = "vit--1.pt"
 
     # VIT specific
-    '''image_size": cfg.TRAIN.IM_SIZE,
+    """image_size": cfg.TRAIN.IM_SIZE,
             "patch_size": cfg.VIT.PATCH_SIZE,
             "stem_type": cfg.VIT.STEM_TYPE,
             "c_stem_kernels": cfg.VIT.C_STEM_KERNELS,
@@ -83,7 +83,37 @@ class train_config(base_config):
             "cls_type": cfg.VIT.CLASSIFIER_TYPE,
             "num_classes": cfg.MODEL.NUM_CLASSES,
         }
-    '''
+    # Patch Size (TRAIN.IM_SIZE must be divisible by PATCH_SIZE)
+_C.VIT.PATCH_SIZE = 16
+
+# Type of stem select from {'patchify', 'conv'}
+_C.VIT.STEM_TYPE = "patchify"
+
+# C-stem conv kernel sizes (https://arxiv.org/abs/2106.14881)
+_C.VIT.C_STEM_KERNELS = []
+
+# C-stem conv strides (the product of which must equal PATCH_SIZE)
+_C.VIT.C_STEM_STRIDES = []
+
+# C-stem conv output dims (last dim must equal HIDDEN_DIM)
+_C.VIT.C_STEM_DIMS = []
+
+# Number of layers in the encoder
+_C.VIT.NUM_LAYERS = 12
+
+# Number of self attention heads
+_C.VIT.NUM_HEADS = 12
+
+# Hidden dimension
+_C.VIT.HIDDEN_DIM = 768
+
+# Dimension of the MLP in the encoder
+_C.VIT.MLP_DIM = 3072
+
+# Type of classifier select from {'token', 'pooled'}
+_C.VIT.CLASSIFIER_TYPE = "token"
+
+    """
 
 
 def build_model(model_size: str):
@@ -91,22 +121,23 @@ def build_model(model_size: str):
     if model_size == "60M":
         model_args = {
             "image_size": 256,
-            "patch_size": 32,
+            "patch_size": 16,
             "num_classes": NUM_CLASSES,
             "dim": 1024,
             "depth": 10,
             "heads": 8,
-            "mlp_dim": 2048,
+            "mlp_dim": 3072,
             "dropout": 0.1,
             "emb_dropout": 0.1,
-            "c_stem_kernels": 
-            "c_stem_strides": cfg.VIT.C_STEM_STRIDES,
-            "c_stem_dims": cfg.VIT.C_STEM_DIMS,
-            "n_layers": cfg.VIT.NUM_LAYERS,
-            "n_heads": cfg.VIT.NUM_HEADS,
-            "hidden_d": cfg.VIT.HIDDEN_DIM,
-            "mlp_d": cfg.VIT.MLP_DIM,
-            "cls_type": cfg.VIT.CLASSIFIER_TYPE,
+            "c_stem_kernels": [],
+            "c_stem_strides": [],
+            "c_stem_dims": [],
+            "n_layers": 12,
+            "n_heads": 12,
+            "hidden_d": 768,
+            "mlp_d": 3072,
+            "cls_type": "pooled",
+            "stem_type": "patchify",
         }
     if model_size == "120M":
         model_args = {
@@ -231,7 +262,7 @@ def build_model(model_size: str):
             "dropout": 0.1,
             "emb_dropout": 0.1,
         }
-    model = DeepViT(**model_args)
+    model = ViT(params=model_args)
 
     return model
 
@@ -338,7 +369,6 @@ def train(
 
 
 def validation(model, local_rank, rank, val_loader, world_size):
-
     epoch_val_accuracy = 0
     epoch_val_loss = 0
     model.eval()
