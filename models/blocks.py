@@ -14,6 +14,10 @@ import torch.nn as nn
 # from pycls.core.config import cfg
 from torch.nn import Module
 
+# from config import vit_config
+
+# cfg = vit_config.train_config()
+
 
 # ----------------------- Shortcuts for common torch.nn layers ----------------------- #
 
@@ -46,9 +50,12 @@ def gap2d(_w_in):
     return nn.AdaptiveAvgPool2d((1, 1))
 
 
-def layernorm(w_in):
+def layernorm(
+    w_in,
+    eps,
+):
     """Helper for building a layernorm layer."""
-    return nn.LayerNorm(w_in, eps=cfg.LN.EPS)
+    return nn.LayerNorm(w_in, eps)
 
 
 def linear(w_in, w_out, *, bias=False):
@@ -58,6 +65,8 @@ def linear(w_in, w_out, *, bias=False):
 
 def activation(activation_fun=None):
     """Helper for building an activation layer."""
+    return torch.nn.GELU()
+    """
     activation_fun = (activation_fun or cfg.MODEL.ACTIVATION_FUN).lower()
     if activation_fun == "relu":
         return nn.ReLU(inplace=cfg.MODEL.ACTIVATION_INPLACE)
@@ -70,6 +79,7 @@ def activation(activation_fun=None):
         return torch.nn.GELU()
     else:
         raise AssertionError("Unknown MODEL.ACTIVATION_FUN: " + activation_fun)
+    """
 
 
 # --------------------------- Complexity (cx) calculations --------------------------- #

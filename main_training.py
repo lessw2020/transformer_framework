@@ -39,7 +39,6 @@ def print_model(model, file_name, rank):
 
     fn = file_name
     with open(fn, "w") as external_file:
-
         print(f"model wrapping = \n{model}\n\n", file=external_file)
 
         external_file.close()
@@ -163,10 +162,6 @@ def fsdp_main():
 
         elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
             model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
-        
-        
-
-    
 
     prefetch_policy = cfg.backward_prefetch
     if rank == 0:
@@ -193,8 +188,11 @@ def fsdp_main():
         limit_all_gathers=True,
     )
 
-    if cfg.load_model_checkpoint and cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT:
-            model_checkpointing.load_model_sharded(model, rank, cfg)
+    if (
+        cfg.load_model_checkpoint
+        and cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT
+    ):
+        model_checkpointing.load_model_sharded(model, rank, cfg)
 
     if cfg.fsdp_activation_checkpointing:
         config.fsdp_checkpointing(model)
@@ -338,9 +336,7 @@ def fsdp_main():
 
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
-
             if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
-
                 model_checkpointing.save_model_checkpoint(
                     model, optimizer, rank, cfg, epoch=1
                 )
@@ -351,8 +347,6 @@ def fsdp_main():
             elif cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT:
                 model_checkpointing.save_model_sharded(model, rank, cfg)
 
-
-
         if cfg.save_optimizer:
             model_checkpointing.save_optimizer_checkpoint(
                 model, optimizer, rank, cfg, epoch=1
@@ -360,7 +354,6 @@ def fsdp_main():
 
     # memory summary
     if local_rank == 0:
-
         # memory monitor
         memmax.stop()  # stop and display info
 
@@ -387,8 +380,8 @@ def parse_args():
         "--model",
         default="deepvit",
         metavar="string",
-        choices=["deepvit", "t5", "regnet"],
-        help="choose model to run, available: `deepvit`, `t5`, `regnet` (default: deepvit)",
+        choices=["deepvit", "t5", "regnet", "vit"],
+        help="choose model to run, available: `deepvit`, `t5`, `regnet`, `vit` (default: deepvit)",
     )
     args = parser.parse_args()
     return args
@@ -396,12 +389,15 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    assert args.model in ["deepvit", "t5", "regnet"]
+    print(f"******* loading model {args.model=}")
+    assert args.model in ["deepvit", "t5", "regnet", "vit"]
     if args.model == "deepvit":
         import config.deepvit_config as config
     elif args.model == "t5":
         import config.t5_config as config
     elif args.model == "regnet":
         import config.regnet_config as config
+    elif args.model == "vit":
+        import config.vit_config as config
 
     fsdp_main()

@@ -14,7 +14,7 @@ from torch.utils.data.distributed import DistributedSampler
 
 # from vit_pytorch.deepvit import DeepViT, Residual
 # import torchvision.models as models
-from models.vit import ViT
+from models.vit import ViT, ViTEncoderBlock
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
@@ -24,7 +24,7 @@ NUM_CLASSES = 10000
 @dataclass
 class train_config(base_config):
     # model
-    model_name = "500M"
+    model_name = "60M"
 
     # available models -name is ~ num params
     # 60M
@@ -54,12 +54,14 @@ class train_config(base_config):
     checkpoint_type = StateDictType.SHARDED_STATE_DICT
 
     dist_checkpoint_root_folder = "distributed_checkpoints"
-    dist_checkpoint_folder = "DeepVit_local_checkpoint"
-    model_save_name = "deepvit-"
+    dist_checkpoint_folder = "vit_local_checkpoint"
+    model_save_name = "vit-"
     checkpoint_folder = "training_checkpoints"
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
+
+    layernorm_eps = 1e-6
 
     # optimizers load and save
     save_optimizer: bool = False
@@ -116,16 +118,16 @@ _C.VIT.CLASSIFIER_TYPE = "token"
     """
 
 
-def build_model(model_size: str):
+def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
     model_args = dict()
-    if model_size == "60M":
+    model_args["layernorm_eps"] = layernorm_eps_in
+
+    if model_size == "90M":
         model_args = {
+            **model_args,
             "image_size": 256,
             "patch_size": 16,
             "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 10,
-            "heads": 8,
             "mlp_dim": 3072,
             "dropout": 0.1,
             "emb_dropout": 0.1,
@@ -316,11 +318,11 @@ def get_dataset(train=True):
 
 
 def get_policy():
-    return get_policy_base({Residual})
+    return get_policy_base({ViTEncoderBlock})
 
 
 def fsdp_checkpointing(model):
-    return fsdp_checkpointing_base(model, Residual)
+    return fsdp_checkpointing_base(model, ViTEncoderBlock)
 
 
 def train(

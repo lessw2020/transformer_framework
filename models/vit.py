@@ -77,11 +77,11 @@ class MLPBlock(Module):
 class ViTEncoderBlock(Module):
     """Transformer encoder block, following https://arxiv.org/abs/2010.11929."""
 
-    def __init__(self, hidden_d, n_heads, mlp_d):
+    def __init__(self, hidden_d, n_heads, mlp_d, ln_eps):
         super().__init__()
-        self.ln_1 = layernorm(hidden_d)
+        self.ln_1 = layernorm(hidden_d, ln_eps)
         self.self_attention = MultiheadAttention(hidden_d, n_heads)
-        self.ln_2 = layernorm(hidden_d)
+        self.ln_2 = layernorm(hidden_d, ln_eps)
         self.mlp_block = MLPBlock(hidden_d, mlp_d)
 
     def forward(self, x):
@@ -103,11 +103,13 @@ class ViTEncoderBlock(Module):
 class ViTEncoder(Module):
     """Transformer encoder (sequence of ViTEncoderBlocks)."""
 
-    def __init__(self, n_layers, hidden_d, n_heads, mlp_d):
+    def __init__(self, n_layers, hidden_d, n_heads, mlp_d, ln_eps):
         super(ViTEncoder, self).__init__()
         for i in range(n_layers):
-            self.add_module(f"block_{i}", ViTEncoderBlock(hidden_d, n_heads, mlp_d))
-        self.ln = layernorm(hidden_d)
+            self.add_module(
+                f"block_{i}", ViTEncoderBlock(hidden_d, n_heads, mlp_d, ln_eps)
+            )
+        self.ln = layernorm(hidden_d, ln_eps)
 
     def forward(self, x):
         for block in self.children():
@@ -206,7 +208,7 @@ class ViT(Module):
             err_str = "Stem output dim unequal to hidden dim"
             assert p["c_stem_dims"][-1] == p["hidden_d"], err_str
 
-    def __init__(self, params=None):
+    def __init__(self, params=None, cfg=None):
         super(ViT, self).__init__()
         p = ViT.get_params() if not params else params
         ViT.check_params(p)
@@ -223,7 +225,7 @@ class ViT(Module):
             self.class_token = None
         self.pos_embedding = Parameter(torch.zeros(seq_len, 1, p["hidden_d"]))
         self.encoder = ViTEncoder(
-            p["n_layers"], p["hidden_d"], p["n_heads"], p["mlp_dim"]
+            p["n_layers"], p["hidden_d"], p["n_heads"], p["mlp_dim"], p["layernorm_eps"]
         )
         self.head = ViTHead(p["hidden_d"], p["num_classes"])
         init_weights_vit(self)
@@ -255,7 +257,7 @@ class ViT(Module):
         elif p["stem_type"] == "conv":
             ks, ws, ss = p["c_stem_kernels"], p["c_stem_dims"], p["c_stem_strides"]
             cx = ViTStemConv.complexity(cx, 3, ks, ws, ss)
-        seq_len = (p["image_size"] // cfg.VIT.PATCH_SIZE) ** 2
+        seq_len = (p["image_size"] // params.VIT.PATCH_SIZE) ** 2
         if p["cls_type"] == "token":
             seq_len += 1
             cx["params"] += p["hidden_d"]
