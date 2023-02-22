@@ -39,6 +39,9 @@ class base_config:
     # this is only for fp32 scenario...
     use_tf32: bool = False
 
+    # add in tp support (default to false for base, activate in model)
+    use_tp = False
+
     # optimizer config
     optimizer: str = (
         "AnyPrecision"  # [AdamW, AnyPrecision, int8] (fp32, bf16, int8 optimizers)
