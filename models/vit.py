@@ -208,7 +208,7 @@ class ViT(Module):
             err_str = "Stem output dim unequal to hidden dim"
             assert p["c_stem_dims"][-1] == p["hidden_d"], err_str
 
-    def __init__(self, params=None, cfg=None):
+    def __init__(self, params=None):
         super(ViT, self).__init__()
         p = ViT.get_params() if not params else params
         ViT.check_params(p)

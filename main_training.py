@@ -176,6 +176,9 @@ def fsdp_main():
         if rank == 0:
             print(f"--> Model converted to BF16.\nRunning in ** PURE ** BFloat mode")
 
+    # ----- Add 2D Tensor Parallel if activated (in config)
+    if cfg.use_tp:
+        print(f"Tensor Parallel activated - init start\n")
     # ----- main FSDP init -----------
     model = FSDP(
         model,

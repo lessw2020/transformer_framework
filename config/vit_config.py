@@ -24,7 +24,7 @@ NUM_CLASSES = 10000
 @dataclass
 class train_config(base_config):
     # model
-    model_name = "60M"
+    model_name = "90M"
 
     # available models -name is ~ num params
     # 60M
@@ -37,6 +37,9 @@ class train_config(base_config):
     # 3B
     # 8B
 
+    # use TP
+    use_tp: bool = True
+
     # use synthetic data
     use_synthetic_data: bool = True
     train_data_path = "datasets_vision/imagenette320/train"
@@ -46,11 +49,11 @@ class train_config(base_config):
     use_mixed_precision: bool = True
 
     # checkpoint models
-    save_model_checkpoint: bool = True
-    # only for local dist
+    save_model_checkpoint: bool = False
+    # only for local and sharded dist
     single_file_per_rank = True
 
-    load_model_checkpoint: bool = True
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.SHARDED_STATE_DICT
 
     dist_checkpoint_root_folder = "distributed_checkpoints"
@@ -264,6 +267,9 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
             "dropout": 0.1,
             "emb_dropout": 0.1,
         }
+    assert model_args.get(
+        "image_size"
+    ), f"failed to build model args for {model_size=}...is your model size listed in config?"
     model = ViT(params=model_args)
 
     return model

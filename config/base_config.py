@@ -17,7 +17,6 @@ import torch
 
 @dataclass
 class base_config:
-
     # seed
     seed: int = 2022
     verbose: bool = True  # how much info to show...
@@ -71,7 +70,7 @@ class base_config:
     batch_size_training: int = 16
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # validation
     run_validation: bool = False
