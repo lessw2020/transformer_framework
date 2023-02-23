@@ -40,6 +40,9 @@ class train_config(base_config):
     # use TP
     use_tp: bool = True
 
+    # image size
+    image_size: int = 224
+
     # use synthetic data
     use_synthetic_data: bool = True
     train_data_path = "datasets_vision/imagenette320/train"
@@ -128,7 +131,7 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
     if model_size == "90M":
         model_args = {
             **model_args,
-            "image_size": 256,
+            "image_size": 224,
             "patch_size": 16,
             "num_classes": NUM_CLASSES,
             "mlp_dim": 3072,
@@ -278,7 +281,8 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
 class GeneratedDataset(Dataset):
     def __init__(self, **kwargs) -> None:
         super()
-        self._input_shape = kwargs.get("input_shape", [3, 256, 256])
+        image_size = kwargs.get("image_size", 256)
+        self._input_shape = kwargs.get("input_shape", [3, image_size, image_size])
         self._input_type = kwargs.get("input_type", torch.float32)
         self._len = kwargs.get("len", 1000000)
         self._num_classes = kwargs.get("num_classes", 1000)
@@ -295,7 +299,10 @@ class GeneratedDataset(Dataset):
 def get_dataset(train=True):
     cfg = train_config()
     if cfg.use_synthetic_data:
-        return GeneratedDataset()
+        image_size = 256
+        if cfg.image_size:
+            image_size = cfg.image_size
+        return GeneratedDataset(image_size=cfg.image_size)
 
     normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
