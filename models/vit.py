@@ -36,10 +36,6 @@ from models.blocks import (
     patchify2d_cx,
 )
 
-# from config import vit_config
-use_tp = True
-# todo - pull from config but currently 'circular import'
-# cfg = vit_config.train_config()
 
 from torch.nn import Module, Parameter, init
 
@@ -83,6 +79,13 @@ class ViTEncoderBlock(Module):
 
     def __init__(self, hidden_d, n_heads, mlp_d, ln_eps):
         super().__init__()
+
+        # TODO - this is temp workaround for MHA returning non tuple when running TP
+        import config.vit_config as config
+
+        self.cfg = config.train_config()
+        self.use_tp = self.cfg.use_tp  
+        
         self.ln_1 = layernorm(hidden_d, ln_eps)
         self.self_attention = MultiheadAttention(hidden_d, n_heads)
         self.ln_2 = layernorm(hidden_d, ln_eps)
@@ -91,7 +94,7 @@ class ViTEncoderBlock(Module):
     def forward(self, x):
         x_p = self.ln_1(x)
         # print(f"vit l89, {x_p.shape=}")
-        if use_tp:
+        if self.use_tp:
             x_p = self.self_attention(x_p, x_p, x_p)
         else:
             x_p, _ = self.self_attention(x_p, x_p, x_p)
