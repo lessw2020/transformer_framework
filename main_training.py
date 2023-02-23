@@ -77,6 +77,12 @@ def setup_tasks(rank, world_size, cfg):
     setup_environ_flags(cfg, rank)
 
 
+# wrapper to avoid cluttering with if rank==0...
+def rank_print(rank, x):
+    if rank == 0:
+        print(x)
+
+
 # ------ main code loop -----------------
 def fsdp_main():
     """main process,  within each rank process"""
@@ -179,6 +185,80 @@ def fsdp_main():
     # ----- Add 2D Tensor Parallel if activated (in config)
     if cfg.use_tp:
         print(f"Tensor Parallel activated - init start\n")
+
+        from torch.distributed.tensor.parallel.fsdp import enable_2d_with_fsdp
+
+        TP_AVAILABLE = False
+        try:
+            from torch.distributed._tensor import (
+                DeviceMesh,
+            )
+            from torch.distributed.tensor.parallel import (
+                PairwiseParallel,
+                parallelize_module,
+                # get_parallelization_fqn,
+            )
+
+            # need to setup hooks for TP
+
+            fsdp_is_available = enable_2d_with_fsdp()
+
+            TP_AVAILABLE = fsdp_is_available
+
+        except BaseException as e:
+            print(f"Exception during TP init - {e=}\n")
+            pass
+
+        assert TP_AVAILABLE, f"fsdp did not init"
+        print(f"tp_initialized - rank {rank}\n")
+
+        # Init TP
+        _tp = int(os.environ.get("RANK", -1)) != -1  # verify distributed run
+
+        assert (
+            _tp and TP_AVAILABLE
+        ), "this config assumes setup for Tensor Parallel - distributed not ready here."
+
+        # rank_print(f"TP is available = {TP_AVAILABLE}\n")
+        model_parallel_size = 2
+
+        # 2-D mesh is [dp, tp]
+        twod_mesh = DeviceMesh(
+            device_type="cuda",
+            mesh=torch.arange(0, world_size).view(model_parallel_size, -1),
+        )
+        rank_print(rank, f"{twod_mesh=}")
+
+        """for i in range(6):
+            block = model.get_submodule(f"transformer.h.{i}")
+            parallelized_block = parallelize_module(
+                module=block,
+                device_mesh=twod_mesh,
+                parallelize_plan={"attn": PairwiseParallel(), "mlp": PairwiseParallel()},
+                tp_mesh_dim=1,
+            )
+            block = parallelized_block
+        """
+
+        model = parallelize_module(
+            model,
+            twod_mesh,
+            {"attn": PairwiseParallel(), "mlp": PairwiseParallel()},
+            tp_mesh_dim=1,
+        )
+
+        """
+        # print(f"{tp_model=}")
+
+        fsdp_pg = twod_mesh.get_dim_groups()[0]
+
+
+        # todo - add back main code later for resume
+
+        model.to(device)
+        model = FSDP(model, process_group=fsdp_pg)
+        """
+
     # ----- main FSDP init -----------
     model = FSDP(
         model,
