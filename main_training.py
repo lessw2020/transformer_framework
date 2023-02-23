@@ -449,8 +449,10 @@ def fsdp_main():
     if local_rank == 0:
         # memory monitor
         memmax.stop()  # stop and display info
-
-        stable_sum = sum(tracking_duration[1:])
+        # print(f"{tracking_duration=}, {cfg.total_steps_to_run=}")
+        stable_sum = sum(
+            tracking_duration[3:]
+        )  # this is b/c of 2 warmup steps, plus remove first actual step
         if cfg.total_steps_to_run is not None:
             stable_avg = stable_sum / cfg.total_steps_to_run
             stable_avg = round(stable_avg, 4)
