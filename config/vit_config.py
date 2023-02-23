@@ -46,7 +46,7 @@ class train_config(base_config):
     val_data_path = "datasets_vision/imagenette320/val"
 
     # mixed precision
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
 
     # checkpoint models
     save_model_checkpoint: bool = False
