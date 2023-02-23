@@ -36,6 +36,10 @@ from models.blocks import (
     patchify2d_cx,
 )
 
+# from config import vit_config
+use_tp = True
+# todo - pull from config but currently 'circular import'
+# cfg = vit_config.train_config()
 
 from torch.nn import Module, Parameter, init
 
@@ -87,7 +91,11 @@ class ViTEncoderBlock(Module):
     def forward(self, x):
         x_p = self.ln_1(x)
         # print(f"vit l89, {x_p.shape=}")
-        x_p = self.self_attention(x_p, x_p, x_p)
+        if use_tp:
+            x_p = self.self_attention(x_p, x_p, x_p)
+        else:
+            x_p, _ = self.self_attention(x_p, x_p, x_p)
+
         # assert not isinstance(
         #    x_p, tuple
         # ), f"return value has become a tuple again - should only be tuple for need_weights=True"
