@@ -40,6 +40,7 @@ class base_config:
     use_tf32: bool = False
 
     # add in tp support (default to false for base, activate in model)
+    # generally change only in the model config, this is here for back compat.
     use_tp = False
 
     # optimizer config
@@ -70,7 +71,7 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 16
+    batch_size_training: int = 124
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = False
