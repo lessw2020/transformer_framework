@@ -324,7 +324,8 @@ def get_dataset(train=True):
 
 
 def get_policy():
-    return get_policy_base({ViTEncoderBlock})
+    # todo - can't use autowrap policy with 2d
+    return None  # get_policy_base({ViTEncoderBlock})
 
 
 def fsdp_checkpointing(model):

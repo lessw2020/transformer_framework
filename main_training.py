@@ -132,6 +132,8 @@ def fsdp_main():
 
     if local_rank == 0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
+
+    # ---  build model
     model = config.build_model(cfg.model_name)
 
     if local_rank == 0:
@@ -229,21 +231,25 @@ def fsdp_main():
         )
         rank_print(rank, f"{twod_mesh=}")
 
-        """for i in range(6):
-            block = model.get_submodule(f"transformer.h.{i}")
+        for i in range(12):
+            block = model.get_submodule(f"encoder.block_{i}")
             parallelized_block = parallelize_module(
                 module=block,
                 device_mesh=twod_mesh,
-                parallelize_plan={"attn": PairwiseParallel(), "mlp": PairwiseParallel()},
+                parallelize_plan={
+                    "self_attention": PairwiseParallel(),
+                    "mlp_block": PairwiseParallel(),
+                },
                 tp_mesh_dim=1,
             )
             block = parallelized_block
         """
-
+        if rank == 0:
+            print(f"&&&&&&&&&&&\n {model=}")
         model = parallelize_module(
             model,
             twod_mesh,
-            {"attn": PairwiseParallel(), "mlp": PairwiseParallel()},
+            {"self_attention": PairwiseParallel(), "mlp_block": PairwiseParallel()},
             tp_mesh_dim=1,
         )
 
@@ -252,23 +258,27 @@ def fsdp_main():
 
         fsdp_pg = twod_mesh.get_dim_groups()[0]
 
-
         # todo - add back main code later for resume
-
+        device = "cuda"
         model.to(device)
         model = FSDP(model, process_group=fsdp_pg)
-        """
 
+    process_group_fsdp = None
+
+    if cfg.use_tp:
+        fsdp_pg = twod_mesh.get_dim_groups()[0]
+        process_group_fsdp = fsdp_pg
     # ----- main FSDP init -----------
     model = FSDP(
         model,
+        process_group=process_group_fsdp,
         auto_wrap_policy=my_auto_wrap_policy,
         mixed_precision=mp_policy,
         backward_prefetch=prefetch_policy,
         sharding_strategy=cfg.sharding_strategy,
         device_id=torch.cuda.current_device(),
         forward_prefetch=cfg.forward_prefetch,
-        limit_all_gathers=True,
+        limit_all_gathers=False,
     )
 
     if (
