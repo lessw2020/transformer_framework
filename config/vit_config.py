@@ -18,7 +18,7 @@ from models.vit import ViT, ViTEncoderBlock
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
-NUM_CLASSES = 10000
+NUM_CLASSES = 37  # hardcode for pets dset
 
 
 @dataclass
@@ -41,12 +41,15 @@ class train_config(base_config):
     use_tp: bool = True
 
     # image size
-    image_size: int = 224
+    image_size: int = 256
 
     # use synthetic data
     use_synthetic_data: bool = True
-    train_data_path = "datasets_vision/imagenette320/train"
-    val_data_path = "datasets_vision/imagenette320/val"
+
+    # real dset, pets
+    num_categories = 37
+    train_data_path = "datasets_vision/pets/train"
+    val_data_path = "datasets_vision/pets/val"
 
     # mixed precision
     use_mixed_precision: bool = False
@@ -147,129 +150,7 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
             "cls_type": "pooled",
             "stem_type": "patchify",
         }
-    if model_size == "120M":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 2,
-            "heads": 2,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "500M":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 59,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "750M":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 89,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
 
-    if model_size == "1B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 118,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "1.5B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 177,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "2B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 236,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-
-    if model_size == "2.5B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 296,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-
-    if model_size == "3B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 357,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "3.5B":
-        model.args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 404,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
-    if model_size == "8B":
-        model_args = {
-            "image_size": 256,
-            "patch_size": 32,
-            "num_classes": NUM_CLASSES,
-            "dim": 1024,
-            "depth": 952,
-            "heads": 16,
-            "mlp_dim": 2048,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-        }
     assert model_args.get(
         "image_size"
     ), f"failed to build model args for {model_size=}...is your model size listed in config?"
@@ -294,6 +175,22 @@ class GeneratedDataset(Dataset):
         rand_image = torch.randn(self._input_shape, dtype=self._input_type)
         label = torch.tensor(data=[index % self._num_classes], dtype=torch.int64)
         return rand_image, label
+
+
+def load_image_batch(batch, feature_extractor):
+    # Take a list of PIL images and turn them to pixel values
+    inputs = feature_extractor([x for x in batch["image"]], return_tensors="pt")
+
+    inputs["labels"] = batch["labels"]
+    return inputs
+
+
+def get_hf_extractor(model_name=None):
+    from transformers import ViTFeatureExtractor
+
+    if not model_name:
+        model_name = "google/vit-base-patch16-224-in21k"
+    feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
 
 
 def get_dataset(train=True):
@@ -326,7 +223,20 @@ def get_dataset(train=True):
                 normalize,
             ]
         )
-    data_path = cfg.train_data_path if train else cfg.val_data_path
+    # HF specific
+    # from datasets import load_dataset
+
+    # ds = load_dataset("keremberke/pokemon-classification", name="full")
+    # example = ds['train'][0]
+
+    # data_path = cfg.train_data_path if train else cfg.val_data_path
+    # extractor = get_hf_extractor()
+
+    # prepare dataset
+    # prepared_ds = ds.with_transform(load_image_batch)
+
+    # Use torchvision
+
     return torchvision.datasets.ImageFolder(data_path, transform=input_transform)
 
 
