@@ -280,15 +280,20 @@ def validation(model, local_rank, rank, val_loader, world_size):
     loss_function = torch.nn.CrossEntropyLoss()
 
     with torch.no_grad():
-        for batch_idx, (inputs, target) in enumerate(val_loader):
-            inputs, target = inputs.to(torch.cuda.current_device()), target.to(
+        for batch_idx, (batch) in enumerate(val_loader):
+            inputs = batch["pixel_values"]
+            targets = batch["labels"]
+
+            inputs, targets = inputs.to(torch.cuda.current_device()), targets.to(
                 torch.cuda.current_device()
             )
             output = model(inputs)
-            loss = loss_function(output, target)
+            loss = loss_function(output, targets)
 
             # measure accuracy and record loss
-            acc = (output.argmax(dim=1) == target).float().mean()
+            acc = (output.argmax(dim=1) == targets).float().mean()
+            if acc > 0:
+                print(f"********** success: {acc=}\n")
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += loss / len(val_loader)
 

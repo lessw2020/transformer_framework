@@ -27,7 +27,7 @@ class base_config:
     print_memory_summary: bool = False
 
     # training
-    num_epochs: int = 2
+    num_epochs: int = 12
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 
@@ -71,14 +71,14 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 36
+    batch_size_training: int = 72
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = False
 
     # validation
-    run_validation: bool = False
-    val_batch_size = 6
+    run_validation: bool = True
+    val_batch_size = 24
 
     # logging
     track_memory = True

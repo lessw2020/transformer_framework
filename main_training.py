@@ -129,13 +129,14 @@ def fsdp_main():
         print(f"pokemon set not enabled")
         pass
 
+    val_dataset = None
+
     if use_pokemon:
         dataset, val_dataset = config.get_pokemon_dataset()
     else:
         dataset = config.get_dataset()
 
     # samplers ----
-    val_dataset = None
 
     train_sampler = DistributedSampler(
         dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size(), shuffle=True
