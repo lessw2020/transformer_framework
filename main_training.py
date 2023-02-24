@@ -119,13 +119,31 @@ def fsdp_main():
     my_auto_wrap_policy = config.get_policy()
     if rank == 0:
         print(f"policy is {my_auto_wrap_policy}")
-    dataset = config.get_dataset()
+
+    # todo - clean this up...temp bridge for testing pokemon dataset
+    if cfg.use_synthetic_data == False:
+        use_pokemon = False
+    try:
+        use_pokemon = cfg.use_pokemon_dataset
+    except:
+        print(f"pokemon set not enabled")
+        pass
+
+    if use_pokemon:
+        dataset, val_dataset = config.get_pokemon_dataset()
+    else:
+        dataset = config.get_dataset()
+
+    # samplers ----
+    val_dataset = None
+
     train_sampler = DistributedSampler(
         dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size(), shuffle=True
     )
 
     if cfg.run_validation:
-        val_dataset = config.get_dataset(train=False)
+        if not val_dataset:
+            val_dataset = config.get_dataset(train=False)
         val_sampler = DistributedSampler(
             val_dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size()
         )

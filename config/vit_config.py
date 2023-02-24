@@ -11,6 +11,7 @@ from torch import distributed as dist
 from torch.distributed.fsdp import StateDictType
 from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
+import torchvision.transforms as tvt
 
 # from vit_pytorch.deepvit import DeepViT, Residual
 # import torchvision.models as models
@@ -18,7 +19,7 @@ from models.vit import ViT, ViTEncoderBlock
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
-NUM_CLASSES = 37  # hardcode for pets dset
+NUM_CLASSES = 150  # hardcode for pets dset
 
 
 @dataclass
@@ -38,18 +39,20 @@ class train_config(base_config):
     # 8B
 
     # use TP
-    use_tp: bool = True
+    use_tp: bool = False
 
     # image size
-    image_size: int = 256
+    image_size: int = 224
 
     # use synthetic data
-    use_synthetic_data: bool = True
+    use_synthetic_data: bool = False
 
-    # real dset, pets
-    num_categories = 37
-    train_data_path = "datasets_vision/pets/train"
-    val_data_path = "datasets_vision/pets/val"
+    use_pokemon_dataset: bool = True
+
+    # real dset, pokemon
+    num_categories = 150
+    # train_data_path = "datasets_vision/pets/train"
+    # val_data_path = "datasets_vision/pets/val"
 
     # mixed precision
     use_mixed_precision: bool = False
@@ -193,7 +196,8 @@ def get_hf_extractor(model_name=None):
     feature_extractor = ViTFeatureExtractor.from_pretrained(model_name)
 
 
-def get_dataset(train=True):
+def get_dataset():
+    """generate both train and val dataset"""
     cfg = train_config()
     if cfg.use_synthetic_data:
         image_size = 256
@@ -201,43 +205,11 @@ def get_dataset(train=True):
             image_size = cfg.image_size
         return GeneratedDataset(image_size=cfg.image_size)
 
-    normalize = transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-    )
-    if train:
-        input_transform = transforms.Compose(
-            [
-                transforms.Resize((256, 256)),
-                transforms.RandomResizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize,
-            ]
-        )
-    else:
-        input_transform = transforms.Compose(
-            [
-                transforms.Resize((256, 256)),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                normalize,
-            ]
-        )
-    # HF specific
-    # from datasets import load_dataset
 
-    # ds = load_dataset("keremberke/pokemon-classification", name="full")
-    # example = ds['train'][0]
+def get_pokemon_dataset():
+    from datasets_vision.dataset_pokemon import get_datasets
 
-    # data_path = cfg.train_data_path if train else cfg.val_data_path
-    # extractor = get_hf_extractor()
-
-    # prepare dataset
-    # prepared_ds = ds.with_transform(load_image_batch)
-
-    # Use torchvision
-
-    return torchvision.datasets.ImageFolder(data_path, transform=input_transform)
+    return get_datasets()
 
 
 def get_policy():
@@ -262,9 +234,11 @@ def train(
     cfg = train_config()
     loss_function = torch.nn.CrossEntropyLoss()
     t0 = time.perf_counter()
-    for batch_index, (inputs, target) in enumerate(data_loader, start=1):
+    for batch_index, (batch) in enumerate(data_loader, start=1):
+        inputs = batch["pixel_values"]
+        targets = batch["labels"]
         inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
-            target.to(torch.cuda.current_device()), -1
+            targets.to(torch.cuda.current_device()), -1
         )
         if optimizer:
             optimizer.zero_grad()
