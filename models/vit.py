@@ -250,19 +250,19 @@ class ViT(Module):
 
     def forward(self, x):
         # (n, c, h, w) -> (n, hidden_d, n_h, n_w)
-        print(f"{x.shape=}")
+        # print(f"{x.shape=}")
         x = self.stem(x)
-        print(f"after stem {x.shape=}")
+        # print(f"after stem {x.shape=}")
         # (n, hidden_d, n_h, n_w) -> (n, hidden_d, (n_h * n_w))
         x = x.reshape(x.size(0), x.size(1), -1)
         # (n, hidden_d, (n_h * n_w)) -> ((n_h * n_w), n, hidden_d)
         x = x.permute(2, 0, 1)
-        print(f"after permute {x.shape=}")
+        # print(f"after permute {x.shape=}")
         if self.class_token is not None:
             # Expand the class token to the full batch
             class_token = self.class_token.expand(-1, x.size(1), -1)
             x = torch.cat([class_token, x], dim=0)
-        print(f"{self.pos_embedding.shape=}, {x.shape=}")
+        # print(f"{self.pos_embedding.shape=}, {x.shape=}")
         x = x + self.pos_embedding
         x = self.encoder(x)
         # `token` or `pooled` features for classification

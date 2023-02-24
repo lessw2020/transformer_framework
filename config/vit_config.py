@@ -39,7 +39,7 @@ class train_config(base_config):
     # 8B
 
     # use TP
-    use_tp: bool = False
+    use_tp: bool = True
 
     # image size
     image_size: int = 224

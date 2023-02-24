@@ -21,7 +21,7 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 5
+    total_steps_to_run: int = None
 
     # stats
     print_memory_summary: bool = False
@@ -71,7 +71,7 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 12
+    batch_size_training: int = 36
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = False
