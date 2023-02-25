@@ -348,5 +348,5 @@ def validation(model, local_rank, rank, val_loader, world_size, stats=None):
             acc = f"{epoch_val_accuracy:.4f}"
             stats["loss"].append(loss)
             stats["accuracy"].append(acc)
-            print(f"{stats=}")
+            # print(f"{stats=}")
     return

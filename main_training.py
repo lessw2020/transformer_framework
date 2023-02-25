@@ -374,7 +374,7 @@ def fsdp_main():
 
     # optimizer ----------
     optimizer = None
-    lr = 1e-3
+    lr = 8e-4
     weight_decay = 0.002
 
     if cfg.optimizer == "int8":
@@ -403,11 +403,19 @@ def fsdp_main():
             )
 
     else:
-        optimizer = torch.optim.AdamW(
-            model.parameters(), lr=lr, weight_decay=weight_decay, amsgrad=False
+        from dadaptation import DAdaptAdam
+
+        # optimizer = torch.optim.AdamW(
+        optimizer = DAdaptAdam(
+            model.parameters(),
+            lr=1.0,
+            weight_decay=weight_decay,
+            amsgrad=False,
+            decouple=True,
+            log_every=4,
         )
         if rank == 0:
-            print(f"Running with AdamW optimizer")
+            print(f"Running with DAdapt optimizer")
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
