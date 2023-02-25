@@ -39,7 +39,7 @@ class train_config(base_config):
     # 8B
 
     # use TP
-    use_tp: bool = True
+    use_tp: bool = False
 
     # image size
     image_size: int = 224
@@ -133,6 +133,26 @@ _C.VIT.CLASSIFIER_TYPE = "token"
 def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
     model_args = dict()
     model_args["layernorm_eps"] = layernorm_eps_in
+
+    if model_size == "90M":
+        model_args = {
+            **model_args,
+            "image_size": 224,
+            "patch_size": 16,
+            "num_classes": NUM_CLASSES,
+            "mlp_dim": 3072,
+            "dropout": 0.1,
+            "emb_dropout": 0.1,
+            "c_stem_kernels": [],
+            "c_stem_strides": [],
+            "c_stem_dims": [],
+            "n_layers": 12,
+            "n_heads": 12,
+            "hidden_d": 1024,
+            "mlp_d": 3072,
+            "cls_type": "pooled",
+            "stem_type": "patchify",
+        }
 
     if model_size == "90M":
         model_args = {
@@ -268,7 +288,7 @@ def train(
             break
 
 
-def validation(model, local_rank, rank, val_loader, world_size):
+def validation(model, local_rank, rank, val_loader, world_size, stats=None):
     epoch_val_accuracy = 0
     epoch_val_loss = 0
     model.eval()
@@ -308,4 +328,10 @@ def validation(model, local_rank, rank, val_loader, world_size):
     epoch_val_loss, epoch_val_accuracy = metrics[0], metrics[1]
     if rank == 0:
         print(f"val_loss : {epoch_val_loss:.4f} :  val_acc: {epoch_val_accuracy:.4f}\n")
+    if stats:
+        print(f"updating stats...")
+        loss = f"{epoch_val_loss:.4f}"
+        acc = f"{epoch_val_accuracy:.4f}"
+        stats["loss"].append(loss)
+        stats["accuracy"].append(acc)
     return

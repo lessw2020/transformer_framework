@@ -130,9 +130,13 @@ def fsdp_main():
         pass
 
     val_dataset = None
-
+    _stats = None
     if use_pokemon:
         dataset, val_dataset = config.get_pokemon_dataset()
+        if rank == 0:
+            import collections
+
+            _stats = collections.defaultdict(list)
     else:
         dataset = config.get_dataset()
 
@@ -151,6 +155,7 @@ def fsdp_main():
 
     if local_rank == 0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
+        print(f"stats is ready....? {_stats=}")
 
     # ---  build model
     model = config.build_model(cfg.model_name)
@@ -362,8 +367,8 @@ def fsdp_main():
 
     # optimizer ----------
     optimizer = None
-    lr = 8e-4
-    weight_decay = 0.0
+    lr = 1e-3
+    weight_decay = 0.002
 
     if cfg.optimizer == "int8":
         import bitsandbytes as bnb
@@ -430,6 +435,8 @@ def fsdp_main():
             )
     else:
         for i in range(1, cfg.num_epochs + 1):
+            if rank == 0:
+                print(f"Epoch: {i} starting...")
             config.train(
                 model,
                 data_loader,
@@ -444,7 +451,9 @@ def fsdp_main():
                 break
 
             if cfg.run_validation:
-                config.validation(model, local_rank, rank, val_loader, world_size)
+                config.validation(
+                    model, local_rank, rank, val_loader, world_size, stats=_stats
+                )
 
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
@@ -469,6 +478,12 @@ def fsdp_main():
         # memory monitor
         memmax.stop()  # stop and display info
         # print(f"{tracking_duration=}, {cfg.total_steps_to_run=}")
+        if _stats:
+            total_loss_curve = stats["loss"]
+            total_acc_curve = stats["accuracy"]
+            for loss, acc in zip(total_loss_curve, total_acc_curve):
+                print(f"{loss=}, {acc=}")
+
         stable_sum = sum(
             tracking_duration[3:]
         )  # this is b/c of 2 warmup steps, plus remove first actual step
