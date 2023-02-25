@@ -227,7 +227,7 @@ def get_dataset():
 
 
 def get_pokemon_dataset():
-    from datasets_vision.dataset_pokemon import get_datasets
+    from dataset_classes.dataset_pokemon import get_datasets
 
     return get_datasets()
 
@@ -313,8 +313,8 @@ def validation(model, local_rank, rank, val_loader, world_size, stats=None):
 
             # measure accuracy and record loss
             acc = (output.argmax(dim=1) == targets).float().mean()
-            if acc > 0:
-                print(f"********** success: {acc=}\n")
+            # if acc > 0:
+            #    print(f"********** success: {acc=}\n")
             epoch_val_accuracy += acc / len(val_loader)
             epoch_val_loss += loss / len(val_loader)
 

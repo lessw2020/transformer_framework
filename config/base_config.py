@@ -27,7 +27,7 @@ class base_config:
     print_memory_summary: bool = False
 
     # training
-    num_epochs: int = 10
+    num_epochs: int = 3
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 
