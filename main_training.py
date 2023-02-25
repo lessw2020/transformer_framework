@@ -155,7 +155,7 @@ def fsdp_main():
 
     if local_rank == 0:
         print(f"\n--> Prepping {cfg.model_name} model ...\n")
-        print(f"stats is ready....? {_stats=}")
+        print(f"stats is ready....? {_stats=}, {local_rank=}, {rank=}")
 
     # ---  build model
     model = config.build_model(cfg.model_name)
@@ -437,6 +437,7 @@ def fsdp_main():
         for i in range(1, cfg.num_epochs + 1):
             if rank == 0:
                 print(f"Epoch: {i} starting...")
+                assert _stats is not None, "missing stats in main"
             config.train(
                 model,
                 data_loader,
@@ -451,6 +452,8 @@ def fsdp_main():
                 break
 
             if cfg.run_validation:
+                if rank == 0:
+                    assert _stats is not None, "no stats in main"
                 config.validation(
                     model, local_rank, rank, val_loader, world_size, stats=_stats
                 )
@@ -479,8 +482,8 @@ def fsdp_main():
         memmax.stop()  # stop and display info
         # print(f"{tracking_duration=}, {cfg.total_steps_to_run=}")
         if _stats:
-            total_loss_curve = stats["loss"]
-            total_acc_curve = stats["accuracy"]
+            total_loss_curve = _stats["loss"]
+            total_acc_curve = _stats["accuracy"]
             for loss, acc in zip(total_loss_curve, total_acc_curve):
                 print(f"{loss=}, {acc=}")
 

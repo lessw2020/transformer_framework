@@ -296,6 +296,7 @@ def validation(model, local_rank, rank, val_loader, world_size, stats=None):
         inner_pbar = tqdm.tqdm(
             range(len(val_loader)), colour="green", desc="Validation Epoch"
         )
+        assert stats is not None, f"missing stats!"
 
     loss_function = torch.nn.CrossEntropyLoss()
 
@@ -328,10 +329,11 @@ def validation(model, local_rank, rank, val_loader, world_size, stats=None):
     epoch_val_loss, epoch_val_accuracy = metrics[0], metrics[1]
     if rank == 0:
         print(f"val_loss : {epoch_val_loss:.4f} :  val_acc: {epoch_val_accuracy:.4f}\n")
-    if stats:
-        print(f"updating stats...")
-        loss = f"{epoch_val_loss:.4f}"
-        acc = f"{epoch_val_accuracy:.4f}"
-        stats["loss"].append(loss)
-        stats["accuracy"].append(acc)
+        if stats is not None:
+            print(f"updating stats...")
+            loss = f"{epoch_val_loss:.4f}"
+            acc = f"{epoch_val_accuracy:.4f}"
+            stats["loss"].append(loss)
+            stats["accuracy"].append(acc)
+            print(f"{stats=}")
     return
