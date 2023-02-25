@@ -19,7 +19,7 @@ from models.vit import ViT, ViTEncoderBlock
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
-NUM_CLASSES = 150  # hardcode for pets dset
+NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 
 
 @dataclass
@@ -47,7 +47,14 @@ class train_config(base_config):
     # use synthetic data
     use_synthetic_data: bool = False
 
-    use_pokemon_dataset: bool = True
+    # todo - below needs to become dynamic since we are adding more datasets
+    use_pokemon_dataset: bool = False
+    if use_pokemon_dataset:
+        NUM_CLASSES = 150
+
+    use_beans_dataset: bool = True
+    if use_beans_dataset:
+        NUM_CLASSES = 3
 
     # real dset, pokemon
     num_categories = 150
@@ -224,6 +231,12 @@ def get_dataset():
         if cfg.image_size:
             image_size = cfg.image_size
         return GeneratedDataset(image_size=cfg.image_size)
+
+
+def get_beans_dataset():
+    from dataset_classes.dataset_beans import get_datasets
+
+    return get_datasets()
 
 
 def get_pokemon_dataset():

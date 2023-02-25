@@ -123,22 +123,29 @@ def fsdp_main():
     # todo - clean this up...temp bridge for testing pokemon dataset
     if cfg.use_synthetic_data == False:
         use_pokemon = False
+        use_beans = False
     try:
         use_pokemon = cfg.use_pokemon_dataset
+        use_beans = cfg.use_beans_dataset
     except:
-        print(f"pokemon set not enabled")
+        print(f"pokemon nor beans set not enabled")
         pass
 
     val_dataset = None
     _stats = None
     if use_pokemon:
         dataset, val_dataset = config.get_pokemon_dataset()
+
+    elif use_beans:
+        dataset, val_dataset = config.get_beans_dataset()
+    else:
+        dataset = config.get_dataset()
+
+    if use_beans or use_pokemon:
         if rank == 0:
             import collections
 
             _stats = collections.defaultdict(list)
-    else:
-        dataset = config.get_dataset()
 
     # samplers ----
 
