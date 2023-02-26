@@ -25,7 +25,10 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 @dataclass
 class train_config(base_config):
     # model
-    model_name = "90M"
+    # model_name = "90M"
+    use_timm=True  
+    model_name = "vit_relpos_medium_patch16_rpn_224"
+                # "vit_relpos_base_patch16_rpn_224","
 
     # available models -name is ~ num params
     # 60M
@@ -56,8 +59,8 @@ class train_config(base_config):
     if use_beans_dataset:
         NUM_CLASSES = 3
 
-    # real dset, pokemon
-    num_categories = 150
+    # real dset
+    num_categories = NUM_CLASSES
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"
 
