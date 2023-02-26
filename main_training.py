@@ -165,7 +165,18 @@ def fsdp_main():
         print(f"stats is ready....? {_stats=}, {local_rank=}, {rank=}")
 
     # ---  build model
-    model = config.build_model(cfg.model_name)
+    if not cfg.use_timm:
+        model = config.build_model(cfg.model_name)
+    else:
+        import timm
+        import torch.nn as nn
+
+        model = timm.create_model(
+            cfg.timm_model_name,
+            act_layer=nn.GELU,
+            qk_norm=True,
+            num_classes=cfg.num_categories,
+        )
 
     if local_rank == 0:
         print(f"--> {cfg.model_name} built.")
