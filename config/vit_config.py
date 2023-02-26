@@ -26,20 +26,12 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
+
     use_timm = True
-    model_name = "vit_relpos_medium_patch16_rpn_224"
-    # "vit_relpos_base_patch16_rpn_224","
-    model_num_heads = 12
-    # available models -name is ~ num params
-    # 60M
-    # 500M
-    # 750M
-    # 1B
-    # 1.5B
-    # 2B
-    # 2.5B
-    # 3B
-    # 8B
+    model_name = (
+        "vit_relpos_medium_patch16_rpn_224"  # "vit_relpos_base_patch16_rpn_224","
+    )
+    model_num_heads = 16
 
     # use TP
     use_tp: bool = False

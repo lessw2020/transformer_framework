@@ -183,8 +183,8 @@ def fsdp_main():
         import torch.nn as nn
 
         model = timm.create_model(
-            cfg.timm_model_name,
-            num_heads=cfg.model_num_heads,
+            cfg.model_name,
+            # num_heads=cfg.model_num_heads,
             act_layer=nn.GELU,
             qk_norm=True,
             num_classes=cfg.num_categories,
