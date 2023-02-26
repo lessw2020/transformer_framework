@@ -525,6 +525,9 @@ def fsdp_main():
             for loss, acc in zip(total_loss_curve, total_acc_curve):
                 print(f"{loss=}, {acc=}")
 
+            best_val_acc = max(total_acc_curve)
+            print(Fore.GREEN + f"\n--> Highest Val Accuracy =  {best_val_acc}\n")
+
         stable_sum = sum(
             tracking_duration[3:]
         )  # this is b/c of 2 warmup steps, plus remove first actual step
