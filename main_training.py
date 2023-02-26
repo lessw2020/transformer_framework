@@ -165,9 +165,16 @@ def fsdp_main():
         print(f"stats is ready....? {_stats=}, {local_rank=}, {rank=}")
 
     # ---  build model
-    if not cfg.use_timm:
+    use_timm = False
+    try:
+        use_timm = cfg.use_timm
+    except:
+        pass  # means older config w/o timm support flag
+
+    if not use_timm:
         model = config.build_model(cfg.model_name)
-    else:
+
+    elif use_timm:
         import timm
         import torch.nn as nn
 
