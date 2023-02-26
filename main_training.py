@@ -175,6 +175,10 @@ def fsdp_main():
         model = config.build_model(cfg.model_name)
 
     elif use_timm:
+        # if you are here and this import fails - run:
+        # git clone https://github.com/huggingface/pytorch-image-models.git
+        # and then in the cloned main dir, run 'python setup.py develop'
+
         import timm
         import torch.nn as nn
 
