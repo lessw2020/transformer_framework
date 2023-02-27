@@ -29,7 +29,9 @@ class train_config(base_config):
 
     use_timm = True
     model_name = (
-        "vit_relpos_medium_patch16_rpn_224"  # "vit_relpos_base_patch16_rpn_224","
+        # "vit_relpos_medium_patch16_rpn_224"  #
+        "vit_relpos_base_patch16_rpn_224"
+        # "maxxvitv2_rmlp_base_rw_224"
     )
     model_num_heads = 16
 

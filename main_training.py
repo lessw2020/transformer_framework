@@ -185,6 +185,7 @@ def fsdp_main():
         model = timm.create_model(
             cfg.model_name,
             # num_heads=cfg.model_num_heads,
+            pretrained=False,
             act_layer=nn.GELU,
             qk_norm=True,
             num_classes=cfg.num_categories,
@@ -427,9 +428,10 @@ def fsdp_main():
 
     else:
         from dadaptation import DAdaptAdam
+        from adanip_exp import DAdaptAdanIP
 
         # optimizer = torch.optim.AdamW(
-        optimizer = DAdaptAdam(
+        optimizer = DAdaptAdam(  # DAdaptAdam(
             model.parameters(),
             lr=1.0,
             weight_decay=weight_decay,
@@ -525,7 +527,7 @@ def fsdp_main():
             for loss, acc in zip(total_loss_curve, total_acc_curve):
                 print(f"{loss=}, {acc=}")
 
-            best_val_acc = max(total_acc_curve)
+            best_val_acc = 100 * float(max(total_acc_curve))
             print(Fore.GREEN + f"\n--> Highest Val Accuracy =  {best_val_acc}\n")
 
         stable_sum = sum(

@@ -1,0 +1,2197 @@
+******* loading model args.model='vit'
+******* loading model args.model='vit'
+******* loading model args.model='vit'
+******* loading model args.model='vit'
+--> World Size = 4
+
+--> Device_count = 4
+--> running with these defaults train_config(seed=2022, verbose=True, total_steps_to_run=None, print_memory_summary=False, num_epochs=300, model_weights_bf16=False, use_mixed_precision=False, use_low_precision_gradient_policy=False, use_tf32=False, optimizer='AnyPrecision', ap_use_kahan_summation=False, sharding_strategy=<ShardingStrategy.FULL_SHARD: 1>, print_sharding_plan=False, run_profiler=False, profile_folder='fsdp/profile_tracing', log_every=1, num_workers_dataloader=2, batch_size_training=68, fsdp_activation_checkpointing=False, run_validation=True, memory_report=True, nccl_debug_handler=True, distributed_debug=True, use_non_recursive_wrapping=False, use_tp=False, image_size=224, use_synthetic_data=False, use_pokemon_dataset=False, use_beans_dataset=True, save_model_checkpoint=False, load_model_checkpoint=False, checkpoint_max_save_count=2, save_optimizer=False, load_optimizer=False, optimizer_checkpoint_file='Adam-vit--1.pt', checkpoint_model_filename='vit--1.pt')
+clearing gpu cache for all ranks
+--> running with torch dist debug set to detail
+--> total memory per gpu (GB) = 22.0626
+policy is None
+
+--> Prepping vit_relpos_base_patch16_rpn_224 model ...
+
+stats is ready....? _stats=defaultdict(<class 'list'>, {}), local_rank=0, rank=0
+--> vit_relpos_base_patch16_rpn_224 built.
+built model with 151.942851M params
+--> Warning - bf16 support not available.  Using fp32
+backward prefetch set to None
+sharding set to ShardingStrategy.FULL_SHARD
+--> Batch Size = 68
+local rank 0 init time = 0.7194142759999522
+memory stats reset, ready to track
+step: 1: time taken for the last 1 steps is 2.7425989050000226, loss is 1.3618253469467163
+step: 2: time taken for the last 1 steps is 0.5492016389998753, loss is 1.2400237321853638
+Finish warm up
+Running with AnyPrecision Optimizer, momo=torch.float32, var = torch.float32, kahan summation =  False
+Epoch: 1 starting...
+step: 1: time taken for the last 1 steps is 1.2059477050001988, loss is 1.3502328395843506
+step: 2: time taken for the last 1 steps is 0.558105623000074, loss is 2.772268056869507
+step: 3: time taken for the last 1 steps is 0.5638014480000493, loss is 2.188901901245117
+step: 4: time taken for the last 1 steps is 0.531010574999982, loss is 1.8474090099334717
+val_loss : 1.4679 :  val_acc: 0.4521
+
+updating stats...
+Epoch: 2 starting...
+step: 1: time taken for the last 1 steps is 0.8264739339999778, loss is 1.8955564498901367
+step: 2: time taken for the last 1 steps is 0.5498019899998781, loss is 1.1917791366577148
+step: 3: time taken for the last 1 steps is 0.5327653079998527, loss is 1.2654627561569214
+step: 4: time taken for the last 1 steps is 0.5191987880000397, loss is 0.8961225152015686
+val_loss : 1.0444 :  val_acc: 0.5250
+
+updating stats...
+Epoch: 3 starting...
+step: 1: time taken for the last 1 steps is 0.8135913480000454, loss is 1.1972880363464355
+step: 2: time taken for the last 1 steps is 0.5436835079999582, loss is 1.137427568435669
+step: 3: time taken for the last 1 steps is 0.5465052800000194, loss is 1.0648016929626465
+step: 4: time taken for the last 1 steps is 0.49816815200006204, loss is 0.9127635359764099
+val_loss : 0.9245 :  val_acc: 0.5302
+
+updating stats...
+Epoch: 4 starting...
+step: 1: time taken for the last 1 steps is 0.8449840939999831, loss is 1.0200624465942383
+step: 2: time taken for the last 1 steps is 0.548742152000159, loss is 0.9055872559547424
+step: 3: time taken for the last 1 steps is 0.5473216350001167, loss is 0.973391592502594
+step: 4: time taken for the last 1 steps is 0.520292869000059, loss is 0.9933704137802124
+val_loss : 0.9433 :  val_acc: 0.5177
+
+updating stats...
+Epoch: 5 starting...
+step: 1: time taken for the last 1 steps is 0.8542066929999237, loss is 1.0468885898590088
+step: 2: time taken for the last 1 steps is 0.5338339780000751, loss is 1.0379694700241089
+step: 3: time taken for the last 1 steps is 0.5462448159998985, loss is 0.9869194030761719
+step: 4: time taken for the last 1 steps is 0.5177978330000315, loss is 0.9640048146247864
+val_loss : 0.9358 :  val_acc: 0.5156
+
+updating stats...
+Epoch: 6 starting...
+step: 1: time taken for the last 1 steps is 0.8200303359999452, loss is 0.9707807898521423
+step: 2: time taken for the last 1 steps is 0.5328905009998834, loss is 1.0078496932983398
+step: 3: time taken for the last 1 steps is 0.5508367090001229, loss is 0.9222326278686523
+step: 4: time taken for the last 1 steps is 0.5185197949999747, loss is 0.9319679141044617
+val_loss : 0.8963 :  val_acc: 0.5656
+
+updating stats...
+Epoch: 7 starting...
+step: 1: time taken for the last 1 steps is 0.8411699939999835, loss is 0.9370549321174622
+step: 2: time taken for the last 1 steps is 0.5481458610001937, loss is 0.9615454077720642
+step: 3: time taken for the last 1 steps is 0.5439990239999588, loss is 0.9261724948883057
+step: 4: time taken for the last 1 steps is 0.5197624390000328, loss is 0.8765459656715393
+val_loss : 0.8534 :  val_acc: 0.6000
+
+updating stats...
+Epoch: 8 starting...
+step: 1: time taken for the last 1 steps is 0.8368948150000506, loss is 0.9940316677093506
+step: 2: time taken for the last 1 steps is 0.5447389679998196, loss is 0.995409369468689
+step: 3: time taken for the last 1 steps is 0.5487850519998574, loss is 0.923244833946228
+step: 4: time taken for the last 1 steps is 0.5231416009999066, loss is 0.9233924150466919
+val_loss : 0.8564 :  val_acc: 0.5813
+
+updating stats...
+Epoch: 9 starting...
+step: 1: time taken for the last 1 steps is 0.8603359060000457, loss is 0.9624865055084229
+step: 2: time taken for the last 1 steps is 0.5478670140000759, loss is 0.9661927223205566
+step: 3: time taken for the last 1 steps is 0.5472375640001701, loss is 0.9105219841003418
+step: 4: time taken for the last 1 steps is 0.5170502290000059, loss is 0.851849377155304
+val_loss : 0.8624 :  val_acc: 0.6198
+
+updating stats...
+Epoch: 10 starting...
+step: 1: time taken for the last 1 steps is 0.8296574720000081, loss is 0.9686362147331238
+step: 2: time taken for the last 1 steps is 0.5427856020000945, loss is 0.9338812828063965
+step: 3: time taken for the last 1 steps is 0.5417603930000041, loss is 0.9548109769821167
+step: 4: time taken for the last 1 steps is 0.516019690000121, loss is 0.8184503316879272
+val_loss : 0.8334 :  val_acc: 0.6250
+
+updating stats...
+Epoch: 11 starting...
+step: 1: time taken for the last 1 steps is 0.8410934920000273, loss is 0.9091380834579468
+step: 2: time taken for the last 1 steps is 0.5402776660000654, loss is 0.940418004989624
+step: 3: time taken for the last 1 steps is 0.5349400569998579, loss is 0.9102849960327148
+step: 4: time taken for the last 1 steps is 0.5205788169998868, loss is 0.8478797078132629
+val_loss : 0.8206 :  val_acc: 0.5844
+
+updating stats...
+Epoch: 12 starting...
+step: 1: time taken for the last 1 steps is 0.8505435850001959, loss is 0.9116680026054382
+step: 2: time taken for the last 1 steps is 0.5399741429998812, loss is 0.8749575614929199
+step: 3: time taken for the last 1 steps is 0.5493994070000099, loss is 0.9562798738479614
+step: 4: time taken for the last 1 steps is 0.5150371259999247, loss is 0.8270223736763
+val_loss : 0.8233 :  val_acc: 0.6281
+
+updating stats...
+Epoch: 13 starting...
+step: 1: time taken for the last 1 steps is 0.8452627579999898, loss is 0.8943233489990234
+step: 2: time taken for the last 1 steps is 0.5343376299999818, loss is 0.8784380555152893
+step: 3: time taken for the last 1 steps is 0.5497094720001314, loss is 0.8737931251525879
+step: 4: time taken for the last 1 steps is 0.5093470009999237, loss is 0.813238263130188
+val_loss : 0.7962 :  val_acc: 0.6302
+
+updating stats...
+Epoch: 14 starting...
+step: 1: time taken for the last 1 steps is 0.8305475590000242, loss is 0.8451847434043884
+step: 2: time taken for the last 1 steps is 0.5445413079999071, loss is 0.807092547416687
+step: 3: time taken for the last 1 steps is 0.5390552670000943, loss is 0.8758931159973145
+step: 4: time taken for the last 1 steps is 0.5196595600000364, loss is 0.7266584038734436
+val_loss : 0.7612 :  val_acc: 0.6823
+
+updating stats...
+Epoch: 15 starting...
+step: 1: time taken for the last 1 steps is 0.8316008379999857, loss is 0.8146539926528931
+step: 2: time taken for the last 1 steps is 0.5445479479999449, loss is 0.820121705532074
+step: 3: time taken for the last 1 steps is 0.5425406500000918, loss is 0.904537558555603
+step: 4: time taken for the last 1 steps is 0.5228884800001197, loss is 0.6548585295677185
+val_loss : 0.7176 :  val_acc: 0.6719
+
+updating stats...
+Epoch: 16 starting...
+step: 1: time taken for the last 1 steps is 0.823359986000014, loss is 0.8075004816055298
+step: 2: time taken for the last 1 steps is 0.5409990619998553, loss is 0.812919020652771
+step: 3: time taken for the last 1 steps is 0.5505797979999443, loss is 0.828467607498169
+step: 4: time taken for the last 1 steps is 0.5209054039999046, loss is 0.6972617506980896
+val_loss : 0.6934 :  val_acc: 0.6948
+
+updating stats...
+Epoch: 17 starting...
+step: 1: time taken for the last 1 steps is 0.8451690969998253, loss is 0.8070997595787048
+step: 2: time taken for the last 1 steps is 0.5381818199998634, loss is 0.7828678488731384
+step: 3: time taken for the last 1 steps is 0.5363925880001261, loss is 0.805567741394043
+step: 4: time taken for the last 1 steps is 0.5145254470000964, loss is 0.6182730197906494
+val_loss : 0.6740 :  val_acc: 0.7156
+
+updating stats...
+Epoch: 18 starting...
+step: 1: time taken for the last 1 steps is 0.8435487469998861, loss is 0.7872871160507202
+step: 2: time taken for the last 1 steps is 0.5391830889998346, loss is 0.8073642253875732
+step: 3: time taken for the last 1 steps is 0.5447258409999449, loss is 0.755902886390686
+step: 4: time taken for the last 1 steps is 0.5167048569999224, loss is 0.5741916298866272
+val_loss : 0.6374 :  val_acc: 0.7458
+
+updating stats...
+Epoch: 19 starting...
+step: 1: time taken for the last 1 steps is 0.8201395880000746, loss is 0.7035937309265137
+step: 2: time taken for the last 1 steps is 0.5415559329999269, loss is 0.7020411491394043
+step: 3: time taken for the last 1 steps is 0.5529583820000425, loss is 0.6524328589439392
+step: 4: time taken for the last 1 steps is 0.516060934999814, loss is 0.5203772187232971
+val_loss : 0.6201 :  val_acc: 0.7198
+
+updating stats...
+Epoch: 20 starting...
+step: 1: time taken for the last 1 steps is 0.8128173129998686, loss is 0.741275429725647
+step: 2: time taken for the last 1 steps is 0.540281240000013, loss is 0.7578439116477966
+step: 3: time taken for the last 1 steps is 0.5390044559999296, loss is 0.7470228672027588
+step: 4: time taken for the last 1 steps is 0.5127534240000386, loss is 0.502064049243927
+val_loss : 0.6014 :  val_acc: 0.7635
+
+updating stats...
+Epoch: 21 starting...
+step: 1: time taken for the last 1 steps is 0.8213273700000627, loss is 0.6423299908638
+step: 2: time taken for the last 1 steps is 0.5373384249999162, loss is 0.6209176778793335
+step: 3: time taken for the last 1 steps is 0.5479359000000841, loss is 0.6622822880744934
+step: 4: time taken for the last 1 steps is 0.5202187509999021, loss is 0.6154690980911255
+val_loss : 0.5907 :  val_acc: 0.7865
+
+updating stats...
+Epoch: 22 starting...
+step: 1: time taken for the last 1 steps is 0.8286023829998612, loss is 0.6644025444984436
+step: 2: time taken for the last 1 steps is 0.539339062000181, loss is 0.63299560546875
+step: 3: time taken for the last 1 steps is 0.549679592000075, loss is 0.7135334014892578
+step: 4: time taken for the last 1 steps is 0.5189134369998101, loss is 0.4888369143009186
+val_loss : 0.5481 :  val_acc: 0.7958
+
+updating stats...
+Epoch: 23 starting...
+step: 1: time taken for the last 1 steps is 0.817078550999895, loss is 0.5884806513786316
+step: 2: time taken for the last 1 steps is 0.5524680639998678, loss is 0.6131036281585693
+step: 3: time taken for the last 1 steps is 0.5349797119999948, loss is 0.7055802941322327
+step: 4: time taken for the last 1 steps is 0.5141654599999583, loss is 0.48324206471443176
+val_loss : 0.5360 :  val_acc: 0.7812
+
+updating stats...
+Epoch: 24 starting...
+step: 1: time taken for the last 1 steps is 0.845998181999903, loss is 0.6357324719429016
+step: 2: time taken for the last 1 steps is 0.551383153000188, loss is 0.6854644417762756
+step: 3: time taken for the last 1 steps is 0.5418210679999902, loss is 0.653465986251831
+step: 4: time taken for the last 1 steps is 0.5210236359998817, loss is 0.42653608322143555
+val_loss : 0.5140 :  val_acc: 0.7917
+
+updating stats...
+Epoch: 25 starting...
+step: 1: time taken for the last 1 steps is 0.8431856199999856, loss is 0.6675330400466919
+step: 2: time taken for the last 1 steps is 0.5453269219999584, loss is 0.6548640727996826
+step: 3: time taken for the last 1 steps is 0.5423217469999599, loss is 0.5874381065368652
+step: 4: time taken for the last 1 steps is 0.5117928060001304, loss is 0.4780173897743225
+val_loss : 0.5461 :  val_acc: 0.7479
+
+updating stats...
+Epoch: 26 starting...
+step: 1: time taken for the last 1 steps is 0.8556660589999865, loss is 0.5913741588592529
+step: 2: time taken for the last 1 steps is 0.5490591610000592, loss is 0.7334398627281189
+step: 3: time taken for the last 1 steps is 0.5472029669999756, loss is 0.6245533227920532
+step: 4: time taken for the last 1 steps is 0.5180356809999012, loss is 0.5323359966278076
+val_loss : 0.4688 :  val_acc: 0.7885
+
+updating stats...
+Epoch: 27 starting...
+step: 1: time taken for the last 1 steps is 0.8381884880000143, loss is 0.5139099359512329
+step: 2: time taken for the last 1 steps is 0.5411214450000443, loss is 0.693558931350708
+step: 3: time taken for the last 1 steps is 0.5449236340000425, loss is 0.7740514278411865
+step: 4: time taken for the last 1 steps is 0.510619153999869, loss is 0.47446271777153015
+val_loss : 0.5068 :  val_acc: 0.8010
+
+updating stats...
+Epoch: 28 starting...
+step: 1: time taken for the last 1 steps is 0.8444867850000719, loss is 0.7158756256103516
+step: 2: time taken for the last 1 steps is 0.5393332710000323, loss is 0.5535522699356079
+step: 3: time taken for the last 1 steps is 0.5361991239999497, loss is 0.4926387071609497
+step: 4: time taken for the last 1 steps is 0.5207769010000902, loss is 0.4277729392051697
+val_loss : 0.5148 :  val_acc: 0.8167
+
+updating stats...
+Epoch: 29 starting...
+step: 1: time taken for the last 1 steps is 0.8343857690001641, loss is 0.7410185933113098
+step: 2: time taken for the last 1 steps is 0.5437762440001279, loss is 0.4869172275066376
+step: 3: time taken for the last 1 steps is 0.5517492899998615, loss is 0.6866953372955322
+step: 4: time taken for the last 1 steps is 0.5145939980000094, loss is 0.3805162310600281
+val_loss : 0.4761 :  val_acc: 0.8188
+
+updating stats...
+Epoch: 30 starting...
+step: 1: time taken for the last 1 steps is 0.8440308360000017, loss is 0.6032447814941406
+step: 2: time taken for the last 1 steps is 0.543419096999969, loss is 0.600347638130188
+step: 3: time taken for the last 1 steps is 0.5466232549999859, loss is 0.5694103240966797
+step: 4: time taken for the last 1 steps is 0.5138032330000897, loss is 0.4858241379261017
+val_loss : 0.5104 :  val_acc: 0.7865
+
+updating stats...
+Epoch: 31 starting...
+step: 1: time taken for the last 1 steps is 0.8438744630000201, loss is 0.6173492074012756
+step: 2: time taken for the last 1 steps is 0.5304690500001925, loss is 0.5149618983268738
+step: 3: time taken for the last 1 steps is 0.5430723810000018, loss is 0.5191231966018677
+step: 4: time taken for the last 1 steps is 0.5110833629998979, loss is 0.35234522819519043
+val_loss : 0.4901 :  val_acc: 0.7812
+
+updating stats...
+Epoch: 32 starting...
+step: 1: time taken for the last 1 steps is 0.8310574679999263, loss is 0.5714020133018494
+step: 2: time taken for the last 1 steps is 0.544334913000057, loss is 0.5203770399093628
+step: 3: time taken for the last 1 steps is 0.5487915250000697, loss is 0.5801374316215515
+step: 4: time taken for the last 1 steps is 0.5201246789999914, loss is 0.424825519323349
+val_loss : 0.4423 :  val_acc: 0.8385
+
+updating stats...
+Epoch: 33 starting...
+step: 1: time taken for the last 1 steps is 0.8399538709998069, loss is 0.6046094298362732
+step: 2: time taken for the last 1 steps is 0.5468507399998543, loss is 0.5661307573318481
+step: 3: time taken for the last 1 steps is 0.5371328119999816, loss is 0.47572943568229675
+step: 4: time taken for the last 1 steps is 0.5206928190000326, loss is 0.3309897780418396
+val_loss : 0.4648 :  val_acc: 0.8031
+
+updating stats...
+Epoch: 34 starting...
+step: 1: time taken for the last 1 steps is 0.8525505220000014, loss is 0.6189627051353455
+step: 2: time taken for the last 1 steps is 0.5422852259998763, loss is 0.4379640817642212
+step: 3: time taken for the last 1 steps is 0.5370040200000403, loss is 0.5288975834846497
+step: 4: time taken for the last 1 steps is 0.5144844150001973, loss is 0.40403687953948975
+val_loss : 0.4466 :  val_acc: 0.8188
+
+updating stats...
+Epoch: 35 starting...
+step: 1: time taken for the last 1 steps is 0.824652770000057, loss is 0.5330159068107605
+step: 2: time taken for the last 1 steps is 0.5421480729999075, loss is 0.6689003705978394
+step: 3: time taken for the last 1 steps is 0.5423894380001002, loss is 0.5194405913352966
+step: 4: time taken for the last 1 steps is 0.5097219580000001, loss is 0.5041148066520691
+val_loss : 0.3817 :  val_acc: 0.8573
+
+updating stats...
+Epoch: 36 starting...
+step: 1: time taken for the last 1 steps is 0.8299120480000965, loss is 0.5545355677604675
+step: 2: time taken for the last 1 steps is 0.538976195000032, loss is 0.6755070686340332
+step: 3: time taken for the last 1 steps is 0.5444121150001138, loss is 0.5365249514579773
+step: 4: time taken for the last 1 steps is 0.5116072440000607, loss is 0.3271138370037079
+val_loss : 0.4391 :  val_acc: 0.8344
+
+updating stats...
+Epoch: 37 starting...
+step: 1: time taken for the last 1 steps is 0.8488872850000462, loss is 0.5250250697135925
+step: 2: time taken for the last 1 steps is 0.5463359200000468, loss is 0.4831342101097107
+step: 3: time taken for the last 1 steps is 0.5439744970001357, loss is 0.4384065270423889
+step: 4: time taken for the last 1 steps is 0.5170706730000347, loss is 0.31635811924934387
+val_loss : 0.3799 :  val_acc: 0.8271
+
+updating stats...
+Epoch: 38 starting...
+step: 1: time taken for the last 1 steps is 0.827283578999868, loss is 0.4261717200279236
+step: 2: time taken for the last 1 steps is 0.5493589659999998, loss is 0.6602377891540527
+step: 3: time taken for the last 1 steps is 0.5416404340001009, loss is 0.3891771733760834
+step: 4: time taken for the last 1 steps is 0.5168963799999347, loss is 0.27832353115081787
+val_loss : 0.4075 :  val_acc: 0.8323
+
+updating stats...
+Epoch: 39 starting...
+step: 1: time taken for the last 1 steps is 0.8207659590000276, loss is 0.5376316905021667
+step: 2: time taken for the last 1 steps is 0.5521770079999442, loss is 0.5012232661247253
+step: 3: time taken for the last 1 steps is 0.5509890160001305, loss is 0.4218485653400421
+step: 4: time taken for the last 1 steps is 0.5131002099999478, loss is 0.27662724256515503
+val_loss : 0.4427 :  val_acc: 0.8094
+
+updating stats...
+Epoch: 40 starting...
+step: 1: time taken for the last 1 steps is 0.8376527479999822, loss is 0.4440532624721527
+step: 2: time taken for the last 1 steps is 0.5510345570000936, loss is 0.6418067812919617
+step: 3: time taken for the last 1 steps is 0.5421794839999166, loss is 0.46846866607666016
+step: 4: time taken for the last 1 steps is 0.5162232870000025, loss is 0.2992960810661316
+val_loss : 0.3319 :  val_acc: 0.8750
+
+updating stats...
+Epoch: 41 starting...
+step: 1: time taken for the last 1 steps is 0.844955083000059, loss is 0.4810296297073364
+step: 2: time taken for the last 1 steps is 0.5364089280001281, loss is 0.6463090181350708
+step: 3: time taken for the last 1 steps is 0.5384968659998322, loss is 0.37559396028518677
+step: 4: time taken for the last 1 steps is 0.5182124150001073, loss is 0.29842817783355713
+val_loss : 0.3802 :  val_acc: 0.8344
+
+updating stats...
+Epoch: 42 starting...
+step: 1: time taken for the last 1 steps is 0.8427844630000436, loss is 0.7462881207466125
+step: 2: time taken for the last 1 steps is 0.5459101120000014, loss is 0.4627962112426758
+step: 3: time taken for the last 1 steps is 0.5483047469999747, loss is 0.39968928694725037
+step: 4: time taken for the last 1 steps is 0.5133590350001214, loss is 0.30692461133003235
+val_loss : 0.3518 :  val_acc: 0.8396
+
+updating stats...
+Epoch: 43 starting...
+step: 1: time taken for the last 1 steps is 0.8322284299999865, loss is 0.453580379486084
+step: 2: time taken for the last 1 steps is 0.5522283590000825, loss is 0.652605414390564
+step: 3: time taken for the last 1 steps is 0.5406667170000219, loss is 0.5937989950180054
+step: 4: time taken for the last 1 steps is 0.5092612500000087, loss is 0.3244580030441284
+val_loss : 0.3701 :  val_acc: 0.8771
+
+updating stats...
+Epoch: 44 starting...
+step: 1: time taken for the last 1 steps is 0.8511122150000574, loss is 0.37136971950531006
+step: 2: time taken for the last 1 steps is 0.5458711920000496, loss is 0.5553340315818787
+step: 3: time taken for the last 1 steps is 0.5386855099998229, loss is 0.440286248922348
+step: 4: time taken for the last 1 steps is 0.5118726779999179, loss is 0.38807573914527893
+val_loss : 0.3996 :  val_acc: 0.8396
+
+updating stats...
+Epoch: 45 starting...
+step: 1: time taken for the last 1 steps is 0.8380329860001439, loss is 0.36037102341651917
+step: 2: time taken for the last 1 steps is 0.5441072589999294, loss is 0.5116207599639893
+step: 3: time taken for the last 1 steps is 0.5444170150001355, loss is 0.39522743225097656
+step: 4: time taken for the last 1 steps is 0.512953798000126, loss is 0.28663620352745056
+val_loss : 0.3575 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 46 starting...
+step: 1: time taken for the last 1 steps is 0.8480264199999965, loss is 0.43381190299987793
+step: 2: time taken for the last 1 steps is 0.5492876749999596, loss is 0.49097365140914917
+step: 3: time taken for the last 1 steps is 0.5440264880000996, loss is 0.37951770424842834
+step: 4: time taken for the last 1 steps is 0.5095594559998062, loss is 0.4139736294746399
+val_loss : 0.3501 :  val_acc: 0.8896
+
+updating stats...
+Epoch: 47 starting...
+step: 1: time taken for the last 1 steps is 0.836202123000021, loss is 0.6317886710166931
+step: 2: time taken for the last 1 steps is 0.5462563290000162, loss is 0.5238603949546814
+step: 3: time taken for the last 1 steps is 0.5461061660000723, loss is 0.3395364582538605
+step: 4: time taken for the last 1 steps is 0.5167777680001109, loss is 0.2931707501411438
+val_loss : 0.3809 :  val_acc: 0.8240
+
+updating stats...
+Epoch: 48 starting...
+step: 1: time taken for the last 1 steps is 0.8398710999999821, loss is 0.5362442135810852
+step: 2: time taken for the last 1 steps is 0.5510759789999611, loss is 0.5752094388008118
+step: 3: time taken for the last 1 steps is 0.5389262559999679, loss is 0.3688044548034668
+step: 4: time taken for the last 1 steps is 0.5081076100000246, loss is 0.4317777156829834
+val_loss : 0.4348 :  val_acc: 0.8010
+
+updating stats...
+Epoch: 49 starting...
+step: 1: time taken for the last 1 steps is 0.8448712700001124, loss is 0.5630983114242554
+step: 2: time taken for the last 1 steps is 0.5412297880000096, loss is 0.46068090200424194
+step: 3: time taken for the last 1 steps is 0.5505470200000673, loss is 0.37136125564575195
+step: 4: time taken for the last 1 steps is 0.516530904000092, loss is 0.3317767381668091
+val_loss : 0.4261 :  val_acc: 0.8010
+
+updating stats...
+Epoch: 50 starting...
+step: 1: time taken for the last 1 steps is 0.8202758079999057, loss is 0.5593106150627136
+step: 2: time taken for the last 1 steps is 0.5408029400000487, loss is 0.5105289816856384
+step: 3: time taken for the last 1 steps is 0.5410066849999566, loss is 0.335543155670166
+step: 4: time taken for the last 1 steps is 0.5107147069998064, loss is 0.2307049036026001
+val_loss : 0.3462 :  val_acc: 0.8698
+
+updating stats...
+Epoch: 51 starting...
+step: 1: time taken for the last 1 steps is 0.8397289550000551, loss is 0.35260993242263794
+step: 2: time taken for the last 1 steps is 0.5474934940000367, loss is 0.5112385749816895
+step: 3: time taken for the last 1 steps is 0.550537919999897, loss is 0.46086472272872925
+step: 4: time taken for the last 1 steps is 0.5098960029999944, loss is 0.21640625596046448
+val_loss : 0.4139 :  val_acc: 0.8344
+
+updating stats...
+Epoch: 52 starting...
+step: 1: time taken for the last 1 steps is 0.8392931869998392, loss is 0.38207030296325684
+step: 2: time taken for the last 1 steps is 0.5498887179999201, loss is 0.42851948738098145
+step: 3: time taken for the last 1 steps is 0.5461494379999294, loss is 0.39450252056121826
+step: 4: time taken for the last 1 steps is 0.5205169079999905, loss is 0.2882072925567627
+val_loss : 0.3639 :  val_acc: 0.8396
+
+updating stats...
+Epoch: 53 starting...
+step: 1: time taken for the last 1 steps is 0.8299657860000025, loss is 0.46444156765937805
+step: 2: time taken for the last 1 steps is 0.5380599709999387, loss is 0.45376309752464294
+step: 3: time taken for the last 1 steps is 0.5410077950000414, loss is 0.3763642907142639
+step: 4: time taken for the last 1 steps is 0.5171320459999151, loss is 0.22324706614017487
+val_loss : 0.3446 :  val_acc: 0.8573
+
+updating stats...
+Epoch: 54 starting...
+step: 1: time taken for the last 1 steps is 0.8293039040001986, loss is 0.4434482455253601
+step: 2: time taken for the last 1 steps is 0.5375601210000696, loss is 0.42038384079933167
+step: 3: time taken for the last 1 steps is 0.5522127099998215, loss is 0.29192525148391724
+step: 4: time taken for the last 1 steps is 0.5097539899998083, loss is 0.23594322800636292
+val_loss : 0.3457 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 55 starting...
+step: 1: time taken for the last 1 steps is 0.8469693990000451, loss is 0.5281389355659485
+step: 2: time taken for the last 1 steps is 0.5464324149997992, loss is 0.29966476559638977
+step: 3: time taken for the last 1 steps is 0.5468831629998476, loss is 0.3275134861469269
+step: 4: time taken for the last 1 steps is 0.5148749950001275, loss is 0.3303925693035126
+val_loss : 0.3158 :  val_acc: 0.8729
+
+updating stats...
+Epoch: 56 starting...
+step: 1: time taken for the last 1 steps is 0.8449668020000445, loss is 0.2864932417869568
+step: 2: time taken for the last 1 steps is 0.5465323860000808, loss is 0.23786938190460205
+step: 3: time taken for the last 1 steps is 0.5375252200001341, loss is 0.3883000314235687
+step: 4: time taken for the last 1 steps is 0.5169753229999969, loss is 0.20424135029315948
+val_loss : 0.4455 :  val_acc: 0.8146
+
+updating stats...
+Epoch: 57 starting...
+step: 1: time taken for the last 1 steps is 0.849637378000125, loss is 0.4567107856273651
+step: 2: time taken for the last 1 steps is 0.5514313959999981, loss is 0.4020608067512512
+step: 3: time taken for the last 1 steps is 0.5413075999999819, loss is 0.3310708999633789
+step: 4: time taken for the last 1 steps is 0.5128373370000645, loss is 0.34602242708206177
+val_loss : 0.3613 :  val_acc: 0.8927
+
+updating stats...
+Epoch: 58 starting...
+step: 1: time taken for the last 1 steps is 0.8438951729999644, loss is 0.5850158929824829
+step: 2: time taken for the last 1 steps is 0.5430887830000302, loss is 0.2720194160938263
+step: 3: time taken for the last 1 steps is 0.5457129410001471, loss is 0.32866501808166504
+step: 4: time taken for the last 1 steps is 0.5113696589999108, loss is 0.2173653393983841
+val_loss : 0.3391 :  val_acc: 0.8573
+
+updating stats...
+Epoch: 59 starting...
+step: 1: time taken for the last 1 steps is 0.8378961410001011, loss is 0.4399292767047882
+step: 2: time taken for the last 1 steps is 0.54691432300001, loss is 0.4121926724910736
+step: 3: time taken for the last 1 steps is 0.5394432160001088, loss is 0.4596976041793823
+step: 4: time taken for the last 1 steps is 0.502688439999929, loss is 0.2787383198738098
+val_loss : 0.4702 :  val_acc: 0.8271
+
+updating stats...
+Epoch: 60 starting...
+step: 1: time taken for the last 1 steps is 0.8405262799999491, loss is 0.4451938569545746
+step: 2: time taken for the last 1 steps is 0.5427675870000712, loss is 0.5084255933761597
+step: 3: time taken for the last 1 steps is 0.5422000660000776, loss is 0.3848440647125244
+step: 4: time taken for the last 1 steps is 0.5146825799999988, loss is 0.28282225131988525
+val_loss : 0.3265 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 61 starting...
+step: 1: time taken for the last 1 steps is 0.8466105620000235, loss is 0.568873405456543
+step: 2: time taken for the last 1 steps is 0.5408888520000801, loss is 0.5093417167663574
+step: 3: time taken for the last 1 steps is 0.5481075150000834, loss is 0.44990864396095276
+step: 4: time taken for the last 1 steps is 0.5142949930000213, loss is 0.37456196546554565
+val_loss : 0.3508 :  val_acc: 0.8479
+
+updating stats...
+Epoch: 62 starting...
+step: 1: time taken for the last 1 steps is 0.8397469760000149, loss is 0.3454976975917816
+step: 2: time taken for the last 1 steps is 0.5421872859999439, loss is 0.36569735407829285
+step: 3: time taken for the last 1 steps is 0.5454590470001222, loss is 0.349128395318985
+step: 4: time taken for the last 1 steps is 0.521013357000129, loss is 0.3244234025478363
+val_loss : 0.3229 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 63 starting...
+step: 1: time taken for the last 1 steps is 0.8384043819999079, loss is 0.2720220685005188
+step: 2: time taken for the last 1 steps is 0.5417602179998084, loss is 0.5650380849838257
+step: 3: time taken for the last 1 steps is 0.5458686639999542, loss is 0.40326714515686035
+step: 4: time taken for the last 1 steps is 0.5084576670001297, loss is 0.2615705132484436
+val_loss : 0.3903 :  val_acc: 0.8448
+
+updating stats...
+Epoch: 64 starting...
+step: 1: time taken for the last 1 steps is 0.8334515599999577, loss is 0.3811153769493103
+step: 2: time taken for the last 1 steps is 0.5352437489998465, loss is 0.5216858983039856
+step: 3: time taken for the last 1 steps is 0.5414920640000673, loss is 0.3633744716644287
+step: 4: time taken for the last 1 steps is 0.5168853909999598, loss is 0.25555747747421265
+val_loss : 0.3102 :  val_acc: 0.8646
+
+updating stats...
+Epoch: 65 starting...
+step: 1: time taken for the last 1 steps is 0.8375014040000224, loss is 0.33768174052238464
+step: 2: time taken for the last 1 steps is 0.5470058949999839, loss is 0.4009026288986206
+step: 3: time taken for the last 1 steps is 0.5428169679998973, loss is 0.31035277247428894
+step: 4: time taken for the last 1 steps is 0.5117809579999175, loss is 0.32748943567276
+val_loss : 0.3153 :  val_acc: 0.8771
+
+updating stats...
+Epoch: 66 starting...
+step: 1: time taken for the last 1 steps is 0.8408254260000376, loss is 0.24922168254852295
+step: 2: time taken for the last 1 steps is 0.5391657110001233, loss is 0.38323304057121277
+step: 3: time taken for the last 1 steps is 0.5439622890000919, loss is 0.32413971424102783
+step: 4: time taken for the last 1 steps is 0.5183009869999751, loss is 0.20844615995883942
+val_loss : 0.3758 :  val_acc: 0.8552
+
+updating stats...
+Epoch: 67 starting...
+step: 1: time taken for the last 1 steps is 0.852057713000022, loss is 0.41490158438682556
+step: 2: time taken for the last 1 steps is 0.5440358390001165, loss is 0.43497130274772644
+step: 3: time taken for the last 1 steps is 0.5487611369999286, loss is 0.39321666955947876
+step: 4: time taken for the last 1 steps is 0.5184408790000816, loss is 0.21731966733932495
+val_loss : 0.3267 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 68 starting...
+step: 1: time taken for the last 1 steps is 0.8554738349998843, loss is 0.3155420422554016
+step: 2: time taken for the last 1 steps is 0.5323744859999806, loss is 0.27047860622406006
+step: 3: time taken for the last 1 steps is 0.5466998900001272, loss is 0.4239215552806854
+step: 4: time taken for the last 1 steps is 0.5187169150001409, loss is 0.2991621494293213
+val_loss : 0.4051 :  val_acc: 0.8646
+
+updating stats...
+Epoch: 69 starting...
+step: 1: time taken for the last 1 steps is 0.8485200370000712, loss is 0.5106467604637146
+step: 2: time taken for the last 1 steps is 0.5404764950001208, loss is 0.4554342031478882
+step: 3: time taken for the last 1 steps is 0.5405606459999035, loss is 0.3424634337425232
+step: 4: time taken for the last 1 steps is 0.5136511620000874, loss is 0.5016503930091858
+val_loss : 0.4224 :  val_acc: 0.8500
+
+updating stats...
+Epoch: 70 starting...
+step: 1: time taken for the last 1 steps is 0.8528716670000449, loss is 0.38263043761253357
+step: 2: time taken for the last 1 steps is 0.5334491760002038, loss is 0.5316821932792664
+step: 3: time taken for the last 1 steps is 0.5462976019998678, loss is 0.3921135663986206
+step: 4: time taken for the last 1 steps is 0.5201237600001605, loss is 0.19029353559017181
+val_loss : 0.3654 :  val_acc: 0.8573
+
+updating stats...
+Epoch: 71 starting...
+step: 1: time taken for the last 1 steps is 0.8307401800000207, loss is 0.33706891536712646
+step: 2: time taken for the last 1 steps is 0.5415321939999558, loss is 0.34573251008987427
+step: 3: time taken for the last 1 steps is 0.5472453889999542, loss is 0.3926294147968292
+step: 4: time taken for the last 1 steps is 0.5240712319998693, loss is 0.3372357189655304
+val_loss : 0.3655 :  val_acc: 0.8750
+
+updating stats...
+Epoch: 72 starting...
+step: 1: time taken for the last 1 steps is 0.8419285659999787, loss is 0.3913383483886719
+step: 2: time taken for the last 1 steps is 0.547681257000022, loss is 0.3989218771457672
+step: 3: time taken for the last 1 steps is 0.5463574130001234, loss is 0.29651570320129395
+step: 4: time taken for the last 1 steps is 0.5173357090000081, loss is 0.1850368082523346
+val_loss : 0.3600 :  val_acc: 0.8573
+
+updating stats...
+Epoch: 73 starting...
+step: 1: time taken for the last 1 steps is 0.8459032690000186, loss is 0.23566776514053345
+step: 2: time taken for the last 1 steps is 0.5466515789998994, loss is 0.34271299839019775
+step: 3: time taken for the last 1 steps is 0.5523532130000604, loss is 0.3732047379016876
+step: 4: time taken for the last 1 steps is 0.5127695359999507, loss is 0.25547879934310913
+val_loss : 0.3481 :  val_acc: 0.8625
+
+updating stats...
+Epoch: 74 starting...
+step: 1: time taken for the last 1 steps is 0.8197748190000311, loss is 0.33922043442726135
+step: 2: time taken for the last 1 steps is 0.5446478920000573, loss is 0.42848658561706543
+step: 3: time taken for the last 1 steps is 0.5361137450001934, loss is 0.27290964126586914
+step: 4: time taken for the last 1 steps is 0.5089796459999434, loss is 0.27954408526420593
+val_loss : 0.3030 :  val_acc: 0.8750
+
+updating stats...
+Epoch: 75 starting...
+step: 1: time taken for the last 1 steps is 0.8467514740000297, loss is 0.331319659948349
+step: 2: time taken for the last 1 steps is 0.5418602899999314, loss is 0.4288283884525299
+step: 3: time taken for the last 1 steps is 0.5481950270000198, loss is 0.22228719294071198
+step: 4: time taken for the last 1 steps is 0.5060845130001326, loss is 0.29571616649627686
+val_loss : 0.3303 :  val_acc: 0.8427
+
+updating stats...
+Epoch: 76 starting...
+step: 1: time taken for the last 1 steps is 0.8305346869999539, loss is 0.35639694333076477
+step: 2: time taken for the last 1 steps is 0.5408402820000902, loss is 0.35386237502098083
+step: 3: time taken for the last 1 steps is 0.5403758930001459, loss is 0.26564282178878784
+step: 4: time taken for the last 1 steps is 0.52477868699998, loss is 0.12686072289943695
+val_loss : 0.3505 :  val_acc: 0.8729
+
+updating stats...
+Epoch: 77 starting...
+step: 1: time taken for the last 1 steps is 0.8568825810000362, loss is 0.27486446499824524
+step: 2: time taken for the last 1 steps is 0.5416424559998632, loss is 0.41230034828186035
+step: 3: time taken for the last 1 steps is 0.5394882769999185, loss is 0.2750483751296997
+step: 4: time taken for the last 1 steps is 0.5128158669999721, loss is 0.15927013754844666
+val_loss : 0.3085 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 78 starting...
+step: 1: time taken for the last 1 steps is 0.8594516079999721, loss is 0.5484926700592041
+step: 2: time taken for the last 1 steps is 0.5450754480000342, loss is 0.22854410111904144
+step: 3: time taken for the last 1 steps is 0.5403769429999556, loss is 0.33515334129333496
+step: 4: time taken for the last 1 steps is 0.5095610470000338, loss is 0.13389679789543152
+val_loss : 0.3982 :  val_acc: 0.8750
+
+updating stats...
+Epoch: 79 starting...
+step: 1: time taken for the last 1 steps is 0.8169919470001332, loss is 0.5357200503349304
+step: 2: time taken for the last 1 steps is 0.541370790999963, loss is 0.28352922201156616
+step: 3: time taken for the last 1 steps is 0.5333003729999746, loss is 0.3210703432559967
+step: 4: time taken for the last 1 steps is 0.5238907899999958, loss is 0.17085234820842743
+val_loss : 0.2579 :  val_acc: 0.9115
+
+updating stats...
+Epoch: 80 starting...
+step: 1: time taken for the last 1 steps is 0.8423897749999014, loss is 0.2799394428730011
+step: 2: time taken for the last 1 steps is 0.5454400060000353, loss is 0.2804766893386841
+step: 3: time taken for the last 1 steps is 0.5470311550000133, loss is 0.23797374963760376
+step: 4: time taken for the last 1 steps is 0.5037543699997968, loss is 0.09351199865341187
+val_loss : 0.3462 :  val_acc: 0.8646
+
+updating stats...
+Epoch: 81 starting...
+step: 1: time taken for the last 1 steps is 0.8285302890001276, loss is 0.3739168643951416
+step: 2: time taken for the last 1 steps is 0.5337869119998686, loss is 0.28762388229370117
+step: 3: time taken for the last 1 steps is 0.5460798369999793, loss is 0.2056814283132553
+step: 4: time taken for the last 1 steps is 0.5178612699999121, loss is 0.2639504373073578
+val_loss : 0.2875 :  val_acc: 0.9062
+
+updating stats...
+Epoch: 82 starting...
+step: 1: time taken for the last 1 steps is 0.8433162610001546, loss is 0.3289852440357208
+step: 2: time taken for the last 1 steps is 0.5380572910000865, loss is 0.31694847345352173
+step: 3: time taken for the last 1 steps is 0.540467045000014, loss is 0.19613215327262878
+step: 4: time taken for the last 1 steps is 0.5058267980000437, loss is 0.19082005321979523
+val_loss : 0.4089 :  val_acc: 0.8073
+
+updating stats...
+Epoch: 83 starting...
+step: 1: time taken for the last 1 steps is 0.8528771170001619, loss is 0.2890875041484833
+step: 2: time taken for the last 1 steps is 0.5317863540001326, loss is 0.25270548462867737
+step: 3: time taken for the last 1 steps is 0.5389012760001606, loss is 0.31929105520248413
+step: 4: time taken for the last 1 steps is 0.5169785929999762, loss is 0.19591136276721954
+val_loss : 0.3671 :  val_acc: 0.8583
+
+updating stats...
+Epoch: 84 starting...
+step: 1: time taken for the last 1 steps is 0.8625459649999812, loss is 0.3308655023574829
+step: 2: time taken for the last 1 steps is 0.5426433449999877, loss is 0.2794710099697113
+step: 3: time taken for the last 1 steps is 0.5479242720000457, loss is 0.2557043433189392
+step: 4: time taken for the last 1 steps is 0.5099157330000708, loss is 0.22920313477516174
+val_loss : 0.2672 :  val_acc: 0.9052
+
+updating stats...
+Epoch: 85 starting...
+step: 1: time taken for the last 1 steps is 0.8443998509999346, loss is 0.31487056612968445
+step: 2: time taken for the last 1 steps is 0.5379034229999888, loss is 0.2556721270084381
+step: 3: time taken for the last 1 steps is 0.5424145960000715, loss is 0.2705182135105133
+step: 4: time taken for the last 1 steps is 0.5129072239999459, loss is 0.19406041502952576
+val_loss : 0.2811 :  val_acc: 0.8958
+
+updating stats...
+Epoch: 86 starting...
+step: 1: time taken for the last 1 steps is 0.846795345999908, loss is 0.24836136400699615
+step: 2: time taken for the last 1 steps is 0.538678038000171, loss is 0.3314928710460663
+step: 3: time taken for the last 1 steps is 0.5435622569998486, loss is 0.24494993686676025
+step: 4: time taken for the last 1 steps is 0.5042944159999934, loss is 0.23353390395641327
+val_loss : 0.3508 :  val_acc: 0.8958
+
+updating stats...
+Epoch: 87 starting...
+step: 1: time taken for the last 1 steps is 0.8483938850001778, loss is 0.21342074871063232
+step: 2: time taken for the last 1 steps is 0.5361883020000278, loss is 0.2538529932498932
+step: 3: time taken for the last 1 steps is 0.5459579719999965, loss is 0.215516597032547
+step: 4: time taken for the last 1 steps is 0.5138188609998906, loss is 0.08187326043844223
+val_loss : 0.2932 :  val_acc: 0.8708
+
+updating stats...
+Epoch: 88 starting...
+step: 1: time taken for the last 1 steps is 0.8284909889998744, loss is 0.32094860076904297
+step: 2: time taken for the last 1 steps is 0.546609202999889, loss is 0.3729039132595062
+step: 3: time taken for the last 1 steps is 0.5420560200000182, loss is 0.2696378827095032
+step: 4: time taken for the last 1 steps is 0.5149517509998986, loss is 0.233515202999115
+val_loss : 0.2802 :  val_acc: 0.8479
+
+updating stats...
+Epoch: 89 starting...
+step: 1: time taken for the last 1 steps is 0.8260963650000122, loss is 0.1977672129869461
+step: 2: time taken for the last 1 steps is 0.5481952229999933, loss is 0.3694140911102295
+step: 3: time taken for the last 1 steps is 0.5431735600000138, loss is 0.312104731798172
+step: 4: time taken for the last 1 steps is 0.5116949620000923, loss is 0.3138490617275238
+val_loss : 0.4317 :  val_acc: 0.8198
+
+updating stats...
+Epoch: 90 starting...
+step: 1: time taken for the last 1 steps is 0.8226159700000153, loss is 0.3480829894542694
+step: 2: time taken for the last 1 steps is 0.5399158699999589, loss is 0.35792312026023865
+step: 3: time taken for the last 1 steps is 0.5459028509999371, loss is 0.3412383198738098
+step: 4: time taken for the last 1 steps is 0.5141728070000227, loss is 0.2192990630865097
+val_loss : 0.3090 :  val_acc: 0.8708
+
+updating stats...
+Epoch: 91 starting...
+step: 1: time taken for the last 1 steps is 0.8144271090000075, loss is 0.5013067126274109
+step: 2: time taken for the last 1 steps is 0.5394525320000412, loss is 0.32031697034835815
+step: 3: time taken for the last 1 steps is 0.5470062710001002, loss is 0.534544825553894
+step: 4: time taken for the last 1 steps is 0.5077366279999751, loss is 0.21631096303462982
+val_loss : 0.3675 :  val_acc: 0.8521
+
+updating stats...
+Epoch: 92 starting...
+step: 1: time taken for the last 1 steps is 0.8319976440000119, loss is 0.38171812891960144
+step: 2: time taken for the last 1 steps is 0.5485370289998173, loss is 0.37269327044487
+step: 3: time taken for the last 1 steps is 0.5507007799999428, loss is 0.2330285757780075
+step: 4: time taken for the last 1 steps is 0.522854617999883, loss is 0.34924086928367615
+val_loss : 0.4231 :  val_acc: 0.8427
+
+updating stats...
+Epoch: 93 starting...
+step: 1: time taken for the last 1 steps is 0.8457249660000343, loss is 0.40017637610435486
+step: 2: time taken for the last 1 steps is 0.5381915989999015, loss is 0.46867069602012634
+step: 3: time taken for the last 1 steps is 0.5425971100000879, loss is 0.30734196305274963
+step: 4: time taken for the last 1 steps is 0.5154852010000468, loss is 0.15804480016231537
+val_loss : 0.3035 :  val_acc: 0.8906
+
+updating stats...
+Epoch: 94 starting...
+step: 1: time taken for the last 1 steps is 0.8326172049999059, loss is 0.381089985370636
+step: 2: time taken for the last 1 steps is 0.546245196999962, loss is 0.32271283864974976
+step: 3: time taken for the last 1 steps is 0.545861830000149, loss is 0.34432435035705566
+step: 4: time taken for the last 1 steps is 0.5125337469999067, loss is 0.20784370601177216
+val_loss : 0.3086 :  val_acc: 0.8885
+
+updating stats...
+Epoch: 95 starting...
+step: 1: time taken for the last 1 steps is 0.8247717899998861, loss is 0.2757062613964081
+step: 2: time taken for the last 1 steps is 0.5348315070000353, loss is 0.1893559992313385
+step: 3: time taken for the last 1 steps is 0.5348839390001103, loss is 0.3900822103023529
+step: 4: time taken for the last 1 steps is 0.5175287689999095, loss is 0.18327276408672333
+val_loss : 0.3094 :  val_acc: 0.8958
+
+updating stats...
+Epoch: 96 starting...
+step: 1: time taken for the last 1 steps is 0.8573793699999896, loss is 0.2578771114349365
+step: 2: time taken for the last 1 steps is 0.544312102000049, loss is 0.17483782768249512
+step: 3: time taken for the last 1 steps is 0.542864654999903, loss is 0.21440821886062622
+step: 4: time taken for the last 1 steps is 0.519148838999854, loss is 0.20658259093761444
+val_loss : 0.2842 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 97 starting...
+step: 1: time taken for the last 1 steps is 0.8408754869999484, loss is 0.48936226963996887
+step: 2: time taken for the last 1 steps is 0.5353012559999115, loss is 0.21120376884937286
+step: 3: time taken for the last 1 steps is 0.5482557739999265, loss is 0.2297537475824356
+step: 4: time taken for the last 1 steps is 0.5141605169999366, loss is 0.1071009635925293
+val_loss : 0.3520 :  val_acc: 0.8604
+
+updating stats...
+Epoch: 98 starting...
+step: 1: time taken for the last 1 steps is 0.832407380999939, loss is 0.19704879820346832
+step: 2: time taken for the last 1 steps is 0.5466210540000702, loss is 0.2286141812801361
+step: 3: time taken for the last 1 steps is 0.5488970760000029, loss is 0.21051321923732758
+step: 4: time taken for the last 1 steps is 0.5142117979999057, loss is 0.08688507229089737
+val_loss : 0.3973 :  val_acc: 0.8479
+
+updating stats...
+Epoch: 99 starting...
+step: 1: time taken for the last 1 steps is 0.8239628349999748, loss is 0.21949981153011322
+step: 2: time taken for the last 1 steps is 0.5429894970000078, loss is 0.21821193397045135
+step: 3: time taken for the last 1 steps is 0.5375028559999464, loss is 0.3166569471359253
+step: 4: time taken for the last 1 steps is 0.5203485810000075, loss is 0.12969240546226501
+val_loss : 0.3300 :  val_acc: 0.8531
+
+updating stats...
+Epoch: 100 starting...
+step: 1: time taken for the last 1 steps is 0.8347128929999599, loss is 0.2797228991985321
+step: 2: time taken for the last 1 steps is 0.5388064209998902, loss is 0.30911651253700256
+step: 3: time taken for the last 1 steps is 0.5480606800001624, loss is 0.14625027775764465
+step: 4: time taken for the last 1 steps is 0.5064257250000992, loss is 0.1337253898382187
+val_loss : 0.3273 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 101 starting...
+step: 1: time taken for the last 1 steps is 0.8286636109999108, loss is 0.4220364987850189
+step: 2: time taken for the last 1 steps is 0.5425721399999475, loss is 0.24942083656787872
+step: 3: time taken for the last 1 steps is 0.5473255770000378, loss is 0.24028123915195465
+step: 4: time taken for the last 1 steps is 0.5154505710002013, loss is 0.09368717670440674
+val_loss : 0.2888 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 102 starting...
+step: 1: time taken for the last 1 steps is 0.8495685350001168, loss is 0.2553580701351166
+step: 2: time taken for the last 1 steps is 0.543228771000031, loss is 0.24219229817390442
+step: 3: time taken for the last 1 steps is 0.5405446830000074, loss is 0.1835995316505432
+step: 4: time taken for the last 1 steps is 0.5211338950000481, loss is 0.13723914325237274
+val_loss : 0.3508 :  val_acc: 0.8729
+
+updating stats...
+Epoch: 103 starting...
+step: 1: time taken for the last 1 steps is 0.8557737510000152, loss is 0.32227328419685364
+step: 2: time taken for the last 1 steps is 0.5414626690001114, loss is 0.23622240126132965
+step: 3: time taken for the last 1 steps is 0.5423972959999901, loss is 0.10949648916721344
+step: 4: time taken for the last 1 steps is 0.5153621590000057, loss is 0.0485488586127758
+val_loss : 0.3259 :  val_acc: 0.8729
+
+updating stats...
+Epoch: 104 starting...
+step: 1: time taken for the last 1 steps is 0.8483487039998181, loss is 0.23121657967567444
+step: 2: time taken for the last 1 steps is 0.5423038339999948, loss is 0.18137679994106293
+step: 3: time taken for the last 1 steps is 0.5458056299999043, loss is 0.13929536938667297
+step: 4: time taken for the last 1 steps is 0.5089244400001007, loss is 0.24883422255516052
+val_loss : 0.4846 :  val_acc: 0.8198
+
+updating stats...
+Epoch: 105 starting...
+step: 1: time taken for the last 1 steps is 0.8190294949999952, loss is 0.27593880891799927
+step: 2: time taken for the last 1 steps is 0.5409724809999261, loss is 0.32822275161743164
+step: 3: time taken for the last 1 steps is 0.5450738449999335, loss is 0.23556791245937347
+step: 4: time taken for the last 1 steps is 0.507785130000002, loss is 0.27463263273239136
+val_loss : 0.3760 :  val_acc: 0.8604
+
+updating stats...
+Epoch: 106 starting...
+step: 1: time taken for the last 1 steps is 0.8207827669998551, loss is 0.1473020315170288
+step: 2: time taken for the last 1 steps is 0.5431136489999062, loss is 0.2801692485809326
+step: 3: time taken for the last 1 steps is 0.5362593540000944, loss is 0.2647358477115631
+step: 4: time taken for the last 1 steps is 0.5162192150000919, loss is 0.12988831102848053
+val_loss : 0.3343 :  val_acc: 0.8375
+
+updating stats...
+Epoch: 107 starting...
+step: 1: time taken for the last 1 steps is 0.833228045000169, loss is 0.2196303904056549
+step: 2: time taken for the last 1 steps is 0.5532953770000404, loss is 0.27693474292755127
+step: 3: time taken for the last 1 steps is 0.5486186910000015, loss is 0.2350563108921051
+step: 4: time taken for the last 1 steps is 0.514876250000043, loss is 0.3257180154323578
+val_loss : 0.3459 :  val_acc: 0.8708
+
+updating stats...
+Epoch: 108 starting...
+step: 1: time taken for the last 1 steps is 0.8397798670000611, loss is 0.21648883819580078
+step: 2: time taken for the last 1 steps is 0.5493833850000556, loss is 0.22610464692115784
+step: 3: time taken for the last 1 steps is 0.5383823419999771, loss is 0.21012021601200104
+step: 4: time taken for the last 1 steps is 0.5194201639999392, loss is 0.18727920949459076
+val_loss : 0.3495 :  val_acc: 0.8656
+
+updating stats...
+Epoch: 109 starting...
+step: 1: time taken for the last 1 steps is 0.8335427119998258, loss is 0.31226015090942383
+step: 2: time taken for the last 1 steps is 0.5509009030001835, loss is 0.10334939509630203
+step: 3: time taken for the last 1 steps is 0.5508179319999726, loss is 0.3445267081260681
+step: 4: time taken for the last 1 steps is 0.5160869119999916, loss is 0.1566741019487381
+val_loss : 0.3433 :  val_acc: 0.8604
+
+updating stats...
+Epoch: 110 starting...
+step: 1: time taken for the last 1 steps is 0.8238666029999422, loss is 0.20163756608963013
+step: 2: time taken for the last 1 steps is 0.5432443019999482, loss is 0.22355687618255615
+step: 3: time taken for the last 1 steps is 0.5457815080001183, loss is 0.19716985523700714
+step: 4: time taken for the last 1 steps is 0.5160539320002044, loss is 0.08098874241113663
+val_loss : 0.3423 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 111 starting...
+step: 1: time taken for the last 1 steps is 0.833992470000112, loss is 0.2133871465921402
+step: 2: time taken for the last 1 steps is 0.535491428999876, loss is 0.3107958137989044
+step: 3: time taken for the last 1 steps is 0.5450893550000728, loss is 0.2364930510520935
+step: 4: time taken for the last 1 steps is 0.5167933559998801, loss is 0.13913331925868988
+val_loss : 0.3341 :  val_acc: 0.8625
+
+updating stats...
+Epoch: 112 starting...
+step: 1: time taken for the last 1 steps is 0.8597529430001032, loss is 0.22639983892440796
+step: 2: time taken for the last 1 steps is 0.5488661859999411, loss is 0.1658080816268921
+step: 3: time taken for the last 1 steps is 0.5490329780000138, loss is 0.23099306225776672
+step: 4: time taken for the last 1 steps is 0.5184978470001624, loss is 0.16578662395477295
+val_loss : 0.2739 :  val_acc: 0.8604
+
+updating stats...
+Epoch: 113 starting...
+step: 1: time taken for the last 1 steps is 0.8315173449998383, loss is 0.16881488263607025
+step: 2: time taken for the last 1 steps is 0.5442046499999833, loss is 0.24062001705169678
+step: 3: time taken for the last 1 steps is 0.5495735189999778, loss is 0.18358272314071655
+step: 4: time taken for the last 1 steps is 0.5188580930000626, loss is 0.06868131458759308
+val_loss : 0.3465 :  val_acc: 0.8656
+
+updating stats...
+Epoch: 114 starting...
+step: 1: time taken for the last 1 steps is 0.8331722440000249, loss is 0.23260445892810822
+step: 2: time taken for the last 1 steps is 0.5399141509999481, loss is 0.13639242947101593
+step: 3: time taken for the last 1 steps is 0.5524316199998793, loss is 0.1224542111158371
+step: 4: time taken for the last 1 steps is 0.5208255100001224, loss is 0.04217711463570595
+val_loss : 0.3420 :  val_acc: 0.8583
+
+updating stats...
+Epoch: 115 starting...
+step: 1: time taken for the last 1 steps is 0.835538058000111, loss is 0.15135188400745392
+step: 2: time taken for the last 1 steps is 0.5345559130000765, loss is 0.2830204963684082
+step: 3: time taken for the last 1 steps is 0.5462675979999858, loss is 0.1491066962480545
+step: 4: time taken for the last 1 steps is 0.5157286559999648, loss is 0.18703991174697876
+val_loss : 0.3906 :  val_acc: 0.8552
+
+updating stats...
+Epoch: 116 starting...
+step: 1: time taken for the last 1 steps is 0.8388663689997884, loss is 0.15969131886959076
+step: 2: time taken for the last 1 steps is 0.5514538630000061, loss is 0.20289331674575806
+step: 3: time taken for the last 1 steps is 0.5449429529999179, loss is 0.14836043119430542
+step: 4: time taken for the last 1 steps is 0.5075112750000699, loss is 0.21727649867534637
+val_loss : 0.2394 :  val_acc: 0.8906
+
+updating stats...
+Epoch: 117 starting...
+step: 1: time taken for the last 1 steps is 0.8362406510000255, loss is 0.18652546405792236
+step: 2: time taken for the last 1 steps is 0.5434661660001439, loss is 0.29893532395362854
+step: 3: time taken for the last 1 steps is 0.5366016700002092, loss is 0.13873383402824402
+step: 4: time taken for the last 1 steps is 0.5155686030000197, loss is 0.3674727976322174
+val_loss : 0.3146 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 118 starting...
+step: 1: time taken for the last 1 steps is 0.8333909379998659, loss is 0.3156467378139496
+step: 2: time taken for the last 1 steps is 0.5443394620001527, loss is 0.3926163911819458
+step: 3: time taken for the last 1 steps is 0.5497580119999839, loss is 0.22245709598064423
+step: 4: time taken for the last 1 steps is 0.5229863389999991, loss is 0.11398866772651672
+val_loss : 0.3542 :  val_acc: 0.8552
+
+updating stats...
+Epoch: 119 starting...
+step: 1: time taken for the last 1 steps is 0.8392318069998055, loss is 0.2782702147960663
+step: 2: time taken for the last 1 steps is 0.5421284110000215, loss is 0.22524024546146393
+step: 3: time taken for the last 1 steps is 0.5474166179999429, loss is 0.14453952014446259
+step: 4: time taken for the last 1 steps is 0.5285316919998877, loss is 0.15003451704978943
+val_loss : 0.3089 :  val_acc: 0.8927
+
+updating stats...
+Epoch: 120 starting...
+step: 1: time taken for the last 1 steps is 0.8547551619999467, loss is 0.3001267910003662
+step: 2: time taken for the last 1 steps is 0.5518926409999949, loss is 0.1999441385269165
+step: 3: time taken for the last 1 steps is 0.5369474159999754, loss is 0.17225666344165802
+step: 4: time taken for the last 1 steps is 0.5100306709998677, loss is 0.07319803535938263
+val_loss : 0.3874 :  val_acc: 0.8354
+
+updating stats...
+Epoch: 121 starting...
+step: 1: time taken for the last 1 steps is 0.8653296170000431, loss is 0.22975504398345947
+step: 2: time taken for the last 1 steps is 0.5409945710000557, loss is 0.1557852029800415
+step: 3: time taken for the last 1 steps is 0.5443037110001114, loss is 0.15954366326332092
+step: 4: time taken for the last 1 steps is 0.5150099229999796, loss is 0.12123353779315948
+val_loss : 0.3285 :  val_acc: 0.8833
+
+updating stats...
+Epoch: 122 starting...
+step: 1: time taken for the last 1 steps is 0.8281160419999196, loss is 0.3289310932159424
+step: 2: time taken for the last 1 steps is 0.5468061770000077, loss is 0.269641637802124
+step: 3: time taken for the last 1 steps is 0.5506677790001504, loss is 0.1859942525625229
+step: 4: time taken for the last 1 steps is 0.5185790579998866, loss is 0.1782110184431076
+val_loss : 0.3583 :  val_acc: 0.8479
+
+updating stats...
+Epoch: 123 starting...
+step: 1: time taken for the last 1 steps is 0.831049516000121, loss is 0.2093392163515091
+step: 2: time taken for the last 1 steps is 0.5461782269999276, loss is 0.25754496455192566
+step: 3: time taken for the last 1 steps is 0.5525563329999841, loss is 0.3564473092556
+step: 4: time taken for the last 1 steps is 0.5179747370000314, loss is 0.08637047559022903
+val_loss : 0.3817 :  val_acc: 0.8552
+
+updating stats...
+Epoch: 124 starting...
+step: 1: time taken for the last 1 steps is 0.8353048740000304, loss is 0.26357996463775635
+step: 2: time taken for the last 1 steps is 0.5468996390000029, loss is 0.1601312905550003
+step: 3: time taken for the last 1 steps is 0.5485613599998942, loss is 0.19831518828868866
+step: 4: time taken for the last 1 steps is 0.5215086119999341, loss is 0.12957823276519775
+val_loss : 0.3403 :  val_acc: 0.8760
+
+updating stats...
+Epoch: 125 starting...
+step: 1: time taken for the last 1 steps is 0.8250694759999533, loss is 0.35187920928001404
+step: 2: time taken for the last 1 steps is 0.536845294999921, loss is 0.3312763571739197
+step: 3: time taken for the last 1 steps is 0.5498871150000468, loss is 0.19091582298278809
+step: 4: time taken for the last 1 steps is 0.5160061500000666, loss is 0.19450074434280396
+val_loss : 0.3641 :  val_acc: 0.8531
+
+updating stats...
+Epoch: 126 starting...
+step: 1: time taken for the last 1 steps is 0.833503022000059, loss is 0.3330601155757904
+step: 2: time taken for the last 1 steps is 0.5420429499999955, loss is 0.13295193016529083
+step: 3: time taken for the last 1 steps is 0.5417438439999387, loss is 0.3638148903846741
+step: 4: time taken for the last 1 steps is 0.5153054180000254, loss is 0.07850835472345352
+val_loss : 0.3221 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 127 starting...
+step: 1: time taken for the last 1 steps is 0.8491267780000271, loss is 0.24357804656028748
+step: 2: time taken for the last 1 steps is 0.5455395940000471, loss is 0.29562243819236755
+step: 3: time taken for the last 1 steps is 0.5314664249999623, loss is 0.20026874542236328
+step: 4: time taken for the last 1 steps is 0.5152690380000422, loss is 0.12037405371665955
+val_loss : 0.2680 :  val_acc: 0.8979
+
+updating stats...
+Epoch: 128 starting...
+step: 1: time taken for the last 1 steps is 0.8377951500001473, loss is 0.2601964771747589
+step: 2: time taken for the last 1 steps is 0.5421436110000286, loss is 0.19486166536808014
+step: 3: time taken for the last 1 steps is 0.5360760400001254, loss is 0.20891495048999786
+step: 4: time taken for the last 1 steps is 0.5077499000001353, loss is 0.1476304978132248
+val_loss : 0.3263 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 129 starting...
+step: 1: time taken for the last 1 steps is 0.830030688000079, loss is 0.24688339233398438
+step: 2: time taken for the last 1 steps is 0.5304454160000205, loss is 0.2883984446525574
+step: 3: time taken for the last 1 steps is 0.5371215890002077, loss is 0.14962342381477356
+step: 4: time taken for the last 1 steps is 0.5128330529998948, loss is 0.10271614044904709
+val_loss : 0.2456 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 130 starting...
+step: 1: time taken for the last 1 steps is 0.8496224069999698, loss is 0.34984588623046875
+step: 2: time taken for the last 1 steps is 0.547131224000168, loss is 0.10970146954059601
+step: 3: time taken for the last 1 steps is 0.5481025910000881, loss is 0.1442084014415741
+step: 4: time taken for the last 1 steps is 0.5177007920001415, loss is 0.14509323239326477
+val_loss : 0.2792 :  val_acc: 0.8708
+
+updating stats...
+Epoch: 131 starting...
+step: 1: time taken for the last 1 steps is 0.8485974390000592, loss is 0.10823793709278107
+step: 2: time taken for the last 1 steps is 0.5427098430000115, loss is 0.17695271968841553
+step: 3: time taken for the last 1 steps is 0.5430290780000178, loss is 0.07522056996822357
+step: 4: time taken for the last 1 steps is 0.5197019289998934, loss is 0.15911951661109924
+val_loss : 0.2006 :  val_acc: 0.9156
+
+updating stats...
+Epoch: 132 starting...
+step: 1: time taken for the last 1 steps is 0.8502708690000418, loss is 0.2690389156341553
+step: 2: time taken for the last 1 steps is 0.544610227000021, loss is 0.1371082067489624
+step: 3: time taken for the last 1 steps is 0.5420186799999556, loss is 0.271022230386734
+step: 4: time taken for the last 1 steps is 0.503929769000024, loss is 0.047077834606170654
+val_loss : 0.2494 :  val_acc: 0.8729
+
+updating stats...
+Epoch: 133 starting...
+step: 1: time taken for the last 1 steps is 0.8390434630000527, loss is 0.13717074692249298
+step: 2: time taken for the last 1 steps is 0.5433608539999568, loss is 0.11350798606872559
+step: 3: time taken for the last 1 steps is 0.54805769099994, loss is 0.17020857334136963
+step: 4: time taken for the last 1 steps is 0.5127865619999739, loss is 0.10511463135480881
+val_loss : 0.2181 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 134 starting...
+step: 1: time taken for the last 1 steps is 0.8393913300001259, loss is 0.1663718819618225
+step: 2: time taken for the last 1 steps is 0.5428640759998871, loss is 0.23052118718624115
+step: 3: time taken for the last 1 steps is 0.5277730569998766, loss is 0.10574774444103241
+step: 4: time taken for the last 1 steps is 0.5167185939999399, loss is 0.08073250949382782
+val_loss : 0.2728 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 135 starting...
+step: 1: time taken for the last 1 steps is 0.8270585620000475, loss is 0.28187641501426697
+step: 2: time taken for the last 1 steps is 0.5415998919997946, loss is 0.12345430254936218
+step: 3: time taken for the last 1 steps is 0.5416222019998713, loss is 0.2848227620124817
+step: 4: time taken for the last 1 steps is 0.5258555620000607, loss is 0.06634354591369629
+val_loss : 0.2215 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 136 starting...
+step: 1: time taken for the last 1 steps is 0.8426601500000288, loss is 0.1461525559425354
+step: 2: time taken for the last 1 steps is 0.5537219140001071, loss is 0.20109066367149353
+step: 3: time taken for the last 1 steps is 0.5358355959999699, loss is 0.15052686631679535
+step: 4: time taken for the last 1 steps is 0.5154718109999976, loss is 0.058297231793403625
+val_loss : 0.2977 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 137 starting...
+step: 1: time taken for the last 1 steps is 0.839107494000018, loss is 0.24798670411109924
+step: 2: time taken for the last 1 steps is 0.5471809550001581, loss is 0.13620461523532867
+step: 3: time taken for the last 1 steps is 0.5486626419999538, loss is 0.21183767914772034
+step: 4: time taken for the last 1 steps is 0.5105505909998556, loss is 0.04936673492193222
+val_loss : 0.1854 :  val_acc: 0.9542
+
+updating stats...
+Epoch: 138 starting...
+step: 1: time taken for the last 1 steps is 0.8486273890000575, loss is 0.18589040637016296
+step: 2: time taken for the last 1 steps is 0.5433034929999394, loss is 0.19360938668251038
+step: 3: time taken for the last 1 steps is 0.5509192740000799, loss is 0.2684054970741272
+step: 4: time taken for the last 1 steps is 0.5220178710001164, loss is 0.08169292658567429
+val_loss : 0.2604 :  val_acc: 0.8979
+
+updating stats...
+Epoch: 139 starting...
+step: 1: time taken for the last 1 steps is 0.8350175390000913, loss is 0.18236927688121796
+step: 2: time taken for the last 1 steps is 0.5439600059999066, loss is 0.13463377952575684
+step: 3: time taken for the last 1 steps is 0.5400098750001234, loss is 0.06456519663333893
+step: 4: time taken for the last 1 steps is 0.5126658189999489, loss is 0.026969563215970993
+val_loss : 0.2175 :  val_acc: 0.9156
+
+updating stats...
+Epoch: 140 starting...
+step: 1: time taken for the last 1 steps is 0.8301686149998204, loss is 0.2518521249294281
+step: 2: time taken for the last 1 steps is 0.5382654679999632, loss is 0.27645838260650635
+step: 3: time taken for the last 1 steps is 0.5396047929998531, loss is 0.12452654540538788
+step: 4: time taken for the last 1 steps is 0.5192516889999297, loss is 0.09599743038415909
+val_loss : 0.3445 :  val_acc: 0.8833
+
+updating stats...
+Epoch: 141 starting...
+step: 1: time taken for the last 1 steps is 0.8395525780001662, loss is 0.24361750483512878
+step: 2: time taken for the last 1 steps is 0.5492694300000949, loss is 0.1221233531832695
+step: 3: time taken for the last 1 steps is 0.543872470999986, loss is 0.10915456712245941
+step: 4: time taken for the last 1 steps is 0.5162139040000966, loss is 0.12014542520046234
+val_loss : 0.2292 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 142 starting...
+step: 1: time taken for the last 1 steps is 0.8576133890001074, loss is 0.276843398809433
+step: 2: time taken for the last 1 steps is 0.5359412149996388, loss is 0.08186947554349899
+step: 3: time taken for the last 1 steps is 0.532694026000172, loss is 0.08456063270568848
+step: 4: time taken for the last 1 steps is 0.5223313950000374, loss is 0.06340926885604858
+val_loss : 0.3035 :  val_acc: 0.8750
+
+updating stats...
+Epoch: 143 starting...
+step: 1: time taken for the last 1 steps is 0.8408297309997579, loss is 0.09346549212932587
+step: 2: time taken for the last 1 steps is 0.5419023949998518, loss is 0.10591621696949005
+step: 3: time taken for the last 1 steps is 0.5420851290000428, loss is 0.17059555649757385
+step: 4: time taken for the last 1 steps is 0.516747733000102, loss is 0.05725453421473503
+val_loss : 0.2113 :  val_acc: 0.9208
+
+updating stats...
+Epoch: 144 starting...
+step: 1: time taken for the last 1 steps is 0.8507218730001114, loss is 0.17019638419151306
+step: 2: time taken for the last 1 steps is 0.538734915999612, loss is 0.1723122000694275
+step: 3: time taken for the last 1 steps is 0.5465490999999929, loss is 0.27755963802337646
+step: 4: time taken for the last 1 steps is 0.5098929679998037, loss is 0.03547774255275726
+val_loss : 0.2517 :  val_acc: 0.8927
+
+updating stats...
+Epoch: 145 starting...
+step: 1: time taken for the last 1 steps is 0.8407089789998281, loss is 0.19821543991565704
+step: 2: time taken for the last 1 steps is 0.5378273599999375, loss is 0.15693996846675873
+step: 3: time taken for the last 1 steps is 0.5481056389999139, loss is 0.15473496913909912
+step: 4: time taken for the last 1 steps is 0.5181268179999279, loss is 0.04744845628738403
+val_loss : 0.2319 :  val_acc: 0.9031
+
+updating stats...
+Epoch: 146 starting...
+step: 1: time taken for the last 1 steps is 0.8477424580000843, loss is 0.15523286163806915
+step: 2: time taken for the last 1 steps is 0.5407248329997856, loss is 0.07347993552684784
+step: 3: time taken for the last 1 steps is 0.5328463179998835, loss is 0.17809544503688812
+step: 4: time taken for the last 1 steps is 0.510814943999776, loss is 0.0472150482237339
+val_loss : 0.2245 :  val_acc: 0.9187
+
+updating stats...
+Epoch: 147 starting...
+step: 1: time taken for the last 1 steps is 0.831470538999838, loss is 0.09326350688934326
+step: 2: time taken for the last 1 steps is 0.5401867630002926, loss is 0.12794718146324158
+step: 3: time taken for the last 1 steps is 0.5417496420000134, loss is 0.27471375465393066
+step: 4: time taken for the last 1 steps is 0.512627727999643, loss is 0.08029422163963318
+val_loss : 0.2980 :  val_acc: 0.9062
+
+updating stats...
+Epoch: 148 starting...
+step: 1: time taken for the last 1 steps is 0.8446517809998113, loss is 0.10443143546581268
+step: 2: time taken for the last 1 steps is 0.5425011660004202, loss is 0.15418905019760132
+step: 3: time taken for the last 1 steps is 0.5458932780002215, loss is 0.07744038105010986
+step: 4: time taken for the last 1 steps is 0.5150606319998587, loss is 0.036196019500494
+val_loss : 0.2406 :  val_acc: 0.9365
+
+updating stats...
+Epoch: 149 starting...
+step: 1: time taken for the last 1 steps is 0.853223208000145, loss is 0.11651664227247238
+step: 2: time taken for the last 1 steps is 0.5499637530001564, loss is 0.07588566839694977
+step: 3: time taken for the last 1 steps is 0.546050330000071, loss is 0.24880994856357574
+step: 4: time taken for the last 1 steps is 0.5134747229999448, loss is 0.05467844009399414
+val_loss : 0.2573 :  val_acc: 0.8979
+
+updating stats...
+Epoch: 150 starting...
+step: 1: time taken for the last 1 steps is 0.8275792579997869, loss is 0.06666004657745361
+step: 2: time taken for the last 1 steps is 0.5308750320000399, loss is 0.14006195962429047
+step: 3: time taken for the last 1 steps is 0.5480021570001554, loss is 0.06073610857129097
+step: 4: time taken for the last 1 steps is 0.511171891000231, loss is 0.07871890813112259
+val_loss : 0.2603 :  val_acc: 0.8781
+
+updating stats...
+Epoch: 151 starting...
+step: 1: time taken for the last 1 steps is 0.8290842249998605, loss is 0.29618024826049805
+step: 2: time taken for the last 1 steps is 0.5472056919998067, loss is 0.14076104760169983
+step: 3: time taken for the last 1 steps is 0.5402507140001944, loss is 0.14995735883712769
+step: 4: time taken for the last 1 steps is 0.5176998409997395, loss is 0.10198528319597244
+val_loss : 0.3131 :  val_acc: 0.8781
+
+updating stats...
+Epoch: 152 starting...
+step: 1: time taken for the last 1 steps is 0.8405388959999982, loss is 0.27516454458236694
+step: 2: time taken for the last 1 steps is 0.5488680519997615, loss is 0.11865223199129105
+step: 3: time taken for the last 1 steps is 0.5424123839998174, loss is 0.104759082198143
+step: 4: time taken for the last 1 steps is 0.511046049000015, loss is 0.08389055728912354
+val_loss : 0.2241 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 153 starting...
+step: 1: time taken for the last 1 steps is 0.8566046300002199, loss is 0.3067306578159332
+step: 2: time taken for the last 1 steps is 0.5437523979999241, loss is 0.04242514818906784
+step: 3: time taken for the last 1 steps is 0.5479468050002652, loss is 0.1983722746372223
+step: 4: time taken for the last 1 steps is 0.5139010510001754, loss is 0.12671494483947754
+val_loss : 0.1921 :  val_acc: 0.9177
+
+updating stats...
+Epoch: 154 starting...
+step: 1: time taken for the last 1 steps is 0.8308337670000583, loss is 0.24909409880638123
+step: 2: time taken for the last 1 steps is 0.5418796440003462, loss is 0.3493046760559082
+step: 3: time taken for the last 1 steps is 0.5417501719998654, loss is 0.16120031476020813
+step: 4: time taken for the last 1 steps is 0.5233952349999527, loss is 0.10792029649019241
+val_loss : 0.3053 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 155 starting...
+step: 1: time taken for the last 1 steps is 0.8209725360002267, loss is 0.1575949490070343
+step: 2: time taken for the last 1 steps is 0.5342926950002038, loss is 0.39792880415916443
+step: 3: time taken for the last 1 steps is 0.5429253940001217, loss is 0.2692141532897949
+step: 4: time taken for the last 1 steps is 0.5165989309998622, loss is 0.049097660928964615
+val_loss : 0.2481 :  val_acc: 0.8854
+
+updating stats...
+Epoch: 156 starting...
+step: 1: time taken for the last 1 steps is 0.8496049820000735, loss is 0.12327510863542557
+step: 2: time taken for the last 1 steps is 0.5385447329999806, loss is 0.2269185185432434
+step: 3: time taken for the last 1 steps is 0.5474992879999263, loss is 0.13149024546146393
+step: 4: time taken for the last 1 steps is 0.5110505380002905, loss is 0.29417839646339417
+val_loss : 0.3406 :  val_acc: 0.9104
+
+updating stats...
+Epoch: 157 starting...
+step: 1: time taken for the last 1 steps is 0.8274528459996873, loss is 0.33578431606292725
+step: 2: time taken for the last 1 steps is 0.5427628510001341, loss is 0.09747049957513809
+step: 3: time taken for the last 1 steps is 0.5465007289999448, loss is 0.17399799823760986
+step: 4: time taken for the last 1 steps is 0.5113653040002646, loss is 0.17560653388500214
+val_loss : 0.3226 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 158 starting...
+step: 1: time taken for the last 1 steps is 0.8309205290001955, loss is 0.128714919090271
+step: 2: time taken for the last 1 steps is 0.5496017450000181, loss is 0.20616625249385834
+step: 3: time taken for the last 1 steps is 0.5466553319997729, loss is 0.19910188019275665
+step: 4: time taken for the last 1 steps is 0.518510464999963, loss is 0.1799503117799759
+val_loss : 0.2558 :  val_acc: 0.9135
+
+updating stats...
+Epoch: 159 starting...
+step: 1: time taken for the last 1 steps is 0.8485327419998612, loss is 0.17779740691184998
+step: 2: time taken for the last 1 steps is 0.5339976800000841, loss is 0.22175195813179016
+step: 3: time taken for the last 1 steps is 0.5477264020000803, loss is 0.1509915590286255
+step: 4: time taken for the last 1 steps is 0.5093756780001968, loss is 0.06685664504766464
+val_loss : 0.3169 :  val_acc: 0.8927
+
+updating stats...
+Epoch: 160 starting...
+step: 1: time taken for the last 1 steps is 0.837151712999912, loss is 0.26467224955558777
+step: 2: time taken for the last 1 steps is 0.5470591499997681, loss is 0.23129694163799286
+step: 3: time taken for the last 1 steps is 0.5402755650002291, loss is 0.18204736709594727
+step: 4: time taken for the last 1 steps is 0.5259612519998882, loss is 0.1724771112203598
+val_loss : 0.2178 :  val_acc: 0.9135
+
+updating stats...
+Epoch: 161 starting...
+step: 1: time taken for the last 1 steps is 0.8224306330002946, loss is 0.1396365761756897
+step: 2: time taken for the last 1 steps is 0.5495337549996293, loss is 0.16036807000637054
+step: 3: time taken for the last 1 steps is 0.5498656919999121, loss is 0.10641638934612274
+step: 4: time taken for the last 1 steps is 0.509432858999844, loss is 0.10477135330438614
+val_loss : 0.3553 :  val_acc: 0.8333
+
+updating stats...
+Epoch: 162 starting...
+step: 1: time taken for the last 1 steps is 0.8489372200001526, loss is 0.18615606427192688
+step: 2: time taken for the last 1 steps is 0.540607901000385, loss is 0.18586759269237518
+step: 3: time taken for the last 1 steps is 0.5424321350001264, loss is 0.1559833437204361
+step: 4: time taken for the last 1 steps is 0.5250685859996338, loss is 0.20437970757484436
+val_loss : 0.1238 :  val_acc: 0.9490
+
+updating stats...
+Epoch: 163 starting...
+step: 1: time taken for the last 1 steps is 0.8186381639998217, loss is 0.12565121054649353
+step: 2: time taken for the last 1 steps is 0.5476454109998485, loss is 0.1460590809583664
+step: 3: time taken for the last 1 steps is 0.5426209980000749, loss is 0.23182597756385803
+step: 4: time taken for the last 1 steps is 0.5163312260001476, loss is 0.22502602636814117
+val_loss : 0.1971 :  val_acc: 0.9208
+
+updating stats...
+Epoch: 164 starting...
+step: 1: time taken for the last 1 steps is 0.8381006309996337, loss is 0.1607382893562317
+step: 2: time taken for the last 1 steps is 0.5437622589997773, loss is 0.2388470321893692
+step: 3: time taken for the last 1 steps is 0.538203177000014, loss is 0.20584331452846527
+step: 4: time taken for the last 1 steps is 0.5158983680003075, loss is 0.17007026076316833
+val_loss : 0.1678 :  val_acc: 0.9365
+
+updating stats...
+Epoch: 165 starting...
+step: 1: time taken for the last 1 steps is 0.8480054520000522, loss is 0.12823329865932465
+step: 2: time taken for the last 1 steps is 0.5504234710001583, loss is 0.19015561044216156
+step: 3: time taken for the last 1 steps is 0.5509297199996581, loss is 0.18685409426689148
+step: 4: time taken for the last 1 steps is 0.5250928770001337, loss is 0.11230647563934326
+val_loss : 0.2547 :  val_acc: 0.8635
+
+updating stats...
+Epoch: 166 starting...
+step: 1: time taken for the last 1 steps is 0.8351131659997009, loss is 0.20068347454071045
+step: 2: time taken for the last 1 steps is 0.53996141000016, loss is 0.13024833798408508
+step: 3: time taken for the last 1 steps is 0.5408841859998574, loss is 0.17943696677684784
+step: 4: time taken for the last 1 steps is 0.5204717719998371, loss is 0.019986631348729134
+val_loss : 0.2583 :  val_acc: 0.8854
+
+updating stats...
+Epoch: 167 starting...
+step: 1: time taken for the last 1 steps is 0.8407736290000685, loss is 0.14536631107330322
+step: 2: time taken for the last 1 steps is 0.5411910110001372, loss is 0.1576874554157257
+step: 3: time taken for the last 1 steps is 0.5516423740000391, loss is 0.10739662498235703
+step: 4: time taken for the last 1 steps is 0.5164808180002183, loss is 0.06628276407718658
+val_loss : 0.1882 :  val_acc: 0.9365
+
+updating stats...
+Epoch: 168 starting...
+step: 1: time taken for the last 1 steps is 0.8314192370003184, loss is 0.18083156645298004
+step: 2: time taken for the last 1 steps is 0.5463820869999836, loss is 0.1436735838651657
+step: 3: time taken for the last 1 steps is 0.5393719590001638, loss is 0.13972891867160797
+step: 4: time taken for the last 1 steps is 0.5072548690000076, loss is 0.08441400527954102
+val_loss : 0.2494 :  val_acc: 0.9135
+
+updating stats...
+Epoch: 169 starting...
+step: 1: time taken for the last 1 steps is 0.8502778450001642, loss is 0.187674418091774
+step: 2: time taken for the last 1 steps is 0.553561019999961, loss is 0.3650773763656616
+step: 3: time taken for the last 1 steps is 0.5509439409997867, loss is 0.10640682280063629
+step: 4: time taken for the last 1 steps is 0.5233006030002798, loss is 0.1487274169921875
+val_loss : 0.1780 :  val_acc: 0.9385
+
+updating stats...
+Epoch: 170 starting...
+step: 1: time taken for the last 1 steps is 0.8399334549999367, loss is 0.10544927418231964
+step: 2: time taken for the last 1 steps is 0.5329350910001267, loss is 0.15644054114818573
+step: 3: time taken for the last 1 steps is 0.545370857999842, loss is 0.18974781036376953
+step: 4: time taken for the last 1 steps is 0.5037636960000782, loss is 0.11255691200494766
+val_loss : 0.2692 :  val_acc: 0.8656
+
+updating stats...
+Epoch: 171 starting...
+step: 1: time taken for the last 1 steps is 0.8517263410003579, loss is 0.22760818898677826
+step: 2: time taken for the last 1 steps is 0.5417613329996129, loss is 0.15464675426483154
+step: 3: time taken for the last 1 steps is 0.5473277640003289, loss is 0.07872141897678375
+step: 4: time taken for the last 1 steps is 0.5120771970000533, loss is 0.031342342495918274
+val_loss : 0.2270 :  val_acc: 0.9125
+
+updating stats...
+Epoch: 172 starting...
+step: 1: time taken for the last 1 steps is 0.8432351949995791, loss is 0.2608988285064697
+step: 2: time taken for the last 1 steps is 0.5398304270001972, loss is 0.1360553503036499
+step: 3: time taken for the last 1 steps is 0.5542063509997206, loss is 0.15655292570590973
+step: 4: time taken for the last 1 steps is 0.49890742599973237, loss is 0.0681452751159668
+val_loss : 0.3387 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 173 starting...
+step: 1: time taken for the last 1 steps is 0.8372383949999858, loss is 0.1506594568490982
+step: 2: time taken for the last 1 steps is 0.5421175989999938, loss is 0.22691185772418976
+step: 3: time taken for the last 1 steps is 0.5492691000004015, loss is 0.1553538292646408
+step: 4: time taken for the last 1 steps is 0.5159511080000811, loss is 0.14301085472106934
+val_loss : 0.1728 :  val_acc: 0.9208
+
+updating stats...
+Epoch: 174 starting...
+step: 1: time taken for the last 1 steps is 0.8451900209997802, loss is 0.2189742624759674
+step: 2: time taken for the last 1 steps is 0.5319142810003541, loss is 0.087981678545475
+step: 3: time taken for the last 1 steps is 0.5470983810000689, loss is 0.34585168957710266
+step: 4: time taken for the last 1 steps is 0.5201949160000368, loss is 0.1294044703245163
+val_loss : 0.2194 :  val_acc: 0.8938
+
+updating stats...
+Epoch: 175 starting...
+step: 1: time taken for the last 1 steps is 0.8187869459998183, loss is 0.11864015460014343
+step: 2: time taken for the last 1 steps is 0.548710619999838, loss is 0.12840397655963898
+step: 3: time taken for the last 1 steps is 0.5447591080001075, loss is 0.1679842174053192
+step: 4: time taken for the last 1 steps is 0.5193116169998575, loss is 0.09117275476455688
+val_loss : 0.2846 :  val_acc: 0.8813
+
+updating stats...
+Epoch: 176 starting...
+step: 1: time taken for the last 1 steps is 0.84510273900014, loss is 0.23724345862865448
+step: 2: time taken for the last 1 steps is 0.5455443700002434, loss is 0.2700679898262024
+step: 3: time taken for the last 1 steps is 0.5430849350000244, loss is 0.11448604613542557
+step: 4: time taken for the last 1 steps is 0.5184539619999669, loss is 0.05767315998673439
+val_loss : 0.2009 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 177 starting...
+step: 1: time taken for the last 1 steps is 0.8686596329998792, loss is 0.27370795607566833
+step: 2: time taken for the last 1 steps is 0.548214858999927, loss is 0.11548280715942383
+step: 3: time taken for the last 1 steps is 0.5507891570000538, loss is 0.058591779321432114
+step: 4: time taken for the last 1 steps is 0.51540030499973, loss is 0.10974658280611038
+val_loss : 0.2470 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 178 starting...
+step: 1: time taken for the last 1 steps is 0.820730100000219, loss is 0.08551758527755737
+step: 2: time taken for the last 1 steps is 0.5428388109999105, loss is 0.09472629427909851
+step: 3: time taken for the last 1 steps is 0.545992619000117, loss is 0.16762536764144897
+step: 4: time taken for the last 1 steps is 0.517375721999997, loss is 0.15725678205490112
+val_loss : 0.1926 :  val_acc: 0.9188
+
+updating stats...
+Epoch: 179 starting...
+step: 1: time taken for the last 1 steps is 0.8498167160000776, loss is 0.07209519296884537
+step: 2: time taken for the last 1 steps is 0.5394122269999571, loss is 0.10780905932188034
+step: 3: time taken for the last 1 steps is 0.5428864320001594, loss is 0.20344869792461395
+step: 4: time taken for the last 1 steps is 0.518019753000317, loss is 0.06486137211322784
+val_loss : 0.3209 :  val_acc: 0.8885
+
+updating stats...
+Epoch: 180 starting...
+step: 1: time taken for the last 1 steps is 0.8289750110002387, loss is 0.0761115550994873
+step: 2: time taken for the last 1 steps is 0.5325205009999081, loss is 0.07288415729999542
+step: 3: time taken for the last 1 steps is 0.5464548370000557, loss is 0.139152392745018
+step: 4: time taken for the last 1 steps is 0.5125888029997441, loss is 0.03515760600566864
+val_loss : 0.2253 :  val_acc: 0.8938
+
+updating stats...
+Epoch: 181 starting...
+step: 1: time taken for the last 1 steps is 0.8495229499999368, loss is 0.149839848279953
+step: 2: time taken for the last 1 steps is 0.5411715489999551, loss is 0.07970641553401947
+step: 3: time taken for the last 1 steps is 0.5433025880001878, loss is 0.07881145179271698
+step: 4: time taken for the last 1 steps is 0.5143307650000679, loss is 0.022512514144182205
+val_loss : 0.2253 :  val_acc: 0.9031
+
+updating stats...
+Epoch: 182 starting...
+step: 1: time taken for the last 1 steps is 0.8358969690002596, loss is 0.11861027032136917
+step: 2: time taken for the last 1 steps is 0.5525259789997108, loss is 0.19163070619106293
+step: 3: time taken for the last 1 steps is 0.5482853309999882, loss is 0.09305793046951294
+step: 4: time taken for the last 1 steps is 0.5123023679998369, loss is 0.13186286389827728
+val_loss : 0.3722 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 183 starting...
+step: 1: time taken for the last 1 steps is 0.8468048199997611, loss is 0.17747563123703003
+step: 2: time taken for the last 1 steps is 0.5426227770003607, loss is 0.25253090262413025
+step: 3: time taken for the last 1 steps is 0.544208554999841, loss is 0.0536421537399292
+step: 4: time taken for the last 1 steps is 0.5186303549999138, loss is 0.08996815234422684
+val_loss : 0.2064 :  val_acc: 0.9062
+
+updating stats...
+Epoch: 184 starting...
+step: 1: time taken for the last 1 steps is 0.8521964299998217, loss is 0.1508198082447052
+step: 2: time taken for the last 1 steps is 0.5357320190000792, loss is 0.10931961983442307
+step: 3: time taken for the last 1 steps is 0.5530269189998762, loss is 0.20754829049110413
+step: 4: time taken for the last 1 steps is 0.5151326410000365, loss is 0.06251994520425797
+val_loss : 0.3160 :  val_acc: 0.8583
+
+updating stats...
+Epoch: 185 starting...
+step: 1: time taken for the last 1 steps is 0.837151791999986, loss is 0.1817968636751175
+step: 2: time taken for the last 1 steps is 0.5380144519999703, loss is 0.139604389667511
+step: 3: time taken for the last 1 steps is 0.5470157570002812, loss is 0.1147160455584526
+step: 4: time taken for the last 1 steps is 0.5092620320001515, loss is 0.053971923887729645
+val_loss : 0.1742 :  val_acc: 0.9312
+
+updating stats...
+Epoch: 186 starting...
+step: 1: time taken for the last 1 steps is 0.8274575339996773, loss is 0.1400652527809143
+step: 2: time taken for the last 1 steps is 0.5476677589999781, loss is 0.062093425542116165
+step: 3: time taken for the last 1 steps is 0.5477768609998748, loss is 0.11605796962976456
+step: 4: time taken for the last 1 steps is 0.5205406789996232, loss is 0.054166387766599655
+val_loss : 0.2045 :  val_acc: 0.9188
+
+updating stats...
+Epoch: 187 starting...
+step: 1: time taken for the last 1 steps is 0.8347416880001219, loss is 0.10354933142662048
+step: 2: time taken for the last 1 steps is 0.5469050259998767, loss is 0.06786013394594193
+step: 3: time taken for the last 1 steps is 0.5489773239996794, loss is 0.14041227102279663
+step: 4: time taken for the last 1 steps is 0.5193629979999059, loss is 0.07300858944654465
+val_loss : 0.2044 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 188 starting...
+step: 1: time taken for the last 1 steps is 0.8584717349999664, loss is 0.11156350374221802
+step: 2: time taken for the last 1 steps is 0.5462203219999537, loss is 0.06880618631839752
+step: 3: time taken for the last 1 steps is 0.5451040320003813, loss is 0.08878239244222641
+step: 4: time taken for the last 1 steps is 0.5245890649998728, loss is 0.06278339773416519
+val_loss : 0.2963 :  val_acc: 0.8906
+
+updating stats...
+Epoch: 189 starting...
+step: 1: time taken for the last 1 steps is 0.8484995409999101, loss is 0.15065044164657593
+step: 2: time taken for the last 1 steps is 0.5421561279999878, loss is 0.046774134039878845
+step: 3: time taken for the last 1 steps is 0.5441792249998798, loss is 0.06383493542671204
+step: 4: time taken for the last 1 steps is 0.518698975999996, loss is 0.15673694014549255
+val_loss : 0.1830 :  val_acc: 0.9438
+
+updating stats...
+Epoch: 190 starting...
+step: 1: time taken for the last 1 steps is 0.832364163999955, loss is 0.10898806154727936
+step: 2: time taken for the last 1 steps is 0.5491139450000446, loss is 0.17665638029575348
+step: 3: time taken for the last 1 steps is 0.5320648819997587, loss is 0.11262018233537674
+step: 4: time taken for the last 1 steps is 0.5238767820001158, loss is 0.03295574337244034
+val_loss : 0.2950 :  val_acc: 0.8698
+
+updating stats...
+Epoch: 191 starting...
+step: 1: time taken for the last 1 steps is 0.8344483020000553, loss is 0.17082616686820984
+step: 2: time taken for the last 1 steps is 0.5416982890001236, loss is 0.22685062885284424
+step: 3: time taken for the last 1 steps is 0.5501837749998231, loss is 0.12725821137428284
+step: 4: time taken for the last 1 steps is 0.5195403510001597, loss is 0.44412103295326233
+val_loss : 0.1839 :  val_acc: 0.9188
+
+updating stats...
+Epoch: 192 starting...
+step: 1: time taken for the last 1 steps is 0.8506353010002385, loss is 0.08543043583631516
+step: 2: time taken for the last 1 steps is 0.5408791139998357, loss is 0.17413917183876038
+step: 3: time taken for the last 1 steps is 0.5433216989999892, loss is 0.20430386066436768
+step: 4: time taken for the last 1 steps is 0.5148560349998661, loss is 0.18050310015678406
+val_loss : 0.2555 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 193 starting...
+step: 1: time taken for the last 1 steps is 0.8370892409998305, loss is 0.20880506932735443
+step: 2: time taken for the last 1 steps is 0.5488569819999611, loss is 0.17517565190792084
+step: 3: time taken for the last 1 steps is 0.5461042100000668, loss is 0.09136813133955002
+step: 4: time taken for the last 1 steps is 0.5071827739998298, loss is 0.07532092928886414
+val_loss : 0.1879 :  val_acc: 0.9208
+
+updating stats...
+Epoch: 194 starting...
+step: 1: time taken for the last 1 steps is 0.8127773539999907, loss is 0.1468130201101303
+step: 2: time taken for the last 1 steps is 0.5443339379999088, loss is 0.2917967140674591
+step: 3: time taken for the last 1 steps is 0.5485228449997521, loss is 0.10655619204044342
+step: 4: time taken for the last 1 steps is 0.5195404910000434, loss is 0.10648629814386368
+val_loss : 0.2082 :  val_acc: 0.9219
+
+updating stats...
+Epoch: 195 starting...
+step: 1: time taken for the last 1 steps is 0.8462617400000454, loss is 0.1474115252494812
+step: 2: time taken for the last 1 steps is 0.548464684999999, loss is 0.08136210590600967
+step: 3: time taken for the last 1 steps is 0.5498465999999098, loss is 0.16322104632854462
+step: 4: time taken for the last 1 steps is 0.5143846959999792, loss is 0.052346568554639816
+val_loss : 0.2065 :  val_acc: 0.9313
+
+updating stats...
+Epoch: 196 starting...
+step: 1: time taken for the last 1 steps is 0.867854178000016, loss is 0.07689063251018524
+step: 2: time taken for the last 1 steps is 0.5391955939999207, loss is 0.15801168978214264
+step: 3: time taken for the last 1 steps is 0.5380173510002351, loss is 0.18181629478931427
+step: 4: time taken for the last 1 steps is 0.5087688520002303, loss is 0.14165645837783813
+val_loss : 0.2255 :  val_acc: 0.9292
+
+updating stats...
+Epoch: 197 starting...
+step: 1: time taken for the last 1 steps is 0.8522847310000543, loss is 0.07358216494321823
+step: 2: time taken for the last 1 steps is 0.541242370999953, loss is 0.052317023277282715
+step: 3: time taken for the last 1 steps is 0.5443363279996447, loss is 0.07517939060926437
+step: 4: time taken for the last 1 steps is 0.5132166039998083, loss is 0.11064133793115616
+val_loss : 0.2216 :  val_acc: 0.9313
+
+updating stats...
+Epoch: 198 starting...
+step: 1: time taken for the last 1 steps is 0.83503777299984, loss is 0.1584385633468628
+step: 2: time taken for the last 1 steps is 0.5454322580003463, loss is 0.06373903900384903
+step: 3: time taken for the last 1 steps is 0.549118806000024, loss is 0.2114655077457428
+step: 4: time taken for the last 1 steps is 0.5240203839998685, loss is 0.016383856534957886
+val_loss : 0.3219 :  val_acc: 0.8979
+
+updating stats...
+Epoch: 199 starting...
+step: 1: time taken for the last 1 steps is 0.8465692159998071, loss is 0.18311694264411926
+step: 2: time taken for the last 1 steps is 0.5414696249999906, loss is 0.056380998343229294
+step: 3: time taken for the last 1 steps is 0.5403796250002415, loss is 0.12667232751846313
+step: 4: time taken for the last 1 steps is 0.51728624999987, loss is 0.010315909050405025
+val_loss : 0.2023 :  val_acc: 0.9469
+
+updating stats...
+Epoch: 200 starting...
+step: 1: time taken for the last 1 steps is 0.8465381850000995, loss is 0.2879364490509033
+step: 2: time taken for the last 1 steps is 0.5418688129998372, loss is 0.17339588701725006
+step: 3: time taken for the last 1 steps is 0.5341884300000856, loss is 0.06933329999446869
+step: 4: time taken for the last 1 steps is 0.5161989690000155, loss is 0.04294302687048912
+val_loss : 0.1970 :  val_acc: 0.9115
+
+updating stats...
+Epoch: 201 starting...
+step: 1: time taken for the last 1 steps is 0.849201962999814, loss is 0.12029058486223221
+step: 2: time taken for the last 1 steps is 0.5445471620000717, loss is 0.15472976863384247
+step: 3: time taken for the last 1 steps is 0.546687022000242, loss is 0.10264110565185547
+step: 4: time taken for the last 1 steps is 0.5124796109998897, loss is 0.08451419323682785
+val_loss : 0.4102 :  val_acc: 0.8854
+
+updating stats...
+Epoch: 202 starting...
+step: 1: time taken for the last 1 steps is 0.8208950930002175, loss is 0.2756101191043854
+step: 2: time taken for the last 1 steps is 0.5521990429997459, loss is 0.18716488778591156
+step: 3: time taken for the last 1 steps is 0.5335044889998244, loss is 0.1263684332370758
+step: 4: time taken for the last 1 steps is 0.515964355000051, loss is 0.09393708407878876
+val_loss : 0.2262 :  val_acc: 0.9062
+
+updating stats...
+Epoch: 203 starting...
+step: 1: time taken for the last 1 steps is 0.8461518190001698, loss is 0.09771156311035156
+step: 2: time taken for the last 1 steps is 0.5490609650000806, loss is 0.11336018145084381
+step: 3: time taken for the last 1 steps is 0.5435042629997042, loss is 0.1255464404821396
+step: 4: time taken for the last 1 steps is 0.5126644839997425, loss is 0.048626258969306946
+val_loss : 0.2647 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 204 starting...
+step: 1: time taken for the last 1 steps is 0.8165610430000925, loss is 0.08001167327165604
+step: 2: time taken for the last 1 steps is 0.5446616839999479, loss is 0.13546238839626312
+step: 3: time taken for the last 1 steps is 0.5443372979998458, loss is 0.10732559859752655
+step: 4: time taken for the last 1 steps is 0.5185923940002795, loss is 0.11076337844133377
+val_loss : 0.2054 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 205 starting...
+step: 1: time taken for the last 1 steps is 0.8431862339998588, loss is 0.17411483824253082
+step: 2: time taken for the last 1 steps is 0.5541357379997862, loss is 0.06990526616573334
+step: 3: time taken for the last 1 steps is 0.5442249360003188, loss is 0.38117364048957825
+step: 4: time taken for the last 1 steps is 0.5225719969998863, loss is 0.09593784064054489
+val_loss : 0.1976 :  val_acc: 0.9260
+
+updating stats...
+Epoch: 206 starting...
+step: 1: time taken for the last 1 steps is 0.8428209670000797, loss is 0.07099870592355728
+step: 2: time taken for the last 1 steps is 0.5334140059999299, loss is 0.3697071671485901
+step: 3: time taken for the last 1 steps is 0.543721086000005, loss is 0.10294096171855927
+step: 4: time taken for the last 1 steps is 0.5114720829997168, loss is 0.09678544104099274
+val_loss : 0.2000 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 207 starting...
+step: 1: time taken for the last 1 steps is 0.8522014189998117, loss is 0.1091572493314743
+step: 2: time taken for the last 1 steps is 0.5387177839998003, loss is 0.15482108294963837
+step: 3: time taken for the last 1 steps is 0.548105896999914, loss is 0.06371445208787918
+step: 4: time taken for the last 1 steps is 0.5116528359999393, loss is 0.105599045753479
+val_loss : 0.3058 :  val_acc: 0.8854
+
+updating stats...
+Epoch: 208 starting...
+step: 1: time taken for the last 1 steps is 0.8218575000000783, loss is 0.17462104558944702
+step: 2: time taken for the last 1 steps is 0.5408507530000861, loss is 0.10109928995370865
+step: 3: time taken for the last 1 steps is 0.5397145030001411, loss is 0.06352569907903671
+step: 4: time taken for the last 1 steps is 0.5177390180001566, loss is 0.049627214670181274
+val_loss : 0.2071 :  val_acc: 0.8813
+
+updating stats...
+Epoch: 209 starting...
+step: 1: time taken for the last 1 steps is 0.8500792009999714, loss is 0.08060695976018906
+step: 2: time taken for the last 1 steps is 0.5416782390002481, loss is 0.1857529878616333
+step: 3: time taken for the last 1 steps is 0.5443690090000928, loss is 0.05884299427270889
+step: 4: time taken for the last 1 steps is 0.5126460040000893, loss is 0.17945560812950134
+val_loss : 0.3018 :  val_acc: 0.8979
+
+updating stats...
+Epoch: 210 starting...
+step: 1: time taken for the last 1 steps is 0.8415052420000393, loss is 0.12532079219818115
+step: 2: time taken for the last 1 steps is 0.537691884999731, loss is 0.08220040053129196
+step: 3: time taken for the last 1 steps is 0.5489241319996836, loss is 0.22836309671401978
+step: 4: time taken for the last 1 steps is 0.5161687090003397, loss is 0.053020499646663666
+val_loss : 0.1961 :  val_acc: 0.9292
+
+updating stats...
+Epoch: 211 starting...
+step: 1: time taken for the last 1 steps is 0.8579161050001858, loss is 0.09975224733352661
+step: 2: time taken for the last 1 steps is 0.5364561530000174, loss is 0.06557486206293106
+step: 3: time taken for the last 1 steps is 0.5441907059998812, loss is 0.2584226131439209
+step: 4: time taken for the last 1 steps is 0.5166093949997048, loss is 0.06286241114139557
+val_loss : 0.2028 :  val_acc: 0.8906
+
+updating stats...
+Epoch: 212 starting...
+step: 1: time taken for the last 1 steps is 0.8236785159997453, loss is 0.07556596398353577
+step: 2: time taken for the last 1 steps is 0.5385966310000185, loss is 0.04916638508439064
+step: 3: time taken for the last 1 steps is 0.5441474419999395, loss is 0.08451484888792038
+step: 4: time taken for the last 1 steps is 0.5150666869999441, loss is 0.10031317919492722
+val_loss : 0.1379 :  val_acc: 0.9594
+
+updating stats...
+Epoch: 213 starting...
+step: 1: time taken for the last 1 steps is 0.833882373999586, loss is 0.08736226707696915
+step: 2: time taken for the last 1 steps is 0.540484634999757, loss is 0.13340507447719574
+step: 3: time taken for the last 1 steps is 0.5453246239999316, loss is 0.06734424829483032
+step: 4: time taken for the last 1 steps is 0.5170295140001144, loss is 0.06394781917333603
+val_loss : 0.1529 :  val_acc: 0.9417
+
+updating stats...
+Epoch: 214 starting...
+step: 1: time taken for the last 1 steps is 0.8306398239997179, loss is 0.11488289386034012
+step: 2: time taken for the last 1 steps is 0.5423589400002129, loss is 0.04226569086313248
+step: 3: time taken for the last 1 steps is 0.5462094509998678, loss is 0.12501752376556396
+step: 4: time taken for the last 1 steps is 0.5092777619997833, loss is 0.07956577092409134
+val_loss : 0.2898 :  val_acc: 0.8583
+
+updating stats...
+Epoch: 215 starting...
+step: 1: time taken for the last 1 steps is 0.8226521769997817, loss is 0.15821599960327148
+step: 2: time taken for the last 1 steps is 0.5477461890000086, loss is 0.10802856087684631
+step: 3: time taken for the last 1 steps is 0.5397446009997111, loss is 0.11031858623027802
+step: 4: time taken for the last 1 steps is 0.5164749329996994, loss is 0.07153551280498505
+val_loss : 0.1633 :  val_acc: 0.9417
+
+updating stats...
+Epoch: 216 starting...
+step: 1: time taken for the last 1 steps is 0.8465029059998415, loss is 0.0908135399222374
+step: 2: time taken for the last 1 steps is 0.5433838879998802, loss is 0.18402230739593506
+step: 3: time taken for the last 1 steps is 0.5473705519998475, loss is 0.07157421112060547
+step: 4: time taken for the last 1 steps is 0.5172053870001037, loss is 0.022289155051112175
+val_loss : 0.2019 :  val_acc: 0.9156
+
+updating stats...
+Epoch: 217 starting...
+step: 1: time taken for the last 1 steps is 0.8395255969999198, loss is 0.1675487905740738
+step: 2: time taken for the last 1 steps is 0.5493906199999401, loss is 0.265312135219574
+step: 3: time taken for the last 1 steps is 0.5381144610000774, loss is 0.11461307853460312
+step: 4: time taken for the last 1 steps is 0.517183507000027, loss is 0.06575483828783035
+val_loss : 0.2431 :  val_acc: 0.9313
+
+updating stats...
+Epoch: 218 starting...
+step: 1: time taken for the last 1 steps is 0.8423200699999143, loss is 0.19774794578552246
+step: 2: time taken for the last 1 steps is 0.5363567489998786, loss is 0.08320148289203644
+step: 3: time taken for the last 1 steps is 0.5420855139996092, loss is 0.06120575964450836
+step: 4: time taken for the last 1 steps is 0.5237836979999884, loss is 0.04011278972029686
+val_loss : 0.1946 :  val_acc: 0.9260
+
+updating stats...
+Epoch: 219 starting...
+step: 1: time taken for the last 1 steps is 0.8214670750003279, loss is 0.0383671410381794
+step: 2: time taken for the last 1 steps is 0.5451884019998943, loss is 0.08455629646778107
+step: 3: time taken for the last 1 steps is 0.542717446000097, loss is 0.1312817931175232
+step: 4: time taken for the last 1 steps is 0.51442516599991, loss is 0.0394296869635582
+val_loss : 0.1579 :  val_acc: 0.9490
+
+updating stats...
+Epoch: 220 starting...
+step: 1: time taken for the last 1 steps is 0.8815477410003041, loss is 0.19718343019485474
+step: 2: time taken for the last 1 steps is 0.5441502419998869, loss is 0.14052309095859528
+step: 3: time taken for the last 1 steps is 0.5505287599999065, loss is 0.13311778008937836
+step: 4: time taken for the last 1 steps is 0.5181479540001419, loss is 0.038602933287620544
+val_loss : 0.1726 :  val_acc: 0.9344
+
+updating stats...
+Epoch: 221 starting...
+step: 1: time taken for the last 1 steps is 0.8313811979996899, loss is 0.0875457301735878
+step: 2: time taken for the last 1 steps is 0.546842093000123, loss is 0.06121473386883736
+step: 3: time taken for the last 1 steps is 0.5490666919999967, loss is 0.06473243236541748
+step: 4: time taken for the last 1 steps is 0.5078511739998248, loss is 0.06033017486333847
+val_loss : 0.2061 :  val_acc: 0.9365
+
+updating stats...
+Epoch: 222 starting...
+step: 1: time taken for the last 1 steps is 0.8318356360000507, loss is 0.03522247076034546
+step: 2: time taken for the last 1 steps is 0.5545807439998498, loss is 0.05870521068572998
+step: 3: time taken for the last 1 steps is 0.543727853999826, loss is 0.17804665863513947
+step: 4: time taken for the last 1 steps is 0.5108808200002386, loss is 0.04187791422009468
+val_loss : 0.1819 :  val_acc: 0.9312
+
+updating stats...
+Epoch: 223 starting...
+step: 1: time taken for the last 1 steps is 0.839591419000044, loss is 0.19632379710674286
+step: 2: time taken for the last 1 steps is 0.5471645070001614, loss is 0.06876654922962189
+step: 3: time taken for the last 1 steps is 0.5405031550003514, loss is 0.07843640446662903
+step: 4: time taken for the last 1 steps is 0.5144632259998616, loss is 0.13296404480934143
+val_loss : 0.2162 :  val_acc: 0.9313
+
+updating stats...
+Epoch: 224 starting...
+step: 1: time taken for the last 1 steps is 0.8491176540001106, loss is 0.19929692149162292
+step: 2: time taken for the last 1 steps is 0.5444840089999161, loss is 0.11158446222543716
+step: 3: time taken for the last 1 steps is 0.5459917869998208, loss is 0.11032555997371674
+step: 4: time taken for the last 1 steps is 0.5161709590001919, loss is 0.07224346697330475
+val_loss : 0.1796 :  val_acc: 0.9563
+
+updating stats...
+Epoch: 225 starting...
+step: 1: time taken for the last 1 steps is 0.8254879090000031, loss is 0.08749788999557495
+step: 2: time taken for the last 1 steps is 0.5515830490003282, loss is 0.16934125125408173
+step: 3: time taken for the last 1 steps is 0.5529342740001084, loss is 0.05716897174715996
+step: 4: time taken for the last 1 steps is 0.5116955550001876, loss is 0.03176632896065712
+val_loss : 0.2317 :  val_acc: 0.9135
+
+updating stats...
+Epoch: 226 starting...
+step: 1: time taken for the last 1 steps is 0.83599432300025, loss is 0.16851301491260529
+step: 2: time taken for the last 1 steps is 0.5470662970001285, loss is 0.15613919496536255
+step: 3: time taken for the last 1 steps is 0.5430637730000853, loss is 0.16597862541675568
+step: 4: time taken for the last 1 steps is 0.5153139730000476, loss is 0.03939466178417206
+val_loss : 0.1352 :  val_acc: 0.9563
+
+updating stats...
+Epoch: 227 starting...
+step: 1: time taken for the last 1 steps is 0.8335061269999642, loss is 0.19084402918815613
+step: 2: time taken for the last 1 steps is 0.540080608000153, loss is 0.06320561468601227
+step: 3: time taken for the last 1 steps is 0.5474689539996689, loss is 0.13856065273284912
+step: 4: time taken for the last 1 steps is 0.5196420910001507, loss is 0.25842493772506714
+val_loss : 0.2701 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 228 starting...
+step: 1: time taken for the last 1 steps is 0.8260350000000471, loss is 0.2798733711242676
+step: 2: time taken for the last 1 steps is 0.5482613379999748, loss is 0.2546997368335724
+step: 3: time taken for the last 1 steps is 0.5490308520002145, loss is 0.13425762951374054
+step: 4: time taken for the last 1 steps is 0.5097233890001007, loss is 0.08221790939569473
+val_loss : 0.1684 :  val_acc: 0.9417
+
+updating stats...
+Epoch: 229 starting...
+step: 1: time taken for the last 1 steps is 0.845947335999881, loss is 0.06467904150485992
+step: 2: time taken for the last 1 steps is 0.5482656379999753, loss is 0.12588447332382202
+step: 3: time taken for the last 1 steps is 0.5501871729998129, loss is 0.13758496940135956
+step: 4: time taken for the last 1 steps is 0.5136583420003262, loss is 0.01810830645263195
+val_loss : 0.2619 :  val_acc: 0.8802
+
+updating stats...
+Epoch: 230 starting...
+step: 1: time taken for the last 1 steps is 0.8261493219997647, loss is 0.05478595942258835
+step: 2: time taken for the last 1 steps is 0.5488944300000185, loss is 0.1911495327949524
+step: 3: time taken for the last 1 steps is 0.5381322330003968, loss is 0.14529098570346832
+step: 4: time taken for the last 1 steps is 0.5243935399998918, loss is 0.06935202330350876
+val_loss : 0.2327 :  val_acc: 0.9104
+
+updating stats...
+Epoch: 231 starting...
+step: 1: time taken for the last 1 steps is 0.8508498159999363, loss is 0.11480812728404999
+step: 2: time taken for the last 1 steps is 0.5436360929998045, loss is 0.125105082988739
+step: 3: time taken for the last 1 steps is 0.5450254879997374, loss is 0.06656103581190109
+step: 4: time taken for the last 1 steps is 0.5164734740001222, loss is 0.08684728294610977
+val_loss : 0.1340 :  val_acc: 0.9438
+
+updating stats...
+Epoch: 232 starting...
+step: 1: time taken for the last 1 steps is 0.8273776440000802, loss is 0.0929834246635437
+step: 2: time taken for the last 1 steps is 0.5554418209999312, loss is 0.23127393424510956
+step: 3: time taken for the last 1 steps is 0.5475810369998726, loss is 0.0641738772392273
+step: 4: time taken for the last 1 steps is 0.5151389379998363, loss is 0.04726714640855789
+val_loss : 0.1652 :  val_acc: 0.9313
+
+updating stats...
+Epoch: 233 starting...
+step: 1: time taken for the last 1 steps is 0.8370830530002422, loss is 0.03206992521882057
+step: 2: time taken for the last 1 steps is 0.5501620329996513, loss is 0.12523674964904785
+step: 3: time taken for the last 1 steps is 0.551742252999702, loss is 0.11931659281253815
+step: 4: time taken for the last 1 steps is 0.5130612809998638, loss is 0.028571441769599915
+val_loss : 0.1765 :  val_acc: 0.9188
+
+updating stats...
+Epoch: 234 starting...
+step: 1: time taken for the last 1 steps is 0.8421326359998602, loss is 0.15409427881240845
+step: 2: time taken for the last 1 steps is 0.5440309310001794, loss is 0.08066519349813461
+step: 3: time taken for the last 1 steps is 0.5353446110002551, loss is 0.016947485506534576
+step: 4: time taken for the last 1 steps is 0.5122228350001024, loss is 0.07077024132013321
+val_loss : 0.1390 :  val_acc: 0.9417
+
+updating stats...
+Epoch: 235 starting...
+step: 1: time taken for the last 1 steps is 0.8394159660001606, loss is 0.08416891098022461
+step: 2: time taken for the last 1 steps is 0.5493363380001028, loss is 0.057516567409038544
+step: 3: time taken for the last 1 steps is 0.5465284469996732, loss is 0.08847159147262573
+step: 4: time taken for the last 1 steps is 0.5203748650001216, loss is 0.06135888397693634
+val_loss : 0.1984 :  val_acc: 0.9260
+
+updating stats...
+Epoch: 236 starting...
+step: 1: time taken for the last 1 steps is 0.807719783000266, loss is 0.09797689318656921
+step: 2: time taken for the last 1 steps is 0.5510068179996779, loss is 0.11551699787378311
+step: 3: time taken for the last 1 steps is 0.5451463520003017, loss is 0.07532216608524323
+step: 4: time taken for the last 1 steps is 0.5109256720002122, loss is 0.047886576503515244
+val_loss : 0.1566 :  val_acc: 0.9417
+
+updating stats...
+Epoch: 237 starting...
+step: 1: time taken for the last 1 steps is 0.8266972119999991, loss is 0.14813266694545746
+step: 2: time taken for the last 1 steps is 0.546553066999877, loss is 0.26294296979904175
+step: 3: time taken for the last 1 steps is 0.5444252079996659, loss is 0.05583280697464943
+step: 4: time taken for the last 1 steps is 0.5151949389996844, loss is 0.010759299620985985
+val_loss : 0.2113 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 238 starting...
+step: 1: time taken for the last 1 steps is 0.8328742150001744, loss is 0.12154096364974976
+step: 2: time taken for the last 1 steps is 0.5413467509997645, loss is 0.03392403572797775
+step: 3: time taken for the last 1 steps is 0.542059504000008, loss is 0.06596897542476654
+step: 4: time taken for the last 1 steps is 0.5039743530001033, loss is 0.08250115811824799
+val_loss : 0.3790 :  val_acc: 0.9063
+
+updating stats...
+Epoch: 239 starting...
+step: 1: time taken for the last 1 steps is 0.8587422410000727, loss is 0.09056881815195084
+step: 2: time taken for the last 1 steps is 0.5375992320000478, loss is 0.051842473447322845
+step: 3: time taken for the last 1 steps is 0.5459231849999924, loss is 0.128143310546875
+step: 4: time taken for the last 1 steps is 0.5205615489999218, loss is 0.09015967696905136
+val_loss : 0.2508 :  val_acc: 0.8958
+
+updating stats...
+Epoch: 240 starting...
+step: 1: time taken for the last 1 steps is 0.8139543270003742, loss is 0.07156535238027573
+step: 2: time taken for the last 1 steps is 0.5469006430002992, loss is 0.13157276809215546
+step: 3: time taken for the last 1 steps is 0.539062149000074, loss is 0.06864108890295029
+step: 4: time taken for the last 1 steps is 0.5198138440000548, loss is 0.025113554671406746
+val_loss : 0.3779 :  val_acc: 0.8708
+
+updating stats...
+Epoch: 241 starting...
+step: 1: time taken for the last 1 steps is 0.8119487799999661, loss is 0.19530342519283295
+step: 2: time taken for the last 1 steps is 0.5456532100001823, loss is 0.03785482048988342
+step: 3: time taken for the last 1 steps is 0.5373495569997431, loss is 0.0487934909760952
+step: 4: time taken for the last 1 steps is 0.5192110439998032, loss is 0.05793672800064087
+val_loss : 0.2280 :  val_acc: 0.8958
+
+updating stats...
+Epoch: 242 starting...
+step: 1: time taken for the last 1 steps is 0.829607426000166, loss is 0.11813300102949142
+step: 2: time taken for the last 1 steps is 0.5478555999998207, loss is 0.08086998760700226
+step: 3: time taken for the last 1 steps is 0.5397793619999902, loss is 0.054553836584091187
+step: 4: time taken for the last 1 steps is 0.5086526499999309, loss is 0.04010016843676567
+val_loss : 0.1639 :  val_acc: 0.9292
+
+updating stats...
+Epoch: 243 starting...
+step: 1: time taken for the last 1 steps is 0.8374046789999738, loss is 0.02154567837715149
+step: 2: time taken for the last 1 steps is 0.5462914019999516, loss is 0.04471235349774361
+step: 3: time taken for the last 1 steps is 0.5433536680002362, loss is 0.10204271972179413
+step: 4: time taken for the last 1 steps is 0.5176125739999407, loss is 0.0699693039059639
+val_loss : 0.3987 :  val_acc: 0.8677
+
+updating stats...
+Epoch: 244 starting...
+step: 1: time taken for the last 1 steps is 0.8376493939999818, loss is 0.1171482503414154
+step: 2: time taken for the last 1 steps is 0.5442090639999151, loss is 0.12355300784111023
+step: 3: time taken for the last 1 steps is 0.5493499189997237, loss is 0.09497939795255661
+step: 4: time taken for the last 1 steps is 0.5149482249998982, loss is 0.16868789494037628
+val_loss : 0.1503 :  val_acc: 0.9542
+
+updating stats...
+Epoch: 245 starting...
+step: 1: time taken for the last 1 steps is 0.851739333000296, loss is 0.034105416387319565
+step: 2: time taken for the last 1 steps is 0.5338819730000068, loss is 0.09879224002361298
+step: 3: time taken for the last 1 steps is 0.5455264880001778, loss is 0.41717028617858887
+step: 4: time taken for the last 1 steps is 0.5197904639999251, loss is 0.06058834120631218
+val_loss : 0.2631 :  val_acc: 0.8990
+
+updating stats...
+Epoch: 246 starting...
+step: 1: time taken for the last 1 steps is 0.8441465719997723, loss is 0.13478368520736694
+step: 2: time taken for the last 1 steps is 0.5423510299997361, loss is 0.19142897427082062
+step: 3: time taken for the last 1 steps is 0.5388898860001063, loss is 0.07727557420730591
+step: 4: time taken for the last 1 steps is 0.5251941139999872, loss is 0.09608923643827438
+val_loss : 0.2635 :  val_acc: 0.8479
+
+updating stats...
+Epoch: 247 starting...
+step: 1: time taken for the last 1 steps is 0.8454198959998394, loss is 0.0808359682559967
+step: 2: time taken for the last 1 steps is 0.5353122599999551, loss is 0.10351333022117615
+step: 3: time taken for the last 1 steps is 0.5380921119999584, loss is 0.15006448328495026
+step: 4: time taken for the last 1 steps is 0.5084345450000001, loss is 0.13255849480628967
+val_loss : 0.1359 :  val_acc: 0.9594
+
+updating stats...
+Epoch: 248 starting...
+step: 1: time taken for the last 1 steps is 0.8419781590000639, loss is 0.12310460209846497
+step: 2: time taken for the last 1 steps is 0.543872731999727, loss is 0.1357203722000122
+step: 3: time taken for the last 1 steps is 0.5459362810001949, loss is 0.11618484556674957
+step: 4: time taken for the last 1 steps is 0.5113399649999337, loss is 0.041706401854753494
+val_loss : 0.1573 :  val_acc: 0.9292
+
+updating stats...
+Epoch: 249 starting...
+step: 1: time taken for the last 1 steps is 0.8368590150003001, loss is 0.34468087553977966
+step: 2: time taken for the last 1 steps is 0.541748682999696, loss is 0.07210945338010788
+step: 3: time taken for the last 1 steps is 0.5450198429998636, loss is 0.020110607147216797
+step: 4: time taken for the last 1 steps is 0.5031908149999254, loss is 0.02853180654346943
+val_loss : 0.1958 :  val_acc: 0.9208
+
+updating stats...
+Epoch: 250 starting...
+step: 1: time taken for the last 1 steps is 0.8209561740000026, loss is 0.1705888956785202
+step: 2: time taken for the last 1 steps is 0.5467042539999056, loss is 0.09590217471122742
+step: 3: time taken for the last 1 steps is 0.5282318149997991, loss is 0.07621189951896667
+step: 4: time taken for the last 1 steps is 0.5208092679999936, loss is 0.032729633152484894
+val_loss : 0.1510 :  val_acc: 0.9167
+
+updating stats...
+Epoch: 251 starting...
+step: 1: time taken for the last 1 steps is 0.8435875989998749, loss is 0.07524985074996948
+step: 2: time taken for the last 1 steps is 0.5405244909998146, loss is 0.08108402043581009
+step: 3: time taken for the last 1 steps is 0.5389728119998836, loss is 0.06731800734996796
+step: 4: time taken for the last 1 steps is 0.5100489210003616, loss is 0.06572018563747406
+val_loss : 0.1990 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 252 starting...
+step: 1: time taken for the last 1 steps is 0.8190915479999603, loss is 0.11850804090499878
+step: 2: time taken for the last 1 steps is 0.5446858780001094, loss is 0.058649517595767975
+step: 3: time taken for the last 1 steps is 0.5356190899997273, loss is 0.1731174737215042
+step: 4: time taken for the last 1 steps is 0.5224048179998135, loss is 0.010597897693514824
+val_loss : 0.1598 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 253 starting...
+step: 1: time taken for the last 1 steps is 0.8348146479997922, loss is 0.08445152640342712
+step: 2: time taken for the last 1 steps is 0.5518615089999912, loss is 0.07742534577846527
+step: 3: time taken for the last 1 steps is 0.5483136330003617, loss is 0.15568679571151733
+step: 4: time taken for the last 1 steps is 0.517541288999837, loss is 0.053088244050741196
+val_loss : 0.1835 :  val_acc: 0.9292
+
+updating stats...
+Epoch: 254 starting...
+step: 1: time taken for the last 1 steps is 0.8413810580000245, loss is 0.04547548666596413
+step: 2: time taken for the last 1 steps is 0.5384057819996997, loss is 0.17134486138820648
+step: 3: time taken for the last 1 steps is 0.5411323110001831, loss is 0.07764250785112381
+step: 4: time taken for the last 1 steps is 0.5192249589999847, loss is 0.018140511587262154
+val_loss : 0.2939 :  val_acc: 0.9010
+
+updating stats...
+Epoch: 255 starting...
+step: 1: time taken for the last 1 steps is 0.8446183579999342, loss is 0.07831215858459473
+step: 2: time taken for the last 1 steps is 0.5465371209998011, loss is 0.17309443652629852
+step: 3: time taken for the last 1 steps is 0.545497302000058, loss is 0.05119982734322548
+step: 4: time taken for the last 1 steps is 0.5132975910000823, loss is 0.005992591381072998
+val_loss : 0.1970 :  val_acc: 0.9094
+
+updating stats...
+Epoch: 256 starting...
+step: 1: time taken for the last 1 steps is 0.8266675579998264, loss is 0.07463529706001282
+step: 2: time taken for the last 1 steps is 0.5405759619998207, loss is 0.19035299122333527
+step: 3: time taken for the last 1 steps is 0.5470995110003969, loss is 0.030410394072532654
+step: 4: time taken for the last 1 steps is 0.5262512780000179, loss is 0.05733830854296684
+val_loss : 0.3327 :  val_acc: 0.8760
+
+updating stats...
+Epoch: 257 starting...
+step: 1: time taken for the last 1 steps is 0.8460522039999887, loss is 0.08600521087646484
+step: 2: time taken for the last 1 steps is 0.5464201989998401, loss is 0.08596330881118774
+step: 3: time taken for the last 1 steps is 0.5460280009997405, loss is 0.022769149392843246
+step: 4: time taken for the last 1 steps is 0.5139357520001795, loss is 0.11174370348453522
+val_loss : 0.1495 :  val_acc: 0.9417
+
+updating stats...
+Epoch: 258 starting...
+step: 1: time taken for the last 1 steps is 0.8382156590000704, loss is 0.14953452348709106
+step: 2: time taken for the last 1 steps is 0.5363807550002093, loss is 0.18506382405757904
+step: 3: time taken for the last 1 steps is 0.5472451139999066, loss is 0.19993601739406586
+step: 4: time taken for the last 1 steps is 0.5206296960000145, loss is 0.04062976688146591
+val_loss : 0.1994 :  val_acc: 0.9292
+
+updating stats...
+Epoch: 259 starting...
+step: 1: time taken for the last 1 steps is 0.8455049740000504, loss is 0.10912305116653442
+step: 2: time taken for the last 1 steps is 0.5479968479999116, loss is 0.19156727194786072
+step: 3: time taken for the last 1 steps is 0.5464451190000545, loss is 0.12793637812137604
+step: 4: time taken for the last 1 steps is 0.5183478440003455, loss is 0.0118423942476511
+val_loss : 0.2623 :  val_acc: 0.8781
+
+updating stats...
+Epoch: 260 starting...
+step: 1: time taken for the last 1 steps is 0.8447548300000562, loss is 0.12817543745040894
+step: 2: time taken for the last 1 steps is 0.5405072799999289, loss is 0.08265219628810883
+step: 3: time taken for the last 1 steps is 0.5455019519999951, loss is 0.09794328361749649
+step: 4: time taken for the last 1 steps is 0.5177638219997789, loss is 0.06680136173963547
+val_loss : 0.1772 :  val_acc: 0.9187
+
+updating stats...
+Epoch: 261 starting...
+step: 1: time taken for the last 1 steps is 0.8293812980000439, loss is 0.1140211746096611
+step: 2: time taken for the last 1 steps is 0.5429701160001059, loss is 0.08497940003871918
+step: 3: time taken for the last 1 steps is 0.5432083600003352, loss is 0.11961524933576584
+step: 4: time taken for the last 1 steps is 0.5214363300001423, loss is 0.07908763736486435
+val_loss : 0.2073 :  val_acc: 0.9260
+
+updating stats...
+Epoch: 262 starting...
+step: 1: time taken for the last 1 steps is 0.8347672070003682, loss is 0.08696524053812027
+step: 2: time taken for the last 1 steps is 0.5427481720003016, loss is 0.04890735074877739
+step: 3: time taken for the last 1 steps is 0.5469618890001584, loss is 0.08280705660581589
+step: 4: time taken for the last 1 steps is 0.5184154749999834, loss is 0.05974460765719414
+val_loss : 0.2320 :  val_acc: 0.9083
+
+updating stats...
+Epoch: 263 starting...
+step: 1: time taken for the last 1 steps is 0.8356738540001061, loss is 0.06227261200547218
+step: 2: time taken for the last 1 steps is 0.545888030000242, loss is 0.1931212693452835
+step: 3: time taken for the last 1 steps is 0.5490817280001465, loss is 0.020662134513258934
+step: 4: time taken for the last 1 steps is 0.5207288169999629, loss is 0.1840139776468277
+val_loss : 0.1731 :  val_acc: 0.9490
+
+updating stats...
+Epoch: 264 starting...
+step: 1: time taken for the last 1 steps is 0.8478668780003318, loss is 0.10157494246959686
+step: 2: time taken for the last 1 steps is 0.5401853439998376, loss is 0.034891095012426376
+step: 3: time taken for the last 1 steps is 0.5304841469996973, loss is 0.11387050896883011
+step: 4: time taken for the last 1 steps is 0.5137602989998413, loss is 0.16242970526218414
+val_loss : 0.3104 :  val_acc: 0.8771
+
+updating stats...
+Epoch: 265 starting...
+step: 1: time taken for the last 1 steps is 0.8346790349996809, loss is 0.09643043577671051
+step: 2: time taken for the last 1 steps is 0.5452519079999547, loss is 0.09532008320093155
+step: 3: time taken for the last 1 steps is 0.541656372000034, loss is 0.15304817259311676
+step: 4: time taken for the last 1 steps is 0.5174247459999606, loss is 0.04733297601342201
+val_loss : 0.2351 :  val_acc: 0.9156
+
+updating stats...
+Epoch: 266 starting...
+step: 1: time taken for the last 1 steps is 0.8319813359998989, loss is 0.13936060667037964
+step: 2: time taken for the last 1 steps is 0.5485633379998944, loss is 0.10115206241607666
+step: 3: time taken for the last 1 steps is 0.5451645060002193, loss is 0.12505008280277252
+step: 4: time taken for the last 1 steps is 0.5202506180003184, loss is 0.058849889785051346
+val_loss : 0.2420 :  val_acc: 0.8948
+
+updating stats...
+Epoch: 267 starting...
+step: 1: time taken for the last 1 steps is 0.8323698919998606, loss is 0.04751789569854736
+step: 2: time taken for the last 1 steps is 0.5475879010000426, loss is 0.05646374076604843
+step: 3: time taken for the last 1 steps is 0.546737844999825, loss is 0.06380216032266617
+step: 4: time taken for the last 1 steps is 0.520749017000071, loss is 0.06987891346216202
+val_loss : 0.2026 :  val_acc: 0.8854
+
+updating stats...
+Epoch: 268 starting...
+step: 1: time taken for the last 1 steps is 0.83042870700001, loss is 0.13172274827957153
+step: 2: time taken for the last 1 steps is 0.5413932470000873, loss is 0.1369621455669403
+step: 3: time taken for the last 1 steps is 0.5440769560000263, loss is 0.12998071312904358
+step: 4: time taken for the last 1 steps is 0.5078569699999207, loss is 0.013878928497433662
+val_loss : 0.2222 :  val_acc: 0.9188
+
+updating stats...
+Epoch: 269 starting...
+step: 1: time taken for the last 1 steps is 0.8400892049999129, loss is 0.02089795097708702
+step: 2: time taken for the last 1 steps is 0.5468325169999844, loss is 0.18486103415489197
+step: 3: time taken for the last 1 steps is 0.5383425509999142, loss is 0.06755739450454712
+step: 4: time taken for the last 1 steps is 0.5195795459999317, loss is 0.014330456033349037
+val_loss : 0.2965 :  val_acc: 0.8750
+
+updating stats...
+Epoch: 270 starting...
+step: 1: time taken for the last 1 steps is 0.8356826029998956, loss is 0.03745624050498009
+step: 2: time taken for the last 1 steps is 0.5484732370000529, loss is 0.18622595071792603
+step: 3: time taken for the last 1 steps is 0.5462128250001115, loss is 0.046957094222307205
+step: 4: time taken for the last 1 steps is 0.5150464030002695, loss is 0.04900529235601425
+val_loss : 0.2027 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 271 starting...
+step: 1: time taken for the last 1 steps is 0.8535637420000057, loss is 0.12448897212743759
+step: 2: time taken for the last 1 steps is 0.5401892239997323, loss is 0.044195257127285004
+step: 3: time taken for the last 1 steps is 0.5427530219999426, loss is 0.09772757440805435
+step: 4: time taken for the last 1 steps is 0.5171516420000444, loss is 0.07281576842069626
+val_loss : 0.1935 :  val_acc: 0.9240
+
+updating stats...
+Epoch: 272 starting...
