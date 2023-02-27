@@ -81,7 +81,7 @@ class ViTEncoderBlock(Module):
         super().__init__()
 
         # TODO - this is temp workaround for MHA returning non tuple when running TP
-        import config.vit_config as config
+        import config.vit_base_config as config
 
         self.cfg = config.train_config()
         self.use_tp = self.cfg.use_tp

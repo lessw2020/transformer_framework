@@ -555,8 +555,8 @@ def parse_args():
         "--model",
         default="deepvit",
         metavar="string",
-        choices=["deepvit", "t5", "regnet", "vit"],
-        help="choose model to run, available: `deepvit`, `t5`, `regnet`, `vit` (default: deepvit)",
+        choices=["deepvit", "t5", "regnet", "vitbase", "vitsmart"],
+        help="choose model to run, available: `deepvit`, `t5`, `regnet`, `vitbase`, 'vitsmart' (default: vitbase)",
     )
     args = parser.parse_args()
     return args
@@ -565,14 +565,16 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     print(f"******* loading model {args.model=}")
-    assert args.model in ["deepvit", "t5", "regnet", "vit"]
+    assert args.model in ["deepvit", "t5", "regnet", "vitbase", "vitsmart"]
     if args.model == "deepvit":
         import config.deepvit_config as config
     elif args.model == "t5":
         import config.t5_config as config
     elif args.model == "regnet":
         import config.regnet_config as config
-    elif args.model == "vit":
-        import config.vit_config as config
+    elif args.model == "vitbase":
+        import config.vit_base_config as config
+    elif args.model == "vitsmart":
+        import config.vit_smart_config as config
 
     fsdp_main()

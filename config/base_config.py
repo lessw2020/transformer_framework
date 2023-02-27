@@ -21,7 +21,7 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = None
+    total_steps_to_run: int = 5
 
     # stats
     print_memory_summary: bool = False
