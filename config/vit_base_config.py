@@ -56,6 +56,9 @@ class train_config(base_config):
 
     # real dset
     num_categories = NUM_CLASSES
+
+    label_smoothing_value = 0.0
+
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"
 

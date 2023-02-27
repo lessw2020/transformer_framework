@@ -21,7 +21,7 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 5
+    total_steps_to_run: int = None
 
     # stats
     print_memory_summary: bool = False
@@ -38,6 +38,8 @@ class base_config:
     use_low_precision_gradient_policy: bool = False
     # this is only for fp32 scenario...
     use_tf32: bool = False
+
+    label_smoothing_value = 0.0  # default to none, adjust in model config
 
     # add in tp support (default to false for base, activate in model)
     # generally change only in the model config, this is here for back compat.

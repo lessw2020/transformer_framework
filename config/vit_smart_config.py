@@ -55,6 +55,7 @@ class train_config(base_config):
 
     # real dset
     num_categories = NUM_CLASSES
+    label_smoothing_value = 0.1
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"
 
@@ -260,13 +261,18 @@ def train(
     local_rank,
     tracking_duration,
     total_steps_to_run,
+    use_synthetic_data=False,
 ):
     cfg = train_config()
-    loss_function = torch.nn.CrossEntropyLoss()
+    label_smoothing_amount = cfg.label_smoothing_value
+    loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
     t0 = time.perf_counter()
     for batch_index, (batch) in enumerate(data_loader, start=1):
-        inputs = batch["pixel_values"]
-        targets = batch["labels"]
+        if use_synthetic_data:
+            inputs, targets = batch
+        else:
+            inputs = batch["pixel_values"]
+            targets = batch["labels"]
         inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
             targets.to(torch.cuda.current_device()), -1
         )
