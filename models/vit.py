@@ -94,10 +94,13 @@ class ViTEncoderBlock(Module):
     def forward(self, x):
         x_p = self.ln_1(x)
         # print(f"vit l89, {x_p.shape=}")
-        if self.use_tp:
-            x_p = self.self_attention(x_p, x_p, x_p)
+        # TODO - this should not be happening...sometimes get tensor, sometimes get tuple
+        outs = self.self_attention(x_p, x_p, x_p)
+        if isinstance(outs, (tuple)):
+            x_p, _ = outs
+            # print(f"type of xp = {type(x_p)})")
         else:
-            x_p, _ = self.self_attention(x_p, x_p, x_p)
+            x_p = outs  # self.self_attention(x_p, x_p, x_p)
 
         # assert not isinstance(
         #    x_p, tuple
@@ -105,6 +108,7 @@ class ViTEncoderBlock(Module):
         # Todo - the return value for above is supposed to be a tuple, but is not.
         # print(f"vit91, {outs.shape}\n")
         # x_p = outs
+        # print(f"type of x {type(x)} and type of xp = {type(x_p)}")
         x = x + x_p
         x_p = self.mlp_block(self.ln_2(x))
         return x + x_p
