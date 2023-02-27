@@ -120,6 +120,8 @@ def fsdp_main():
     if rank == 0:
         print(f"policy is {my_auto_wrap_policy}")
 
+    use_pokemon = False
+    use_beans = False
     # todo - clean this up...temp bridge for testing pokemon dataset
     if cfg.use_synthetic_data == False:
         use_pokemon = False
@@ -155,7 +157,7 @@ def fsdp_main():
 
     if cfg.run_validation:
         if not val_dataset:
-            val_dataset = config.get_dataset(train=False)
+            val_dataset = config.get_dataset()  # train=False)
         val_sampler = DistributedSampler(
             val_dataset, rank=dist.get_rank(), num_replicas=dist.get_world_size()
         )
@@ -389,12 +391,21 @@ def fsdp_main():
         tracking_duration = None
 
     # warmup, this is only used in the non-recursive ParamExecOrderPolicy
-    config.train(
-        model, data_loader, None, None, memmax, local_rank, tracking_duration, 1
+    """config.train(
+        model,
+        data_loader,
+        None,
+        None,
+        memmax,
+        local_rank,
+        tracking_duration,
+        1,
+        use_synthetic_data=cfg.use_synthetic_data,
     )
     if rank == 0:
         print("Finish warm up")
     model.zero_grad()
+    """
 
     # optimizer ----------
     optimizer = None
@@ -477,7 +488,8 @@ def fsdp_main():
         for i in range(1, cfg.num_epochs + 1):
             if rank == 0:
                 print(f"Epoch: {i} starting...")
-                assert _stats is not None, "missing stats in main"
+                if not cfg.use_synthetic_data:
+                    assert _stats is not None, "missing stats in main"
             config.train(
                 model,
                 data_loader,
@@ -487,6 +499,7 @@ def fsdp_main():
                 local_rank,
                 tracking_duration,
                 cfg.total_steps_to_run,
+                use_synthetic_data=cfg.use_synthetic_data,
             )
             if cfg.total_steps_to_run is not None:
                 break

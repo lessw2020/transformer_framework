@@ -19,7 +19,7 @@ from models.vit import ViT, ViTEncoderBlock
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
-NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
+NUM_CLASSES = 1000  # default to imagenet, updated in dataset selection
 
 
 @dataclass
@@ -39,19 +39,20 @@ class train_config(base_config):
     use_tp: bool = True
 
     # image size
-    image_size: int = 256
+    image_size: int = 224
 
     # use synthetic data
     use_synthetic_data: bool = True
 
     # todo - below needs to become dynamic since we are adding more datasets
-    use_pokemon_dataset: bool = False
-    if use_pokemon_dataset:
-        NUM_CLASSES = 150
+    if not use_synthetic_data:
+        use_pokemon_dataset: bool = False
+        if use_pokemon_dataset:
+            NUM_CLASSES = 150
 
-    use_beans_dataset: bool = True
-    if use_beans_dataset:
-        NUM_CLASSES = 3
+        use_beans_dataset: bool = True
+        if use_beans_dataset:
+            NUM_CLASSES = 3
 
     # real dset
     num_categories = NUM_CLASSES
@@ -169,7 +170,7 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
 class GeneratedDataset(Dataset):
     def __init__(self, **kwargs) -> None:
         super()
-        image_size = kwargs.get("image_size", 256)
+        image_size = kwargs.get("image_size", 224)
         self._input_shape = kwargs.get("input_shape", [3, image_size, image_size])
         self._input_type = kwargs.get("input_type", torch.float32)
         self._len = kwargs.get("len", 1000000)
@@ -204,8 +205,8 @@ def get_dataset():
     """generate both train and val dataset"""
     cfg = train_config()
     if cfg.use_synthetic_data:
-        image_size = 256
-        if cfg.image_size:
+        image_size = 256  # default
+        if cfg.image_size:  # fetch from config
             image_size = cfg.image_size
         return GeneratedDataset(image_size=cfg.image_size)
 
@@ -240,13 +241,17 @@ def train(
     local_rank,
     tracking_duration,
     total_steps_to_run,
+    use_synthetic_data: bool = False,
 ):
     cfg = train_config()
     loss_function = torch.nn.CrossEntropyLoss()
     t0 = time.perf_counter()
     for batch_index, (batch) in enumerate(data_loader, start=1):
-        inputs = batch["pixel_values"]
-        targets = batch["labels"]
+        if not use_synthetic_data:
+            inputs = batch["pixel_values"]
+            targets = batch["labels"]
+        else:
+            inputs, targets = batch
         inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
             targets.to(torch.cuda.current_device()), -1
         )
