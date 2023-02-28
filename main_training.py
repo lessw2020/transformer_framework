@@ -444,7 +444,7 @@ def fsdp_main():
                 f"Running with AnyPrecision Optimizer, momo={cfg.ap_momentum_dtype}, var = {cfg.ap_variance_dtype}, kahan summation =  {cfg.ap_use_kahan_summation}"
             )
 
-    elif config.optimizer="dadapt_adam":
+    elif config.optimizer=="dadapt_adam":
         from dadaptation import DAdaptAdam
         from adanip_exp import DAdaptAdanIP
 

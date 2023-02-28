@@ -285,6 +285,10 @@ def train(
         #print(f"{batch=}")
         if use_synthetic_data:
             inputs, targets = batch
+        elif use_label_singular:
+            inputs = batch["pixel_values"]
+            targets = batch["label"]
+
         else:
             inputs = batch["pixel_values"]
             targets = batch["labels"]
@@ -319,7 +323,7 @@ def train(
             break
 
 
-def validation(model, local_rank, rank, val_loader, world_size, stats=None):
+def validation(model, local_rank, rank, val_loader, world_size, stats=None, use_label_singular=False):
     epoch_val_accuracy = 0
     epoch_val_loss = 0
     model.eval()
@@ -333,8 +337,12 @@ def validation(model, local_rank, rank, val_loader, world_size, stats=None):
 
     with torch.no_grad():
         for batch_idx, (batch) in enumerate(val_loader):
-            inputs = batch["pixel_values"]
-            targets = batch["labels"]
+            if use_label_singular:
+                inputs = batch["pixel_values"]
+                targets = batch["label"]
+            else:
+                inputs = batch["pixel_values"]
+                targets = batch["labels"]
 
             inputs, targets = inputs.to(torch.cuda.current_device()), targets.to(
                 torch.cuda.current_device()
