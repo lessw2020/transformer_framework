@@ -43,19 +43,25 @@ class train_config(base_config):
 
     # use synthetic data
     use_synthetic_data: bool = False
-
+    use_label_singular = False
     # todo - below needs to become dynamic since we are adding more datasets
     use_pokemon_dataset: bool = False
     if use_pokemon_dataset:
         NUM_CLASSES = 150
 
-    use_beans_dataset: bool = True
+    use_beans_dataset: bool = False
     if use_beans_dataset:
         NUM_CLASSES = 3
+    
+    use_food = True
+    
+    if use_food:
+        NUM_CLASSES = 101
+        use_label_singular = True
 
     # real dset
     num_categories = NUM_CLASSES
-    label_smoothing_value = 0.1
+    label_smoothing_value = 0.0
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"
 
@@ -81,6 +87,8 @@ class train_config(base_config):
     layernorm_eps = 1e-6
 
     # optimizers load and save
+    optimizer = "dadapt_adam"
+    
     save_optimizer: bool = False
     load_optimizer: bool = False
 
@@ -242,6 +250,11 @@ def get_pokemon_dataset():
 
     return get_datasets()
 
+def get_universal_dataset():
+    from dataset_classes.hf_universal import get_datasets
+
+    return get_datasets()
+
 
 def get_policy():
     # todo - can't use autowrap policy with 2d
@@ -262,12 +275,14 @@ def train(
     tracking_duration,
     total_steps_to_run,
     use_synthetic_data=False,
+    use_label_singular=False,
 ):
     cfg = train_config()
     label_smoothing_amount = cfg.label_smoothing_value
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
     t0 = time.perf_counter()
     for batch_index, (batch) in enumerate(data_loader, start=1):
+        #print(f"{batch=}")
         if use_synthetic_data:
             inputs, targets = batch
         else:
