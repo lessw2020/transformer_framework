@@ -1,1 +1,1 @@
-accuracy: 0.0726, best_acc: 0.0726, loss: 4.1643
+accuracy: 0.0726, best_acc: 0.0726, loss: 4.1643accuracy: 0.1505, best_acc: 0.1505, loss: 3.6363accuracy: 0.2196, best_acc: 0.2196, loss: 3.2470accuracy: 0.2688, best_acc: 0.2688, loss: 2.9781accuracy: 0.3168, best_acc: 0.3168, loss: 2.7366accuracy: 0.3574, best_acc: 0.3574, loss: 2.5754

@@ -466,7 +466,12 @@ def fsdp_main():
     # start adding in logged metrics...
     _metric_logger = None
     if cfg.run_validation:
-        _metric_logger = "test_stats_adanip.txt"
+        from metric_logging.metric_logger import get_date_time
+
+        curr_time = get_date_time()
+        file_description = "stats_smartvit_food101_" + curr_time + ".txt"
+        _metric_logger = file_description
+
     # load optimizer checkpoint
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)

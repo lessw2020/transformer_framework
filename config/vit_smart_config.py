@@ -390,7 +390,7 @@ def validation(
             stats["loss"].append(loss)
             stats["accuracy"].append(acc)
             if metric_logger:
-                epoch_results = f"accuracy: {acc}, best_acc: {best_acc}, loss: {loss}"
+                epoch_results = f"accuracy: {acc}, best_acc: {best_acc}, loss: {loss}\n"
                 try:
                     with open(metric_logger, "a") as fwriter:
                         fwriter.write(epoch_results)
