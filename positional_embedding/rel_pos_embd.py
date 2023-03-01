@@ -132,7 +132,7 @@ def gen_relative_log_coords(
         relative_coords_table = torch.sign(relative_coords_table) * torch.log(
             1.0 + relative_coords_table.abs()
         )
-
+    print(f"{relative_coords_table.shape=}")
     return relative_coords_table
 
 

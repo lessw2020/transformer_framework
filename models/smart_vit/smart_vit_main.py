@@ -354,19 +354,19 @@ class VisionTransformerRelPos(nn.Module):
         feat_size = self.patch_embed.grid_size
 
         rel_pos_args = dict(window_size=feat_size, prefix_tokens=self.num_prefix_tokens)
-        if rel_pos_type.startswith("mlp"):
-            if rel_pos_dim:
-                rel_pos_args["hidden_dim"] = rel_pos_dim
-            if "swin" in rel_pos_type:
-                rel_pos_args["mode"] = "swin"
-            rel_pos_cls = partial(RelPosMlp, **rel_pos_args)
-        else:
-            rel_pos_cls = partial(RelPosBias, **rel_pos_args)
+        # if rel_pos_type.startswith("mlp"):
+        #    if rel_pos_dim:
+        #        rel_pos_args["hidden_dim"] = rel_pos_dim
+        #    if "swin" in rel_pos_type:
+        #        rel_pos_args["mode"] = "swin"
+        rel_pos_cls = partial(RelPosMlp, **rel_pos_args)
+        # else:
+        # rel_pos_cls = partial(RelPosBias, **rel_pos_args)
         self.shared_rel_pos = None
-        if shared_rel_pos:
-            self.shared_rel_pos = rel_pos_cls(num_heads=num_heads)
-            # NOTE shared rel pos currently mutually exclusive w/ per-block, but could support both...
-            rel_pos_cls = None
+        # if shared_rel_pos:
+        #    self.shared_rel_pos = rel_pos_cls(num_heads=num_heads)
+        # NOTE shared rel pos currently mutually exclusive w/ per-block, but could support both...
+        #   rel_pos_cls = None
 
         self.cls_token = (
             nn.Parameter(torch.zeros(1, self.num_prefix_tokens, embed_dim))
@@ -443,17 +443,17 @@ class VisionTransformerRelPos(nn.Module):
 
     def forward_features(self, x):
         x = self.patch_embed(x)
-        if self.cls_token is not None:
-            x = torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
+        # if self.cls_token is not None:
+        #    x = torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
 
-        shared_rel_pos = (
-            self.shared_rel_pos.get_bias() if self.shared_rel_pos is not None else None
-        )
+        # shared_rel_pos = (
+        #    self.shared_rel_pos.get_bias() if self.shared_rel_pos is not None else None
+        # )
         for blk in self.blocks:
             # if self.grad_checkpointing and not torch.jit.is_scripting():
             #    x = checkpoint(blk, x, shared_rel_pos=shared_rel_pos)
             # else:
-            x = blk(x, shared_rel_pos=shared_rel_pos)
+            x = blk(x, shared_rel_pos=None)  # shared_rel_pos)
         x = self.norm(x)
         return x
 
