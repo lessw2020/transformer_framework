@@ -19,6 +19,7 @@ class DualPatchNormEmbedding(nn.Module):
         norm_eps: float = 1e-6,
     ):
         super().__init__()
+        img_size = (img_size, img_size)
         self.patch_size = patch_size
         self.patch_dim = in_chans * (patch_size) ** 2
         self.proj_layer = nn.Linear(

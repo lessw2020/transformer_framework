@@ -47,7 +47,7 @@ class base_config:
 
     # optimizer config
     optimizer: str = (
-        "AnyPrecision"  # [AdamW, AnyPrecision, int8] (fp32, bf16, int8 optimizers)
+        "dadapt_adam"  # [AdamW, AnyPrecision, int8] (fp32, bf16, int8 optimizers)
     )
 
     ap_momentum_dtype = torch.float32  # momentum and variance

@@ -444,7 +444,7 @@ def fsdp_main():
                 f"Running with AnyPrecision Optimizer, momo={cfg.ap_momentum_dtype}, var = {cfg.ap_variance_dtype}, kahan summation =  {cfg.ap_use_kahan_summation}"
             )
 
-    elif config.optimizer=="dadapt_adam":
+    elif cfg.optimizer == "dadapt_adam":
         from dadaptation import DAdaptAdam
         from adanip_exp import DAdaptAdanIP
 
@@ -453,7 +453,7 @@ def fsdp_main():
             model.parameters(),
             lr=1.0,
             weight_decay=weight_decay,
-            amsgrad=False,
+            # amsgrad=False,
             decouple=True,
             log_every=4,
         )
@@ -507,7 +507,7 @@ def fsdp_main():
                 tracking_duration,
                 cfg.total_steps_to_run,
                 use_synthetic_data=cfg.use_synthetic_data,
-                use_label_singular = use_label_singular
+                use_label_singular=use_label_singular,
             )
             if cfg.total_steps_to_run is not None:
                 break
@@ -516,7 +516,13 @@ def fsdp_main():
                 if rank == 0:
                     assert _stats is not None, "no stats in main"
                 config.validation(
-                    model, local_rank, rank, val_loader, world_size, stats=_stats, use_label_singular=use_label_singular,
+                    model,
+                    local_rank,
+                    rank,
+                    val_loader,
+                    world_size,
+                    stats=_stats,
+                    use_label_singular=use_label_singular,
                 )
 
         # checkpointing for model and optimizer

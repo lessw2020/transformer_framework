@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from mlp.base_mlp import LinearMLP
-from .weight_init import trunc_normal_
+from models.smart_vit.weight_init import trunc_normal_
 
 
 def gen_relative_position_index(

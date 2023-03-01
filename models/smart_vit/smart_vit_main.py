@@ -15,7 +15,8 @@ from typing import Optional
 from mlp.base_mlp import LinearMLP
 from functools import partial
 from patch_embeddings.dual_patchnorm import DualPatchNormEmbedding
-from rel_pos_embd import RelPosBias, RelPosMlp
+from positional_embedding.rel_pos_embd import RelPosBias, RelPosMlp
+
 
 # from Ross Wightman layers:
 
@@ -59,7 +60,7 @@ class DropPath(nn.Module):
         return f"drop_prob={round(self.drop_prob,3):0.3f}"
 
 
-def build_smart_vit(**kwargs):
+def build_smart_vit(model_params):
     model_kwargs = dict(
         patch_size=16,
         embed_dim=768,
@@ -67,9 +68,9 @@ def build_smart_vit(**kwargs):
         num_heads=12,
         qkv_bias=False,
         block_fn=ResPostRelPosBlock,
-        **kwargs,
     )
-    model = VisionTransformerRelPos(**model_kwargs)
+    merged_vals = {**model_kwargs, **model_params}
+    model = VisionTransformerRelPos(**merged_vals)
     return model
 
 
@@ -229,7 +230,6 @@ class ResPostRelPosBlock(nn.Module):
             dim,
             num_heads,
             qkv_bias=qkv_bias,
-            qk_norm=qk_norm,
             rel_pos_cls=rel_pos_cls,
             attn_drop=attn_drop,
             proj_drop=drop,
@@ -273,6 +273,14 @@ class VisionTransformerRelPos(nn.Module):
     def __init__(
         self,
         img_size=224,
+        image_size=224,  # temp TODO resolve dupe image/img names
+        input_size=(3, 224, 224),  # temp duplicate
+        pool_size=None,
+        crop_pct=None,
+        interpolation=None,
+        fixed_input_size=None,
+        first_conv=None,
+        classifier=None,  # end of dupes
         patch_size=16,
         in_chans=3,
         num_classes=3,

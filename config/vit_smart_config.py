@@ -27,11 +27,12 @@ class train_config(base_config):
     # model
     # model_name = "90M"
 
-    use_timm = True
+    use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
-        "vit_relpos_base_patch16_rpn_224"
+        # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
+        "smartvit90"
     )
     model_num_heads = 16
 
@@ -52,9 +53,9 @@ class train_config(base_config):
     use_beans_dataset: bool = False
     if use_beans_dataset:
         NUM_CLASSES = 3
-    
+
     use_food = True
-    
+
     if use_food:
         NUM_CLASSES = 101
         use_label_singular = True
@@ -88,7 +89,7 @@ class train_config(base_config):
 
     # optimizers load and save
     optimizer = "dadapt_adam"
-    
+
     save_optimizer: bool = False
     load_optimizer: bool = False
 
@@ -166,32 +167,33 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
             "cls_type": "pooled",
             "stem_type": "patchify",
         }
-
-    if model_size == "90M":
+    elif model_size == "smartvit90":
         model_args = {
-            **model_args,
-            "image_size": 224,
             "patch_size": 16,
+            "embed_dim": 768,
+            "depth": 12,
+            "num_heads": 12,
+            "qkv_bias": False,
             "num_classes": NUM_CLASSES,
-            "mlp_dim": 3072,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-            "c_stem_kernels": [],
-            "c_stem_strides": [],
-            "c_stem_dims": [],
-            "n_layers": 12,
-            "n_heads": 12,
-            "hidden_d": 768,
-            "mlp_d": 3072,
-            "cls_type": "pooled",
-            "stem_type": "patchify",
+            "image_size": 224,
+            "input_size": (3, 224, 224),
+            "pool_size": None,
+            "crop_pct": 0.9,
+            "interpolation": "bicubic",
+            "fixed_input_size": True,
+            # "mean": IMAGENET_INCEPTION_MEAN,
+            # "std": IMAGENET_INCEPTION_STD,
+            "first_conv": "patch_embed.proj",
+            "classifier": "head",
         }
 
     assert model_args.get(
         "image_size"
     ), f"failed to build model args for {model_size=}...is your model size listed in config?"
-    model = ViT(params=model_args)
+    # model = ViT(params=model_args)
+    from models.smart_vit.smart_vit_main import build_smart_vit
 
+    model = build_smart_vit(model_args)
     return model
 
 
@@ -250,6 +252,7 @@ def get_pokemon_dataset():
 
     return get_datasets()
 
+
 def get_universal_dataset():
     from dataset_classes.hf_universal import get_datasets
 
@@ -282,7 +285,7 @@ def train(
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
     t0 = time.perf_counter()
     for batch_index, (batch) in enumerate(data_loader, start=1):
-        #print(f"{batch=}")
+        # print(f"{batch=}")
         if use_synthetic_data:
             inputs, targets = batch
         elif use_label_singular:
@@ -323,7 +326,15 @@ def train(
             break
 
 
-def validation(model, local_rank, rank, val_loader, world_size, stats=None, use_label_singular=False):
+def validation(
+    model,
+    local_rank,
+    rank,
+    val_loader,
+    world_size,
+    stats=None,
+    use_label_singular=False,
+):
     epoch_val_accuracy = 0
     epoch_val_loss = 0
     model.eval()
