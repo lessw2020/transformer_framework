@@ -1,0 +1,1 @@
+accuracy: 0.0726, best_acc: 0.0726, loss: 4.1643

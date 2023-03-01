@@ -155,6 +155,7 @@ def fsdp_main():
             import collections
 
             _stats = collections.defaultdict(list)
+            _stats["best_accuracy"] = 0.00
 
     # samplers ----
 
@@ -449,12 +450,12 @@ def fsdp_main():
         from adanip_exp import DAdaptAdanIP
 
         # optimizer = torch.optim.AdamW(
-        optimizer = DAdaptAdam(  # DAdaptAdam(
+        optimizer = DAdaptAdanIP(  # DAdaptAdam(
             model.parameters(),
             lr=1.0,
             weight_decay=weight_decay,
             # amsgrad=False,
-            decouple=True,
+            # decouple=True,
             log_every=4,
         )
         if rank == 0:
@@ -462,6 +463,10 @@ def fsdp_main():
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
+    # start adding in logged metrics...
+    _metric_logger = None
+    if cfg.run_validation:
+        _metric_logger = "test_stats_adanip.txt"
     # load optimizer checkpoint
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
@@ -523,6 +528,7 @@ def fsdp_main():
                     world_size,
                     stats=_stats,
                     use_label_singular=use_label_singular,
+                    metric_logger=_metric_logger,
                 )
 
         # checkpointing for model and optimizer

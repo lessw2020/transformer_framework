@@ -334,6 +334,7 @@ def validation(
     world_size,
     stats=None,
     use_label_singular=False,
+    metric_logger=None,
 ):
     epoch_val_accuracy = 0
     epoch_val_loss = 0
@@ -383,7 +384,19 @@ def validation(
             print(f"updating stats...")
             loss = f"{epoch_val_loss:.4f}"
             acc = f"{epoch_val_accuracy:.4f}"
+            float_acc = float(acc)
+            stats["best_accuracy"] = max(float_acc, stats["best_accuracy"])
+            best_acc = stats["best_accuracy"]
             stats["loss"].append(loss)
             stats["accuracy"].append(acc)
+            if metric_logger:
+                epoch_results = f"accuracy: {acc}, best_acc: {best_acc}, loss: {loss}"
+                try:
+                    with open(metric_logger, "a") as fwriter:
+                        fwriter.write(epoch_results)
+
+                except OSError as oserr:
+                    print("Error while writing stats to disc ", oserr)
+
             # print(f"{stats=}")
     return
