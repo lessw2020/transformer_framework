@@ -3,6 +3,3 @@ accuracy: 0.1381, best_acc: 0.1381, loss: 3.7126
 accuracy: 0.1958, best_acc: 0.1958, loss: 3.3709
 accuracy: 0.2532, best_acc: 0.2532, loss: 3.0661
 accuracy: 0.3016, best_acc: 0.3016, loss: 2.8235
-accuracy: 0.3542, best_acc: 0.3542, loss: 2.5872
-accuracy: 0.4004, best_acc: 0.4004, loss: 2.3910
-accuracy: 0.4404, best_acc: 0.4404, loss: 2.2181

@@ -170,8 +170,8 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
     elif model_size == "smartvit90":
         model_args = {
             "patch_size": 16,
-            "embed_dim": 768,
-            "depth": 12,
+            "embed_dim": 1320,
+            "depth": 16,
             "num_heads": 12,
             "qkv_bias": True,
             "num_classes": NUM_CLASSES,
