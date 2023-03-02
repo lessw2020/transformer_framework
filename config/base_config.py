@@ -21,13 +21,13 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 5
+    total_steps_to_run: int = None
 
     # stats
     print_memory_summary: bool = False
 
     # training
-    num_epochs: int = 12
+    num_epochs: int = 300
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 
@@ -92,7 +92,7 @@ class base_config:
     # backward_prefetch = None
 
     use_non_recursive_wrapping: bool = False
-    backward_prefetch = None  # BackwardPrefetch.BACKWARD_PRE
+    backward_prefetch = BackwardPrefetch.BACKWARD_PRE
 
 
 def get_policy_base(blocks):

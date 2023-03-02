@@ -100,6 +100,7 @@ def gen_relative_log_coords(
     pretrained_win_size: Tuple[int, int] = (0, 0),
     mode="swin",
 ):
+    # print(f"relpos mode = {mode=}, and {pretrained_win_size=}")
     assert mode in ("swin", "cr")
     # as per official swin-v2 impl, supporting timm specific 'cr' log coords as well
     relative_coords_h = torch.arange(
@@ -132,7 +133,7 @@ def gen_relative_log_coords(
         relative_coords_table = torch.sign(relative_coords_table) * torch.log(
             1.0 + relative_coords_table.abs()
         )
-    print(f"{relative_coords_table.shape=}")
+    # print(f"{relative_coords_table.shape=}")
     return relative_coords_table
 
 
@@ -147,12 +148,13 @@ class RelPosMlp(nn.Module):
         self,
         window_size,
         num_heads=8,
-        hidden_dim=128,
+        hidden_dim=256,  # up default from 128 to 256
         prefix_tokens=0,
         mode="cr",
         pretrained_window_size=(0, 0),
     ):
         super().__init__()
+        print(f"{hidden_dim=}")
         self.window_size = window_size
         self.window_area = self.window_size[0] * self.window_size[1]
         self.prefix_tokens = prefix_tokens

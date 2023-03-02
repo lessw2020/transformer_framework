@@ -173,7 +173,7 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
             "embed_dim": 768,
             "depth": 12,
             "num_heads": 12,
-            "qkv_bias": False,
+            "qkv_bias": True,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
             "input_size": (3, 224, 224),
