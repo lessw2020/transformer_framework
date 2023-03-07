@@ -27,6 +27,9 @@ class train_config(base_config):
     # model
     model_name = "250M"
 
+    # profile
+    run_profiler: bool = False
+
     use_timm = False
     # model_name = (
     # "vit_relpos_medium_patch16_rpn_224"  #
@@ -69,7 +72,7 @@ class train_config(base_config):
     # val_data_path = "datasets_vision/pets/val"
 
     # mixed precision
-    use_mixed_precision: bool = True
+    use_mixed_precision: bool = False
 
     # checkpoint models
     save_model_checkpoint: bool = False

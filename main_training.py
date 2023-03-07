@@ -611,6 +611,8 @@ def fsdp_main():
                 + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds"
             )
         print(f"This was run with TensorParallel? = {cfg.use_tp}")
+        print(f"Batch size used = {cfg.batch_size_training}\n")
+
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params\n")
         if cfg.print_memory_summary:
             print(
