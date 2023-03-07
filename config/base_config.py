@@ -22,6 +22,8 @@ class base_config:
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
     total_steps_to_run: int = 8
+    # ignores warmup steps for avg time calcs
+    warmup_steps: int = 3
 
     # stats
     print_memory_summary: bool = False

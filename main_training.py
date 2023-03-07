@@ -598,7 +598,7 @@ def fsdp_main():
             print(Fore.GREEN + f"\n--> Highest Val Accuracy =  {best_val_acc}\n")
 
         if cfg.total_steps_to_run is not None:
-            warmup_steps = 3
+            warmup_steps = cfg.warmup_steps
             iters_to_avg = tracking_duration[warmup_steps:]
 
             stable_sum = sum(iters_to_avg)
