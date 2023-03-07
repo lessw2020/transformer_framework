@@ -599,23 +599,19 @@ def fsdp_main():
 
         if cfg.total_steps_to_run is not None:
             warmup_steps = 3
-            start_avg_index = warmup_steps - 1
-            iters_to_avg = tracking_duration[start_avg_index:]
-            print(f"len tracking list = {len(tracking_duration)}")
-            print(f"{tracking_duration=}")
-            print(f"{iters_to_avg=}")
+            iters_to_avg = tracking_duration[warmup_steps:]
 
             stable_sum = sum(iters_to_avg)
-            print(f"len iters_to_avg = {len(iters_to_avg)}")
-
-            stable_avg = stable_sum / (cfg.total_steps_to_run - warmup_steps)
+            # print(f"len iters_to_avg = {len(iters_to_avg)}")
+            total_steps_measured = cfg.total_steps_to_run - warmup_steps
+            stable_avg = stable_sum / total_steps_measured
             stable_avg = round(stable_avg, 4)
             print(
                 Fore.GREEN
-                + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
+                + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds"
             )
         print(f"This was run with TensorParallel? = {cfg.use_tp}")
-        print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
+        print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params\n")
         if cfg.print_memory_summary:
             print(
                 f"\nCUDA Memory Summary After Training:\n {torch.cuda.memory_summary()}"
