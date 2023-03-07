@@ -546,7 +546,7 @@ def fsdp_main():
                 tracking_duration,
                 total_steps,
                 use_synthetic_data=cfg.use_synthetic_data,
-                # use_label_singular=use_label_singular,
+                use_label_singular=use_label_singular,
             )
             if cfg.total_steps_to_run is not None:
                 break

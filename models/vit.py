@@ -144,7 +144,7 @@ class ViTStemPatchify(Module):
 
     def __init__(self, w_in, w_out, k):
         super(ViTStemPatchify, self).__init__()
-        self.patchify = patchify2d(w_in, w_out, k, bias=True)
+        self.patchify = patchify2d(w_in, w_out, k, bias=False)
 
     def forward(self, x):
         return self.patchify(x)
@@ -297,7 +297,7 @@ def init_weights_vit(model):
                 # ViT patchify stem init
                 fan_in = m.in_channels * m.kernel_size[0] * m.kernel_size[1]
                 init.trunc_normal_(m.weight, std=math.sqrt(1.0 / fan_in))
-                init.zeros_(m.bias)
+                # init.zeros_(m.bias)
             elif "cstem_last" in k:
                 # The last 1x1 conv of the conv stem
                 init.normal_(m.weight, mean=0.0, std=math.sqrt(2.0 / m.out_channels))

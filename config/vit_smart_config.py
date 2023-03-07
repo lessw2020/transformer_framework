@@ -37,7 +37,7 @@ class train_config(base_config):
     model_num_heads = 16
 
     # use TP
-    use_tp: bool = False
+    use_tp: bool = True
 
     # image size
     image_size: int = 224

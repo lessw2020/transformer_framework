@@ -38,6 +38,9 @@ class train_config(base_config):
     # use TP
     use_tp: bool = False
 
+    # training
+    batch_size_training: int = 64
+
     # image size
     image_size: int = 224
 
@@ -60,13 +63,13 @@ class train_config(base_config):
     label_smoothing_value = 0.0
 
     optimizer = "AdamW"
-    use_fused_optimizer = False
+    use_fused_optimizer = True
 
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"
 
     # mixed precision
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
 
     # checkpoint models
     save_model_checkpoint: bool = False
@@ -248,6 +251,7 @@ def train(
     tracking_duration,
     total_steps_to_run,
     use_synthetic_data: bool = False,
+    use_label_singular=False,  # not used, just to avoid errs as used in vitsmart
 ):
     cfg = train_config()
     loss_function = torch.nn.CrossEntropyLoss()
