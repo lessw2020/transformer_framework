@@ -36,7 +36,7 @@ class train_config(base_config):
     # model_num_heads = 16
 
     # use TP
-    use_tp: bool = False
+    use_tp: bool = True
 
     # image size
     image_size: int = 224
@@ -58,6 +58,9 @@ class train_config(base_config):
     num_categories = NUM_CLASSES
 
     label_smoothing_value = 0.0
+
+    optimizer = "AdamW"
+    use_fused_optimizer = False
 
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"

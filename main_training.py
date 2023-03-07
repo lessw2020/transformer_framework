@@ -502,6 +502,10 @@ def fsdp_main():
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
 
     torch_profiler = None
+    total_steps = None
+    if cfg.total_steps_to_run:
+        total_steps = cfg.total_steps_to_run - 1  # fix off by one for step count
+
     if cfg.run_profiler and rank == 0:
         print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
 
@@ -524,10 +528,10 @@ def fsdp_main():
                 memmax,
                 local_rank,
                 tracking_duration,
-                cfg.total_steps_to_run,
+                total_steps,
             )
     else:
-        for i in range(1, cfg.num_epochs + 1):
+        for i in range(cfg.num_epochs):
             if rank == 0:
                 print(f"Epoch: {i} starting...")
                 if not cfg.use_synthetic_data:
@@ -540,7 +544,7 @@ def fsdp_main():
                 memmax,
                 local_rank,
                 tracking_duration,
-                cfg.total_steps_to_run,
+                total_steps,
                 use_synthetic_data=cfg.use_synthetic_data,
                 # use_label_singular=use_label_singular,
             )
@@ -593,16 +597,24 @@ def fsdp_main():
             best_val_acc = 100 * float(max(total_acc_curve))
             print(Fore.GREEN + f"\n--> Highest Val Accuracy =  {best_val_acc}\n")
 
-        stable_sum = sum(
-            tracking_duration[3:]
-        )  # this is b/c of 2 warmup steps, plus remove first actual step
         if cfg.total_steps_to_run is not None:
-            stable_avg = stable_sum / cfg.total_steps_to_run
+            warmup_steps = 3
+            start_avg_index = warmup_steps - 1
+            iters_to_avg = tracking_duration[start_avg_index:]
+            print(f"len tracking list = {len(tracking_duration)}")
+            print(f"{tracking_duration=}")
+            print(f"{iters_to_avg=}")
+
+            stable_sum = sum(iters_to_avg)
+            print(f"len iters_to_avg = {len(iters_to_avg)}")
+
+            stable_avg = stable_sum / (cfg.total_steps_to_run - warmup_steps)
             stable_avg = round(stable_avg, 4)
             print(
                 Fore.GREEN
                 + f"\n--> Step avg speed based on {cfg.total_steps_to_run} steps: {stable_avg} seconds"
             )
+        print(f"This was run with TensorParallel? = {cfg.use_tp}")
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params")
         if cfg.print_memory_summary:
             print(
