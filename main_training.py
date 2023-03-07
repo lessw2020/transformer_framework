@@ -444,10 +444,22 @@ def fsdp_main():
             print(
                 f"Running with AnyPrecision Optimizer, momo={cfg.ap_momentum_dtype}, var = {cfg.ap_variance_dtype}, kahan summation =  {cfg.ap_use_kahan_summation}"
             )
+    elif cfg.optimizer == "dadapt_adanip":
+        from adanip_exp import DAdaptAdanIP
+
+        optimizer = DAdaptAdanIP(  # DAdaptAdam(
+            model.parameters(),
+            lr=1.0,
+            weight_decay=weight_decay,
+            # amsgrad=False,
+            # decouple=True,
+            # log_every=4,
+        )
+        if rank == 0:
+            print(f"Running with DAdapt AdanIP optimizer")
 
     elif cfg.optimizer == "dadapt_adam":
         from dadaptation import DAdaptAdam
-        from adanip_exp import DAdaptAdanIP
 
         # optimizer = torch.optim.AdamW(
         optimizer = DAdaptAdanIP(  # DAdaptAdam(
@@ -456,10 +468,23 @@ def fsdp_main():
             weight_decay=weight_decay,
             # amsgrad=False,
             # decouple=True,
-            log_every=4,
+            # log_every=4,
         )
         if rank == 0:
             print(f"Running with DAdapt optimizer")
+    elif cfg.optimizer == "AdamW":
+        use_fused_optimizer = cfg.use_fused_optimizer
+
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=0.001,
+            weight_decay=weight_decay,
+            fused=use_fused_optimizer,
+        )
+        if rank == 0:
+            print(
+                f"Running with AdamW optimizer, with fusion set to {use_fused_optimizer}"
+            )
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
@@ -517,7 +542,7 @@ def fsdp_main():
                 tracking_duration,
                 cfg.total_steps_to_run,
                 use_synthetic_data=cfg.use_synthetic_data,
-                use_label_singular=use_label_singular,
+                # use_label_singular=use_label_singular,
             )
             if cfg.total_steps_to_run is not None:
                 break
