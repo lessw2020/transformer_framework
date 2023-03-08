@@ -34,7 +34,7 @@ class train_config(base_config):
         # "maxxvitv2_rmlp_base_rw_224"
         "smartvit90"
     )
-    model_num_heads = 16
+    model_num_heads = 12
 
     # use TP
     use_tp: bool = False
@@ -43,7 +43,7 @@ class train_config(base_config):
     image_size: int = 224
 
     # use synthetic data
-    use_synthetic_data: bool = False
+    use_synthetic_data: bool = True
     use_label_singular = False
     # todo - below needs to become dynamic since we are adding more datasets
     use_pokemon_dataset: bool = False
@@ -54,7 +54,7 @@ class train_config(base_config):
     if use_beans_dataset:
         NUM_CLASSES = 3
 
-    use_food = True
+    use_food = False
 
     if use_food:
         NUM_CLASSES = 101
@@ -67,7 +67,7 @@ class train_config(base_config):
     # val_data_path = "datasets_vision/pets/val"
 
     # mixed precision
-    use_mixed_precision: bool = False
+    use_mixed_precision: bool = True
 
     # checkpoint models
     save_model_checkpoint: bool = False

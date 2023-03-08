@@ -17,6 +17,8 @@ from functools import partial
 from patch_embeddings.dual_patchnorm import DualPatchNormEmbedding
 from positional_embedding.rel_pos_embd import RelPosBias, RelPosMlp
 
+from .sar import checkpoint
+
 
 # from Ross Wightman layers:
 
@@ -103,46 +105,112 @@ class ScaledAttention(nn.Module):
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def forward(self, x, shared_rel_pos: Optional[torch.Tensor] = None):
-        B, N, C = x.shape
-        qkv = (
-            self.qkv(x)
-            .reshape(B, N, 3, self.num_heads, self.head_dim)
-            .permute(2, 0, 3, 1, 4)
-        )
-        q, k, v = qkv.unbind(0)
-        q = self.q_norm(q)
-        k = self.k_norm(k)
+    def checkpoint_forward(self, q, k, v):
+        def cp_forward(q, k, v):
+            # print(f"q shape {q.shape}")
 
-        if self.fast_attn:
-            if self.rel_pos is not None:
-                attn_bias = self.rel_pos.get_bias()
-            elif shared_rel_pos is not None:
-                attn_bias = shared_rel_pos
-            else:
-                attn_bias = None
-            x = torch.nn.functional.scaled_dot_product_attention(
-                q,
-                k,
-                v,
-                attn_mask=attn_bias,
-                dropout_p=self.attn_drop.p,
-            )
-        else:
             q = q * self.scale
             attn = q @ k.transpose(-2, -1)
-            if self.rel_pos is not None:
-                attn = self.rel_pos(attn, shared_rel_pos=shared_rel_pos)
-            elif shared_rel_pos is not None:
-                attn = attn + shared_rel_pos
+
+            attn = attn.softmax(dim=-1)
+            # attn = self.attn_drop(attn)
+            x = attn @ v
+
+            return x
+
+        hidden_states = checkpoint(cp_forward, None, q, k, v)
+        print(f"returning hidden states")
+
+        return hidden_states
+
+    '''def _checkpointed_attention_forward(self, query_layer, key_layer,
+                                        value_layer, attention_mask):
+        """Forward method with activation checkpointing."""
+        def custom_forward(*inputs):
+            query_layer = inputs[0]
+            key_layer = inputs[1]
+            value_layer = inputs[2]
+            attention_mask = inputs[3]
+            output_ = self.core_attention(query_layer, key_layer,
+                                          value_layer, attention_mask)
+            return output_
+
+        hidden_states = tensor_parallel.checkpoint(
+            custom_forward,
+            False, query_layer, key_layer, value_layer, attention_mask)
+
+        return hidden_states
+    '''
+
+    def forward(
+        self,
+        x,
+        shared_rel_pos: Optional[torch.Tensor] = None,
+        use_ckp=False,
+    ):
+        # print(f"correct forward!!!!!!")
+        if use_ckp:
+            print(f"Using CHKP! ")
+            B, N, C = x.shape
+            # print(f"{B=}, {N=}, {C=}")
+            qkv = (
+                self.qkv(x)
+                .reshape(B, N, 3, self.num_heads, self.head_dim)
+                .permute(2, 0, 3, 1, 4)
+            )
+            q, k, v = qkv.unbind(0)
+            q = self.q_norm(q)
+            k = self.k_norm(k)
+            x = self.checkpoint_forward(q, k, v)
+
+            x = x.transpose(1, 2).reshape(B, N, C)
+            x = self.proj(x)
+            # x = self.proj_drop(x)
+            return x
+        else:
+            B, N, C = x.shape
+            # print(f"{B=}, {N=}, {C=}")
+            qkv = (
+                self.qkv(x)
+                .reshape(B, N, 3, self.num_heads, self.head_dim)
+                .permute(2, 0, 3, 1, 4)
+            )
+            q, k, v = qkv.unbind(0)
+            q = self.q_norm(q)
+            k = self.k_norm(k)
+            # print(f"q shape {q.shape}")
+
+            """if self.fast_attn:
+                if self.rel_pos is not None:
+                    attn_bias = self.rel_pos.get_bias()
+                elif shared_rel_pos is not None:
+                    attn_bias = shared_rel_pos
+                else:
+                    attn_bias = None
+                x = torch.nn.functional.scaled_dot_product_attention(
+                    q,
+                    k,
+                    v,
+                    attn_mask=attn_bias,
+                    dropout_p=self.attn_drop.p,
+                )
+            else:
+            """
+            q = q * self.scale
+            attn = q @ k.transpose(-2, -1)
+            # if self.rel_pos is not None:
+            #    print(f"self rel pos is valid")
+            #    attn = self.rel_pos(attn, shared_rel_pos=shared_rel_pos)
+            # elif shared_rel_pos is not None:
+            #    attn = attn + shared_rel_pos
             attn = attn.softmax(dim=-1)
             attn = self.attn_drop(attn)
             x = attn @ v
 
-        x = x.transpose(1, 2).reshape(B, N, C)
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
+            x = x.transpose(1, 2).reshape(B, N, C)
+            x = self.proj(x)
+            x = self.proj_drop(x)
+            return x
 
 
 class LayerScale(nn.Module):

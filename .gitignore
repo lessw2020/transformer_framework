@@ -5,6 +5,7 @@ __pycache__/
 
 # profile traces
 fsdp/
+tp_fsdp/
 
 # datasets - vision ones are too large
 datasets_vision

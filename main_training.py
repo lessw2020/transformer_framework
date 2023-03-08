@@ -529,6 +529,8 @@ def fsdp_main():
                 local_rank,
                 tracking_duration,
                 total_steps,
+                use_synthetic_data=cfg.use_synthetic_data,
+                use_label_singular=use_label_singular,
             )
     else:
         for i in range(cfg.num_epochs):

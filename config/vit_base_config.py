@@ -28,7 +28,8 @@ class train_config(base_config):
     model_name = "250M"
 
     # profile
-    run_profiler: bool = False
+    run_profiler: bool = True
+    profile_folder: str = "tp_fsdp/profile_tracing"
 
     use_timm = False
     # model_name = (
@@ -39,7 +40,7 @@ class train_config(base_config):
     # model_num_heads = 16
 
     # use TP
-    use_tp: bool = False
+    use_tp: bool = True
 
     # training
     batch_size_training: int = 64
