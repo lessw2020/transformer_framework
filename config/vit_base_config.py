@@ -30,7 +30,7 @@ class train_config(base_config):
     # profile
     run_profiler: bool = True
     profile_folder: str = "tp_fsdp/profile_tracing"
-
+    warmup_steps: int = 3
     use_timm = False
     # model_name = (
     # "vit_relpos_medium_patch16_rpn_224"  #
