@@ -236,6 +236,11 @@ def fsdp_main():
         elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
             model_checkpointing.load_distributed_model_checkpoint(model, rank, cfg)
 
+        elif (cfg.load_model_checkpoint
+        and cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT):
+
+             model_checkpointing.load_model_sharded(model, rank, cfg)
+
     prefetch_policy = cfg.backward_prefetch
     if rank == 0:
         print(f"backward prefetch set to {prefetch_policy}")
@@ -321,12 +326,12 @@ def fsdp_main():
         """
         # print(f"{tp_model=}")
 
-        fsdp_pg = twod_mesh.get_dim_groups()[0]
+        # fsdp_pg = twod_mesh.get_dim_groups()[0]
 
-        # todo - add back main code later for resume
+        # # todo - add back main code later for resume
         device = "cuda"
-        model.to(device)
-        model = FSDP(model, process_group=fsdp_pg)
+        # model.to(device)
+        # model = FSDP(model, process_group=fsdp_pg)
 
     process_group_fsdp = None
 
@@ -342,15 +347,10 @@ def fsdp_main():
         backward_prefetch=prefetch_policy,
         sharding_strategy=cfg.sharding_strategy,
         device_id=torch.cuda.current_device(),
-        forward_prefetch=cfg.forward_prefetch,
+        # forward_prefetch=cfg.forward_prefetch,
         limit_all_gathers=False,
     )
 
-    if (
-        cfg.load_model_checkpoint
-        and cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT
-    ):
-        model_checkpointing.load_model_sharded(model, rank, cfg)
 
     if cfg.fsdp_activation_checkpointing:
         config.fsdp_checkpointing(model)
@@ -548,7 +548,7 @@ def fsdp_main():
                 tracking_duration,
                 total_steps,
                 use_synthetic_data=cfg.use_synthetic_data,
-                use_label_singular=use_label_singular,
+                # use_label_singular=use_label_singular,
             )
             if cfg.total_steps_to_run is not None:
                 break
