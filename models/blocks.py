@@ -160,7 +160,6 @@ class SiLU(Module):
     def forward(self, x):
         return x * torch.sigmoid(x)
 
-
 class SE(Module):
     """Squeeze-and-Excitation (SE) block: AvgPool, FC, Act, FC, Sigmoid."""
 
@@ -187,6 +186,7 @@ class SE(Module):
         return cx
 
 
+
 class MultiheadAttention(Module):
     """Multi-head Attention block from Transformer models."""
 
@@ -196,6 +196,8 @@ class MultiheadAttention(Module):
 
     def forward(self, query, key, value, need_weights=False):
         return self.block(query=query, key=key, value=value, need_weights=need_weights)
+
+
 
     @staticmethod
     def complexity(cx, hidden_d, n_heads, seq_len):
