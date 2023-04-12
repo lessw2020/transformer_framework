@@ -26,7 +26,7 @@ from contextlib import contextmanager
 bf16_ready = environment.verify_bfloat_support
 
 from torch.utils.data import DistributedSampler
-
+from torch.distributed.fsdp._common_utils import _is_fsdp_flattened
 
 colorama.init(autoreset=True)  # reset after every line
 
@@ -81,17 +81,18 @@ def init_empty_weights(include_buffers: bool = False):
         if include_buffers:
             nn.Module.register_buffer = old_reg
 
+@torch.no_grad()
+def my_init_fn(module: nn.Module):
+    for submodule in module.modules():
+        for param_name, param in submodule.named_parameters(recurse=False):
+            if not _is_fsdp_flattened(param) and param.is_meta:
+                materialized_param = nn.Parameter(
+                    torch.empty_like(param, device=torch.device("cuda"))
+                )
+                # nn.init.uniform_(materialized_param)
+                setattr(submodule, param_name, materialized_param)
 
-def _init_with_reset_params(module):
-    """
-    to_empty + reset_parameters() init function example for modules
-    initailized with device="meta"
-    """
-    is_meta = any(t.is_meta for t in module.parameters())
-    if is_meta:
-        module.to_empty(device=torch.cuda.current_device())
-    with torch.no_grad():
-        module.reset_parameters()
+
 
 
 
@@ -420,7 +421,7 @@ def fsdp_main():
         device_id=torch.cuda.current_device(),
         forward_prefetch=cfg.forward_prefetch,
         limit_all_gathers=False,
-        # param_init_fn=_init_with_reset_params
+        param_init_fn=my_init_fn
     )
     print_memory_summary("vit","cuda")
 
