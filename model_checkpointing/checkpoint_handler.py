@@ -20,8 +20,8 @@ from torch.distributed._shard.checkpoint import (
 )
 
 # state dict updates
-#import spmd.checkpoint.adv_planner as ap
-#import spmd.checkpoint.optimizer as opt
+# import spmd.checkpoint.adv_planner as ap
+# import spmd.checkpoint.optimizer as opt
 
 from torch.distributed.fsdp.fully_sharded_data_parallel import StateDictType
 import torch.distributed._shard.checkpoint as dist_cp
@@ -40,20 +40,20 @@ def get_date_of_run():
 # create singleton saving policies to avoid making over and over
 fullstate_save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
 
+
 def load_model_sharded(model, rank, cfg, verbose=True):
-    #torch.manual_seed(103)
+    # torch.manual_seed(103)
     folder_name = (
-            cfg.dist_checkpoint_root_folder
-            + "/"
-            + cfg.dist_checkpoint_folder
-            + "-"
-            + cfg.model_name
-            )
+        cfg.dist_checkpoint_root_folder
+        + "/"
+        + cfg.dist_checkpoint_folder
+        + "-"
+        + cfg.model_name
+    )
 
     load_dir = Path.cwd() / folder_name
 
     if not load_dir.exists():
-
         if rank == 0:
             print(f"No sharded_state_dict checkpoint directory found...skipping")
         return
@@ -62,44 +62,49 @@ def load_model_sharded(model, rank, cfg, verbose=True):
 
     with FSDP.state_dict_type(model, StateDictType.SHARDED_STATE_DICT):
         checkpoint = model.state_dict()
-        if rank==0:
+        if rank == 0:
             ck = checkpoint.keys()
             print(f" checkpoint key len = {len(ck)} and \n keys =  {ck}")
-        #if dist.get_rank() == 0:
+        # if dist.get_rank() == 0:
         #    traverse_state_dict(checkpoint, print_sharded_tensor)
         dist_cp.load_state_dict(
             state_dict=checkpoint,
             storage_reader=reader,
         )
-        if rank==0:
+        if rank == 0:
             print(f"checkpoint after load_state_dict()")
             ck = checkpoint.keys()
             print(f" checkpoint key len = {len(ck)} and \n keys =  {ck}")
         model.load_state_dict(checkpoint)
 
-    #with FSDP.summon_full_params(model):
-        #p0(f"after-load: {model.weight}")
-    
-    if rank==0:
+    # with FSDP.summon_full_params(model):
+    # p0(f"after-load: {model.weight}")
+
+    if rank == 0:
         print(f"Sharded state checkpoint loaded from {load_dir}")
-    
 
 
 def save_model_sharded(model, rank, cfg, verbose=True):
-    """ save model via sharded_state_dict to save_dir """
+    """save model via sharded_state_dict to save_dir"""
     folder_name = (
-            cfg.dist_checkpoint_root_folder
-            + "/"
-            + cfg.dist_checkpoint_folder
-            + "-"
-            + cfg.model_name
-            )
+        cfg.dist_checkpoint_root_folder
+        + "/"
+        + cfg.dist_checkpoint_folder
+        + "-"
+        + cfg.model_name
+    )
 
     save_dir = Path.cwd() / folder_name
-    if rank==0:
+    if rank == 0:
         print(f"Saving model to {save_dir}")
 
-    distributed_writer = dist_cp.FileSystemWriter(save_dir)
+    distributed_writer = dist_cp.FileSystemWriter(
+        save_dir,
+        single_file_per_rank=False,
+        thread_count=cfg.save_using_num_threads,
+        # per_thread_copy_ahead=20_000_000,
+    )
+    t0 = time.perf_counter()
 
     with FSDP.state_dict_type(model, StateDictType.SHARDED_STATE_DICT):
         checkpoint = model.state_dict()
@@ -108,11 +113,15 @@ def save_model_sharded(model, rank, cfg, verbose=True):
             state_dict=checkpoint,
             storage_writer=distributed_writer,
         )
-    if rank==0:
+    dist.barrier()
+    t1 = time.perf_counter()
+    if rank == 0:
         print(f"Sharded state checkpoint saved to {save_dir}")
-            
+        print(
+            f"Checkpoint Time = {t1-t0:.4f}\n using {cfg.save_using_num_threads=} total threads"
+        )
 
-          
+
 def save_model_checkpoint(
     model,
     optimizer,
@@ -220,7 +229,8 @@ def save_optimizer_checkpoint(model, optimizer, rank, cfg, epoch=1):
 
 def load_optimizer_checkpoint(model, optimizer, rank, cfg):
     """load an fdsp optimizer full_state checkpoint using scatter method
-    this ensures only rank 0 loads the optimizer state dict and scatters to other ranks"""
+    this ensures only rank 0 loads the optimizer state dict and scatters to other ranks
+    """
 
     opt_file_path = Path.cwd() / cfg.checkpoint_folder / cfg.optimizer_checkpoint_file
 
@@ -250,7 +260,6 @@ def load_optimizer_checkpoint(model, optimizer, rank, cfg):
 
 
 def load_distributed_model_checkpoint(model, rank, cfg):
-
     if cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
         print(f"loading distributed checkpoint, rank {rank}...")
         folder_name = (
@@ -314,7 +323,6 @@ def save_distributed_model_checkpoint(model, rank, cfg, epoch=1):
 
         writer = FileSystemWriter(
             save_dir,
-            
         )
 
         with FSDP.state_dict_type(

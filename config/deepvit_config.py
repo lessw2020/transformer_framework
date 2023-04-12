@@ -21,9 +21,8 @@ NUM_CLASSES = 10000
 
 @dataclass
 class train_config(base_config):
-
     # model
-    model_name = "500M"
+    model_name = "2B"
 
     # available models -name is ~ num params
     # 60M
@@ -43,13 +42,13 @@ class train_config(base_config):
 
     # mixed precision
     use_mixed_precision: bool = True
-    
+
     # checkpoint models
     save_model_checkpoint: bool = True
     # only for local dist
     single_file_per_rank = True
 
-    load_model_checkpoint: bool = True
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.SHARDED_STATE_DICT
 
     dist_checkpoint_root_folder = "distributed_checkpoints"
@@ -59,6 +58,8 @@ class train_config(base_config):
     checkpoint_max_save_count: int = (
         2  # number of 'best' checkpoints to save based on val loss
     )
+
+    save_using_num_threads: int = 10
 
     # optimizers load and save
     save_optimizer: bool = False
@@ -276,6 +277,8 @@ def train(
     local_rank,
     tracking_duration,
     total_steps_to_run,
+    use_synthetic_data=True,
+    use_label_singular=False,
 ):
     cfg = train_config()
     loss_function = torch.nn.CrossEntropyLoss()
@@ -313,7 +316,6 @@ def train(
 
 
 def validation(model, local_rank, rank, val_loader, world_size):
-
     epoch_val_accuracy = 0
     epoch_val_loss = 0
     model.eval()
