@@ -6,7 +6,8 @@ import time
 import colorama
 import torch
 
-
+import torch
+import torch.nn as nn
 from colorama import Fore
 
 from torch.distributed.fsdp import (
@@ -20,17 +21,79 @@ import model_checkpointing
 import torch.distributed as dist
 
 import environment
+from contextlib import contextmanager
 
 bf16_ready = environment.verify_bfloat_support
 
 from torch.utils.data import DistributedSampler
-
+from torch.distributed.fsdp._common_utils import _is_fsdp_flattened
 
 colorama.init(autoreset=True)  # reset after every line
 
 import performance
 
 # import optimizers
+
+@contextmanager
+def init_empty_weights(include_buffers: bool = False):
+    """
+    A context manager under which models are initialized with all parameters on the meta device, therefore creating an
+    empty model. Useful when just initializing the model would blow the available RAM.
+    Args:
+        include_buffers (`bool`, *optional*, defaults to `False`):
+            Whether or not to also put all buffers on the meta device while initializing.
+    Example:
+    ```pyton
+    import torch.nn as nn
+    from accelerate import init_empty_weights
+    # Initialize a model with 100 billions parameters in no time and without using any RAM.
+    with init_empty_weights():
+        tst = nn.Sequential(*[nn.Linear(10000, 10000) for _ in range(1000)])
+    ```
+    <Tip warning={true}>
+    Any model created under this context manager has no weights. As such you can't do something like
+    `model.to(some_device)` with it. To load weights inside your empty model, see [`load_checkpoint_and_dispatch`].
+    </Tip>
+    """
+    old_register_parameter = nn.Module.register_parameter
+    if include_buffers:
+        old_register_buffer = nn.Module.register_buffer
+
+    def register_empty_parameter(module, name, param):
+        old_register_parameter(module, name, param)
+        if param is not None:
+            param_cls = type(module._parameters[name])
+            kwargs = module._parameters[name].__dict__
+            module._parameters[name] = param_cls(module._parameters[name].to(torch.device("meta")), **kwargs)
+            
+    def register_empty_buffer(module, name, buffer):
+        old_register_buffer(module, name, buffer)
+        if buffer is not None:
+            module._buffers[name] = module._buffers[name].to(torch.device("meta"))
+
+    try:
+        nn.Module.register_parameter = register_empty_parameter
+        if include_buffers:
+            nn.Module.register_buffer = register_empty_buffer
+        yield
+    finally:
+        nn.Module.register_parameter = old_register_parameter
+        if include_buffers:
+            nn.Module.register_buffer = old_reg
+
+@torch.no_grad()
+def my_init_fn(module: nn.Module):
+    for submodule in module.modules():
+        for param_name, param in submodule.named_parameters(recurse=False):
+            if not _is_fsdp_flattened(param) and param.is_meta:
+                materialized_param = nn.Parameter(
+                    torch.empty_like(param, device=torch.device("cuda"))
+                )
+                # nn.init.uniform_(materialized_param)
+                setattr(submodule, param_name, materialized_param)
+
+
+
 
 
 def print_model(model, file_name, rank):
@@ -43,6 +106,17 @@ def print_model(model, file_name, rank):
 
         external_file.close()
 
+
+def print_memory_summary(prefix, device):
+        rank = int(os.getenv("RANK"))
+        if rank == 0:
+            peak_memory_active = torch.cuda.memory_stats().get("active_bytes.all.peak", 0)
+            print(
+                f"{prefix}, GPU peak memory allocation: {torch.cuda.max_memory_allocated(device) // 1e9}GB, "
+                f"GPU peak memory reserved: {torch.cuda.max_memory_reserved(device) // 1e9}GB, "
+                f"GPU peak memory active: {peak_memory_active // 1e9}GB"
+            )
+            torch.cuda.reset_peak_memory_stats(device)
 
 def setup():
     """we use torchrun for init so no params needed here"""
@@ -182,8 +256,11 @@ def fsdp_main():
         pass  # means older config w/o timm support flag
 
     if not use_timm:
-        model = config.build_model(cfg.model_name)
-
+        print("******************* bulding the model here ************")
+        with init_empty_weights():
+            model = config.build_model(cfg.model_name)
+        print_memory_summary("vit","cuda")
+        time.sleep(10)
     elif use_timm:
         # if you are here and this import fails - run:
         # git clone https://github.com/huggingface/pytorch-image-models.git
@@ -325,8 +402,8 @@ def fsdp_main():
 
         # todo - add back main code later for resume
         device = "cuda"
-        model.to(device)
-        model = FSDP(model, process_group=fsdp_pg)
+        # model.to(device)
+        # model = FSDP(model, process_group=fsdp_pg)
 
     process_group_fsdp = None
 
@@ -344,7 +421,11 @@ def fsdp_main():
         device_id=torch.cuda.current_device(),
         forward_prefetch=cfg.forward_prefetch,
         limit_all_gathers=False,
+        param_init_fn=my_init_fn
     )
+    print_memory_summary("vit","cuda")
+
+    time.sleep(10)
 
     if (
         cfg.load_model_checkpoint
