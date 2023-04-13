@@ -21,7 +21,7 @@ class base_config:
     seed: int = 2022
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 8
+    total_steps_to_run: int = 5
     # ignores warmup steps for avg time calcs
     warmup_steps: int = 3
 
@@ -74,7 +74,7 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 64
+    batch_size_training: int = 16
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = False
