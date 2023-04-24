@@ -18,10 +18,10 @@ import torch
 @dataclass
 class base_config:
     # seed
-    seed: int = 2022
+    seed: int = 2023
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = 5
+    total_steps_to_run: int = None
     # ignores warmup steps for avg time calcs
     warmup_steps: int = 3
 
@@ -29,7 +29,7 @@ class base_config:
     print_memory_summary: bool = False
 
     # training
-    num_epochs: int = 8
+    num_epochs: int = 2
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 

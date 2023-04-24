@@ -44,7 +44,7 @@ class train_config(base_config):
     image_size: int = 224
 
     # use synthetic data
-    use_synthetic_data: bool = True
+    use_synthetic_data: bool = False
     use_label_singular = False
     # todo - below needs to become dynamic since we are adding more datasets
     use_pokemon_dataset: bool = False
@@ -55,7 +55,7 @@ class train_config(base_config):
     if use_beans_dataset:
         NUM_CLASSES = 3
 
-    use_food = False
+    use_food = True
 
     if use_food:
         NUM_CLASSES = 101

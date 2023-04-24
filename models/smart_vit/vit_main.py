@@ -1,8 +1,8 @@
-# Builds upon starting code from:
+# Builds upon code from Ross Wightman/timm:
 # https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
 
 # adds DualPatchNormEmbedding, LinearMLP class
-# qk norm, parallelized block
+# Important updates - qk norm, parallelized block
 # fused attention
 
 
@@ -191,7 +191,7 @@ class Attention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.fused_attn:
-            _log(f"running fused attention")
+            #_log(f"running fused attention")
             x = F.scaled_dot_product_attention(
                 q,
                 k,
