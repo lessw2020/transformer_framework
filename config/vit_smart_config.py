@@ -35,9 +35,10 @@ class train_config(base_config):
         "smartvit90"
     )
     model_num_heads = 12
+    use_fused_attention: bool = True
 
     # use TP
-    use_tp: bool = False
+    use_tp: bool = True
 
     # image size
     image_size: int = 224

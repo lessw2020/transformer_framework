@@ -86,7 +86,7 @@ class ScaledAttention(nn.Module):
         attn_drop=0.0,
         proj_drop=0.0,
         norm_layer=nn.LayerNorm,
-        scaled_attn=True,
+        scaled_attn=False,
     ):
         super().__init__()
         assert (
@@ -95,7 +95,7 @@ class ScaledAttention(nn.Module):
         self.num_heads = num_heads
         self.head_dim = dim // num_heads
         self.scale = self.head_dim**-0.5
-        self.fast_attn = scaled_attn
+        self.fused_attn = scaled_attn
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.q_norm = norm_layer(self.head_dim)
@@ -180,13 +180,13 @@ class ScaledAttention(nn.Module):
             k = self.k_norm(k)
             # print(f"q shape {q.shape}")
 
-            """if self.fast_attn:
+            if self.fused_attn:
+                attn_bias = None
                 if self.rel_pos is not None:
                     attn_bias = self.rel_pos.get_bias()
                 elif shared_rel_pos is not None:
                     attn_bias = shared_rel_pos
-                else:
-                    attn_bias = None
+
                 x = torch.nn.functional.scaled_dot_product_attention(
                     q,
                     k,
@@ -195,21 +195,20 @@ class ScaledAttention(nn.Module):
                     dropout_p=self.attn_drop.p,
                 )
             else:
-            """
-            q = q * self.scale
-            attn = q @ k.transpose(-2, -1)
-            # if self.rel_pos is not None:
-            #    print(f"self rel pos is valid")
-            #    attn = self.rel_pos(attn, shared_rel_pos=shared_rel_pos)
-            # elif shared_rel_pos is not None:
-            #    attn = attn + shared_rel_pos
-            attn = attn.softmax(dim=-1)
-            attn = self.attn_drop(attn)
-            x = attn @ v
+                q = q * self.scale
+                attn = q @ k.transpose(-2, -1)
+                # if self.rel_pos is not None:
+                #    print(f"self rel pos is valid")
+                #    attn = self.rel_pos(attn, shared_rel_pos=shared_rel_pos)
+                # elif shared_rel_pos is not None:
+                #    attn = attn + shared_rel_pos
+                attn = attn.softmax(dim=-1)
+                attn = self.attn_drop(attn)
+                x = attn @ v
 
-            x = x.transpose(1, 2).reshape(B, N, C)
-            x = self.proj(x)
-            x = self.proj_drop(x)
+                x = x.transpose(1, 2).reshape(B, N, C)
+                x = self.proj(x)
+                x = self.proj_drop(x)
             return x
 
 

@@ -100,8 +100,9 @@ def save_model_sharded(model, rank, cfg, verbose=True):
 
     distributed_writer = dist_cp.FileSystemWriter(
         save_dir,
-        single_file_per_rank=False,
+        single_file_per_rank=True,
         thread_count=cfg.save_using_num_threads,
+        sync_files=False,
         # per_thread_copy_ahead=20_000_000,
     )
     t0 = time.perf_counter()
