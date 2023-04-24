@@ -38,7 +38,7 @@ class train_config(base_config):
     use_fused_attention: bool = True
 
     # use TP
-    use_tp: bool = True
+    use_tp: bool = False
 
     # image size
     image_size: int = 224
@@ -177,15 +177,15 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
             "qkv_bias": True,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            "input_size": (3, 224, 224),
-            "pool_size": None,
-            "crop_pct": 0.9,
-            "interpolation": "bicubic",
-            "fixed_input_size": True,
+            # "input_size": (3, 224, 224),
+            # "pool_size": None,
+            # "crop_pct": 0.9,
+            # "interpolation": "bicubic",
+            # "fixed_input_size": True,
             # "mean": IMAGENET_INCEPTION_MEAN,
             # "std": IMAGENET_INCEPTION_STD,
-            "first_conv": "patch_embed.proj",
-            "classifier": "head",
+            # "first_conv": "patch_embed.proj",
+            # "classifier": "head",
         }
 
     assert model_args.get(

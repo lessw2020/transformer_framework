@@ -17,7 +17,7 @@ from patch_embeddings.dual_patchnorm import DualPatchNormEmbedding
 import logging
 import torch.nn.functional as F
 from collections import OrderedDict
-from weight_init import trunc_normal_, lecun_normal_
+from weight_init.weight_init import trunc_normal_, lecun_normal_
 
 
 _logger = logging.getLogger(__name__)
@@ -539,7 +539,7 @@ class VisionTransformer(nn.Module):
 
     def __init__(
         self,
-        img_size: Union[int, Tuple[int, int]] = 224,
+        image_size: Union[int, Tuple[int, int]] = 224,
         patch_size: Union[int, Tuple[int, int]] = 16,
         in_chans: int = 3,
         num_classes: int = 1000,
@@ -566,6 +566,7 @@ class VisionTransformer(nn.Module):
         norm_layer: Optional[Callable] = None,
         act_layer: Optional[Callable] = None,
         block_fn: Callable = Block,
+        input_size=224,
     ):
         """
         Args:
@@ -609,11 +610,11 @@ class VisionTransformer(nn.Module):
         self.grad_checkpointing = False
 
         self.patch_embed = embed_layer(
-            img_size=img_size,
+            img_size=image_size,
             patch_size=patch_size,
             in_chans=in_chans,
             embed_dim=embed_dim,
-            bias=not pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
+            # bias=not pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
         )
         num_patches = self.patch_embed.num_patches
 
@@ -668,6 +669,7 @@ class VisionTransformer(nn.Module):
             self.init_weights(weight_init)
 
     def init_weights(self, mode=""):
+        _log(f"init mode = {mode=}")
         assert mode in ("jax", "jax_nlhb", "moco", "")
         head_bias = -math.log(self.num_classes) if "nlhb" in mode else 0.0
         trunc_normal_(self.pos_embed, std=0.02)
@@ -865,5 +867,6 @@ def build_smart_vit(model_params):
         block_fn=ResPostBlock,
     )
     merged_vals = {**model_kwargs, **model_params}
+
     model = VisionTransformer(**merged_vals)
     return model
