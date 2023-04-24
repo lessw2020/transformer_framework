@@ -1,8 +1,12 @@
 # from Ross Wightman weight init
+# https://github.com/huggingface/pytorch-image-models/blob/main/timm/layers/weight_init.py
 
 import math
 import torch
 import warnings
+from torch import Tensor
+
+from torch.nn.init import _calculate_fan_in_and_fan_out
 
 
 def _trunc_normal_(tensor, mean, std, a, b):
@@ -67,3 +71,88 @@ def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
     """
     with torch.no_grad():
         return _trunc_normal_(tensor, mean, std, a, b)
+
+
+def trunc_normal_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
+    # type: (Tensor, float, float, float, float) -> Tensor
+    r"""Fills the input Tensor with values drawn from a truncated
+    normal distribution. The values are effectively drawn from the
+    normal distribution :math:`\mathcal{N}(\text{mean}, \text{std}^2)`
+    with values outside :math:`[a, b]` redrawn until they are within
+    the bounds. The method used for generating the random values works
+    best when :math:`a \leq \text{mean} \leq b`.
+
+    NOTE: this impl is similar to the PyTorch trunc_normal_, the bounds [a, b] are
+    applied while sampling the normal with mean/std applied, therefore a, b args
+    should be adjusted to match the range of mean, std args.
+
+    Args:
+        tensor: an n-dimensional `torch.Tensor`
+        mean: the mean of the normal distribution
+        std: the standard deviation of the normal distribution
+        a: the minimum cutoff value
+        b: the maximum cutoff value
+    Examples:
+        >>> w = torch.empty(3, 5)
+        >>> nn.init.trunc_normal_(w)
+    """
+    with torch.no_grad():
+        return _trunc_normal_(tensor, mean, std, a, b)
+
+
+def trunc_normal_tf_(tensor, mean=0.0, std=1.0, a=-2.0, b=2.0):
+    # type: (Tensor, float, float, float, float) -> Tensor
+    r"""Fills the input Tensor with values drawn from a truncated
+    normal distribution. The values are effectively drawn from the
+    normal distribution :math:`\mathcal{N}(\text{mean}, \text{std}^2)`
+    with values outside :math:`[a, b]` redrawn until they are within
+    the bounds. The method used for generating the random values works
+    best when :math:`a \leq \text{mean} \leq b`.
+
+    NOTE: this 'tf' variant behaves closer to Tensorflow / JAX impl where the
+    bounds [a, b] are applied when sampling the normal distribution with mean=0, std=1.0
+    and the result is subsquently scaled and shifted by the mean and std args.
+
+    Args:
+        tensor: an n-dimensional `torch.Tensor`
+        mean: the mean of the normal distribution
+        std: the standard deviation of the normal distribution
+        a: the minimum cutoff value
+        b: the maximum cutoff value
+    Examples:
+        >>> w = torch.empty(3, 5)
+        >>> nn.init.trunc_normal_(w)
+    """
+    with torch.no_grad():
+        _trunc_normal_(tensor, 0, 1.0, a, b)
+        tensor.mul_(std).add_(mean)
+    return tensor
+
+
+def variance_scaling_(tensor, scale=1.0, mode="fan_in", distribution="normal"):
+    fan_in, fan_out = _calculate_fan_in_and_fan_out(tensor)
+    if mode == "fan_in":
+        denom = fan_in
+    elif mode == "fan_out":
+        denom = fan_out
+    elif mode == "fan_avg":
+        denom = (fan_in + fan_out) / 2
+
+    variance = scale / denom
+
+    if distribution == "truncated_normal":
+        # constant is stddev of standard normal truncated to (-2, 2)
+        trunc_normal_tf_(tensor, std=math.sqrt(variance) / 0.87962566103423978)
+    elif distribution == "normal":
+        with torch.no_grad():
+            tensor.normal_(std=math.sqrt(variance))
+    elif distribution == "uniform":
+        bound = math.sqrt(3 * variance)
+        with torch.no_grad():
+            tensor.uniform_(-bound, bound)
+    else:
+        raise ValueError(f"invalid distribution {distribution}")
+
+
+def lecun_normal_(tensor):
+    variance_scaling_(tensor, mode="fan_in", distribution="truncated_normal")

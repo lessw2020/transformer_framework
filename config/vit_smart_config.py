@@ -192,7 +192,7 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
         "image_size"
     ), f"failed to build model args for {model_size=}...is your model size listed in config?"
     # model = ViT(params=model_args)
-    from models.smart_vit.smart_vit_main import build_smart_vit
+    from models.smart_vit.vit_main import build_smart_vit
 
     model = build_smart_vit(model_args)
     return model
