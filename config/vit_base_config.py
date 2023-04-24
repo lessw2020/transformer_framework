@@ -238,7 +238,7 @@ def get_pokemon_dataset():
 
 def get_policy():
     # todo - can't use autowrap policy with 2d
-    return None  # get_policy_base({ViTEncoderBlock})
+    return get_policy_base({ViTEncoderBlock})
 
 
 def fsdp_checkpointing(model):

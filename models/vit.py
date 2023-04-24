@@ -19,7 +19,11 @@ import math
 
 import numpy as np
 import torch
-
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    MixedPrecision,
+    StateDictType,
+)
 # from pycls.core.config import cfg
 from models.blocks import (
     MultiheadAttention,
@@ -53,6 +57,8 @@ class ViTHead(Module):
     @staticmethod
     def complexity(cx, w_in, num_classes):
         return linear_cx(cx, w_in, num_classes, bias=True)
+
+
 
 
 class MLPBlock(Module):
@@ -105,6 +111,7 @@ class ViTEncoderBlock(Module):
         x = x + x_p
         x_p = self.mlp_block(self.ln_2(x))
         return x + x_p
+        
 
     @staticmethod
     def complexity(cx, hidden_d, n_heads, mlp_d, seq_len):
@@ -113,6 +120,8 @@ class ViTEncoderBlock(Module):
         cx = layernorm_cx(cx, hidden_d)
         cx = MLPBlock.complexity(cx, hidden_d, mlp_d, seq_len)
         return cx
+
+ 
 
 
 class ViTEncoder(Module):
@@ -131,12 +140,15 @@ class ViTEncoder(Module):
             x = block(x)
         return x
 
+
+
     @staticmethod
     def complexity(cx, n_layers, hidden_d, n_heads, mlp_d, seq_len):
         for _ in range(n_layers):
             cx = ViTEncoderBlock.complexity(cx, hidden_d, n_heads, mlp_d, seq_len)
         cx = layernorm_cx(cx, hidden_d)
         return cx
+
 
 
 class ViTStemPatchify(Module):
@@ -153,6 +165,7 @@ class ViTStemPatchify(Module):
     def complexity(cx, w_in, w_out, k):
         return patchify2d_cx(cx, w_in, w_out, k, bias=True)
 
+ 
 
 class ViTStemConv(Module):
     """The conv vision transformer stem as per https://arxiv.org/abs/2106.14881."""
@@ -173,6 +186,8 @@ class ViTStemConv(Module):
         for layer in self.children():
             x = layer(x)
         return x
+
+
 
     @staticmethod
     def complexity(cx, w_in, ks, ws, ss):
@@ -287,6 +302,8 @@ class ViT(Module):
         )
         cx = ViTHead.complexity(cx, p["hidden_d"], p["num_classes"])
         return cx
+    
+
 
 
 def init_weights_vit(model):
