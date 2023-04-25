@@ -160,7 +160,7 @@ class Attention(nn.Module):
         dim,
         num_heads=8,
         qkv_bias=False,
-        qk_norm=False,
+        qk_norm=True,
         attn_drop=0.0,
         proj_drop=0.0,
         norm_layer=nn.LayerNorm,
@@ -356,12 +356,12 @@ class ParallelScalingBlock(nn.Module):
         self.in_norm = norm_layer(dim)
         self.in_proj = nn.Linear(dim, in_proj_out_dim, bias=qkv_bias)
         self.in_split = [mlp_hidden_dim] + [dim] * 3
-        if qkv_bias:
-            self.register_buffer("qkv_bias", None)
-            self.register_parameter("mlp_bias", None)
-        else:
-            self.register_buffer("qkv_bias", torch.zeros(3 * dim), persistent=False)
-            self.mlp_bias = nn.Parameter(torch.zeros(mlp_hidden_dim))
+        #if qkv_bias:
+        #    self.register_buffer("qkv_bias", None)
+        #    self.register_parameter("mlp_bias", None)
+        #else:
+        self.register_buffer("qkv_bias", torch.zeros(3 * dim), persistent=False)
+        self.mlp_bias = nn.Parameter(torch.zeros(mlp_hidden_dim))
 
         self.q_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
         self.k_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
@@ -370,7 +370,7 @@ class ParallelScalingBlock(nn.Module):
 
         self.mlp_drop = nn.Dropout(proj_drop)
         self.mlp_act = act_layer()
-        self.mlp_out_proj = nn.Linear(mlp_hidden_dim, dim)
+        self.mlp_out_proj = nn.Linear(mlp_hidden_dim, dim, bias = True)
 
         self.ls = (
             LayerScale(dim, init_values=init_values)
@@ -378,26 +378,28 @@ class ParallelScalingBlock(nn.Module):
             else nn.Identity()
         )
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        
 
     def forward(self, x):
         B, N, C = x.shape
 
         # Combined MLP fc1 & qkv projections
         y = self.in_norm(x)
-        if self.mlp_bias is not None:
+        #if self.mlp_bias is not None:
             # Concat constant zero-bias for qkv w/ trainable mlp_bias.
             # Appears faster than adding to x_mlp separately
-            y = F.linear(
+        y = F.linear(
                 y, self.in_proj.weight, torch.cat((self.qkv_bias, self.mlp_bias))
             )
-        else:
-            y = self.in_proj(y)
+        #else:
+        #    y = self.in_proj(y)
         x_mlp, q, k, v = torch.split(y, self.in_split, dim=-1)
 
         # Dot product attention w/ qk norm
         q = self.q_norm(q.view(B, N, self.num_heads, self.head_dim)).transpose(1, 2)
         k = self.k_norm(k.view(B, N, self.num_heads, self.head_dim)).transpose(1, 2)
         v = v.view(B, N, self.num_heads, self.head_dim).transpose(1, 2)
+
         if self.fused_attn:
             x_attn = F.scaled_dot_product_attention(
                 q,
@@ -415,9 +417,13 @@ class ParallelScalingBlock(nn.Module):
         x_attn = self.attn_out_proj(x_attn)
 
         # MLP activation, dropout, fc2
+        #test_xmlp = x_mlp.clone()
+        #res = self.mlp_process(test_xmlp)
         x_mlp = self.mlp_act(x_mlp)
         x_mlp = self.mlp_drop(x_mlp)
         x_mlp = self.mlp_out_proj(x_mlp)
+
+        #assert x_mlp == test_xmlp, f"mismatch using sequential {test_xmlp=}, {res=}"
 
         # Add residual w/ drop path & layer scale applied
         y = self.drop_path(self.ls(x_attn + x_mlp))
@@ -548,8 +554,8 @@ class VisionTransformer(nn.Module):
         depth: int = 12,
         num_heads: int = 12,
         mlp_ratio: float = 4.0,
-        qkv_bias: bool = True,
-        qk_norm: bool = False,
+        qkv_bias: bool = False,
+        qk_norm: bool = True,
         init_values: Optional[float] = None,
         class_token: bool = True,
         no_embed_class: bool = False,
@@ -598,7 +604,7 @@ class VisionTransformer(nn.Module):
         assert class_token or global_pool != "token"
         use_fc_norm = global_pool == "avg" if fc_norm is None else fc_norm
         norm_layer = norm_layer or partial(nn.LayerNorm, eps=1e-6)
-        act_layer = act_layer or nn.GELU
+        act_layer = nn.GELU
 
         self.num_classes = num_classes
         self.global_pool = global_pool
@@ -864,7 +870,10 @@ def build_smart_vit(model_params):
         depth=12,
         num_heads=12,
         qkv_bias=False,
-        block_fn=ResPostBlock,
+        qk_norm=True, 
+        block_fn=ParallelScalingBlock,
+        no_embed_class=True,
+        #norm_layer=RmsNorm,
     )
     merged_vals = {**model_kwargs, **model_params}
 

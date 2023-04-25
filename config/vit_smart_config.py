@@ -26,7 +26,7 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-
+    total_steps_to_run: int = 8
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #

@@ -372,7 +372,31 @@ def fsdp_main():
             mesh=torch.arange(0, world_size).view(model_parallel_size, -1),
         )
         rank_print(rank, f"{twod_mesh=}")
+        ''' 
+        # this is for parallelized vit - need to dynamically locate blocks
+        rank_print(rank, f"{model=}")
+        blocks = model.get_submodule(f"blocks")
+        total_blocks = len(blocks)
+        print(f"len block {total_blocks}")
+        for i, block in enumerate(blocks):
+            try:
+                rank_print(rank, f"\nparallelization of block {i}")
+                parallelized_block = parallelize_module(module = block, device_mesh=twod_mesh,
+                                                        parallelize_plan={"attn": PairwiseParallel(),
+                                                                          "mlp": PairwiseParallel()},
+                tp_mesh_dim=1,
+                )
+                # print(f"\nSuccess - {blocks[i]}\n")
+                block = parallelized_block
+                rank_print(rank, f"{parallelized_block=}")
 
+            except e:
+                print(f"{e=}")
+                assert False, f"failed to TP"
+            #rank_print(rank, f"{blocks=}")
+        rank_print(rank, f"{model=}")
+        '''
+        
         for i in range(12):
             block = model.get_submodule(f"encoder.block_{i}")
             parallelized_block = parallelize_module(
@@ -385,6 +409,7 @@ def fsdp_main():
                 tp_mesh_dim=1,
             )
             block = parallelized_block
+        
         """
         if rank == 0:
             print(f"&&&&&&&&&&&\n {model=}")
@@ -676,8 +701,9 @@ def fsdp_main():
             total_acc_curve = _stats["accuracy"]
             for loss, acc in zip(total_loss_curve, total_acc_curve):
                 print(f"{loss=}, {acc=}")
-
-            best_val_acc = 100 * float(max(total_acc_curve))
+            best_val_acc = 0
+            if total_acc_curve:
+                best_val_acc = 100 * float(max(total_acc_curve))
             print(Fore.GREEN + f"\n--> Highest Val Accuracy =  {best_val_acc}\n")
 
         if cfg.total_steps_to_run is not None:

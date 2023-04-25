@@ -22,7 +22,7 @@ NUM_CLASSES = 10000
 @dataclass
 class train_config(base_config):
     # model
-    model_name = "2B"
+    model_name = "1B"
 
     # available models -name is ~ num params
     # 60M

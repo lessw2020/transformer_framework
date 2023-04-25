@@ -39,7 +39,7 @@ class base_config:
 
     use_low_precision_gradient_policy: bool = False
     # this is only for fp32 scenario...
-    use_tf32: bool = False
+    use_tf32: bool = True
 
     label_smoothing_value = 0.0  # default to none, adjust in model config
 
