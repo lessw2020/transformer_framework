@@ -322,6 +322,102 @@ class ResPostBlock(nn.Module):
         x = x + self.drop_path2(self.norm2(self.mlp(x)))
         return x
 
+class ParallelLayersBlock(nn.Module):
+    """ Process MLP and Attention in parallel
+        Based on 'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
+        We do not use qkv bias
+        Do use mlp bias
+        Do use qk normalization
+        This code is heavily based on TIMM ParallelScalingBlock: 
+        https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
+
+
+    """
+    def __init__(self, dimension, num_heads, mlp_ratio=4.0, qk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None, 
+                 drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
+        super().__init__()
+        assert dimension % num_heads==0, f"dimensions {dimension.shape} must be evenly divisible by num_heads {num_heads=}"
+        self.num_heads = num_heads
+        self.head_dim = dimension//num_heads
+        self.scale = self.head_dim**-0.5
+        self.fused_attention = use_scaled_dpa
+        mlp_hidden_dim = int(mlp_ratio * dimension)
+        in_proj_out_dim = mlp_hidden_dim + 3*dimension
+
+        self.in_normalization = normalization_layer(dimension)
+        self.in_projection = nn.Linear(dimension, in_proj_out_dim, bias = False) # not using qkv bias
+        self.in_proj_split = [mlp_hidden_dim] + 3 * [dimension]
+
+        # setup no op for qkv bias, but real bias for mlp portion of common in projection
+        self.register_buffer("qkv_bias", torch.zeros(3*dimension), persistent=False)
+        self.mlp_bias = nn.Parameter(torch.zeros(mlp_hidden_dim))
+
+        self.q_norm = normalization_layer(self.head_dim)
+        self.k_norm = normalization_layer(self.head_dim)
+        self.attention_drop = nn.Dropout(attention_drop)
+        self.attention_out_proj = nn.Linear(dimension, dimension, bias= use_attention_out_bias)
+
+        self.mlp_drop = nn.Dropout(projection_drop)
+        self.mlp_act = activation_layer()
+        self.mlp_out_proj = nn.Linear(mlp_hidden_dim, dimension, bias = True)
+
+        self.layer_scale = (
+            LayerScale(dimension, init_values=init_values)
+            if init_values is not None
+            else nn.Identity()
+        )
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+
+    def forward(self, x):
+        B, S, C = x.shape
+
+        # single layernorm for all
+        y = self.in_normalization(x)
+
+        # process first full MLP layer for all (qkv bias is not trained)
+        y = F.linear(y, self.in_projection.weight,torch.cat((self.qkv_bias, self.mlp_bias)) )
+
+        # split
+        core_mlp, q, k, v = torch.split(y, self.in_proj_split, dim=-1)
+
+        # Dot product attention w/ qk norm
+        q = self.q_norm(q.view(B, S, self.num_heads, self.head_dim)).transpose(1, 2)
+        k = self.k_norm(k.view(B, S, self.num_heads, self.head_dim)).transpose(1, 2)
+        v = v.view(B, S, self.num_heads, self.head_dim).transpose(1, 2)
+
+        if self.fused_attention:
+            final_attn = F.scaled_dot_product_attention(
+                q,
+                k,
+                v,
+                dropout_p=self.attention_drop.p,
+            )
+        else:
+            q = q * self.scale
+            attn = q @ k.transpose(-2, -1)
+            attn = attn.softmax(dim=-1)
+            attn = self.attn_drop(attn)
+            final_attn = attn @ v
+        final_attn = final_attn.transpose(1, 2).reshape(B, S, C)
+
+        # final attention linear out
+        final_attn = self.attention_out_proj(final_attn)
+
+        # process MLP side
+        core_mlp = self.mlp_act(core_mlp)
+        core_mlp = self.mlp_drop(core_mlp)
+        core_mlp = self.mlp_out_proj(core_mlp)
+
+        #assert x_mlp == test_xmlp, f"mismatch using sequential {test_xmlp=}, {res=}"
+        # join attention and mlp outs
+        y = self.drop_path(self.layer_scale(final_attn + core_mlp))
+        # add residual
+        x = x + y
+        return x
+
+
+
+        # 
 
 class ParallelScalingBlock(nn.Module):
     """Parallel ViT block (MLP & Attention in parallel)
@@ -388,9 +484,11 @@ class ParallelScalingBlock(nn.Module):
         #if self.mlp_bias is not None:
             # Concat constant zero-bias for qkv w/ trainable mlp_bias.
             # Appears faster than adding to x_mlp separately
+        
         y = F.linear(
                 y, self.in_proj.weight, torch.cat((self.qkv_bias, self.mlp_bias))
             )
+        
         #else:
         #    y = self.in_proj(y)
         x_mlp, q, k, v = torch.split(y, self.in_split, dim=-1)
@@ -644,20 +742,27 @@ class VisionTransformer(nn.Module):
         dpr = [
             x.item() for x in torch.linspace(0, drop_path_rate, depth)
         ]  # stochastic depth decay rule
+
+        #def __init__(self, dimension, num_heads, mlp_ratio=4.0, gk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None, 
+        #         drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
+    
         self.blocks = nn.Sequential(
             *[
                 block_fn(
-                    dim=embed_dim,
+                    dimension=embed_dim,
                     num_heads=num_heads,
                     mlp_ratio=mlp_ratio,
-                    qkv_bias=qkv_bias,
-                    qk_norm=qk_norm,
+                    #qkv_bias=qkv_bias,
+                    qk_normalization=qk_norm,
                     init_values=init_values,
-                    proj_drop=proj_drop_rate,
-                    attn_drop=attn_drop_rate,
+                    projection_drop=proj_drop_rate,
+                    attention_drop=attn_drop_rate,
                     drop_path=dpr[i],
-                    norm_layer=norm_layer,
-                    act_layer=act_layer,
+                    activation_layer=act_layer,
+                    normalization_layer=norm_layer,
+                    use_scaled_dpa = True, 
+                    use_attention_out_bias=True,
+                    
                 )
                 for i in range(depth)
             ]
@@ -871,7 +976,7 @@ def build_smart_vit(model_params):
         num_heads=12,
         qkv_bias=False,
         qk_norm=True, 
-        block_fn=ParallelScalingBlock,
+        block_fn=ParallelLayersBlock,
         no_embed_class=True,
         #norm_layer=RmsNorm,
     )

@@ -38,6 +38,11 @@ class train_config(base_config):
     use_fused_attention: bool = True
 
     # use TP
+    # 
+    # inproj
+    # mlp_out_proj
+    # attn_out_proj
+    
     use_tp: bool = False
 
     # image size

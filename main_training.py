@@ -372,20 +372,30 @@ def fsdp_main():
             mesh=torch.arange(0, world_size).view(model_parallel_size, -1),
         )
         rank_print(rank, f"{twod_mesh=}")
-        ''' 
+         
         # this is for parallelized vit - need to dynamically locate blocks
         rank_print(rank, f"{model=}")
+        #assert False, "remove"
+        # tp parallelized block
+        # col
+        # in proj
+        # row
+        # mlp_out_proj
+        # attn_out_proj
+
         blocks = model.get_submodule(f"blocks")
         total_blocks = len(blocks)
         print(f"len block {total_blocks}")
         for i, block in enumerate(blocks):
             try:
                 rank_print(rank, f"\nparallelization of block {i}")
-                parallelized_block = parallelize_module(module = block, device_mesh=twod_mesh,
-                                                        parallelize_plan={"attn": PairwiseParallel(),
-                                                                          "mlp": PairwiseParallel()},
-                tp_mesh_dim=1,
-                )
+                
+                #parallelized_block = parallelize_module(module = block, device_mesh=twod_mesh,
+                #                                        parallelize_plan={"in_proj": NewCol(),
+                #                                                          "mlp_proj": Rowwise(),
+                #                                                          attn_out_proj: Rowwise},
+                #tp_mesh_dim=1,
+                #)
                 # print(f"\nSuccess - {blocks[i]}\n")
                 block = parallelized_block
                 rank_print(rank, f"{parallelized_block=}")
@@ -395,7 +405,6 @@ def fsdp_main():
                 assert False, f"failed to TP"
             #rank_print(rank, f"{blocks=}")
         rank_print(rank, f"{model=}")
-        '''
         
         for i in range(12):
             block = model.get_submodule(f"encoder.block_{i}")
