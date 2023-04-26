@@ -21,7 +21,7 @@ class base_config:
     seed: int = 2023
     verbose: bool = True  # how much info to show...
     # how many mini batches to time with
-    total_steps_to_run: int = None
+    total_steps_to_run: int = 8
     # ignores warmup steps for avg time calcs
     warmup_steps: int = 3
 
