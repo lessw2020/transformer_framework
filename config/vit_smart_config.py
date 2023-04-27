@@ -32,10 +32,13 @@ class train_config(base_config):
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
-        "smartvit90"
+        #"smartvit90"
+        #"631M"
+        "1B"
     )
     model_num_heads = 12
     use_fused_attention: bool = True
+    use_parallel_attention = True
 
     # use TP
     # 
@@ -103,100 +106,55 @@ class train_config(base_config):
 
     checkpoint_model_filename: str = "vit--1.pt"
 
-    # VIT specific
-    """image_size": cfg.TRAIN.IM_SIZE,
-            "patch_size": cfg.VIT.PATCH_SIZE,
-            "stem_type": cfg.VIT.STEM_TYPE,
-            "c_stem_kernels": cfg.VIT.C_STEM_KERNELS,
-            "c_stem_strides": cfg.VIT.C_STEM_STRIDES,
-            "c_stem_dims": cfg.VIT.C_STEM_DIMS,
-            "n_layers": cfg.VIT.NUM_LAYERS,
-            "n_heads": cfg.VIT.NUM_HEADS,
-            "hidden_d": cfg.VIT.HIDDEN_DIM,
-            "mlp_d": cfg.VIT.MLP_DIM,
-            "cls_type": cfg.VIT.CLASSIFIER_TYPE,
-            "num_classes": cfg.MODEL.NUM_CLASSES,
-        }
-    # Patch Size (TRAIN.IM_SIZE must be divisible by PATCH_SIZE)
-_C.VIT.PATCH_SIZE = 16
 
-# Type of stem select from {'patchify', 'conv'}
-_C.VIT.STEM_TYPE = "patchify"
-
-# C-stem conv kernel sizes (https://arxiv.org/abs/2106.14881)
-_C.VIT.C_STEM_KERNELS = []
-
-# C-stem conv strides (the product of which must equal PATCH_SIZE)
-_C.VIT.C_STEM_STRIDES = []
-
-# C-stem conv output dims (last dim must equal HIDDEN_DIM)
-_C.VIT.C_STEM_DIMS = []
-
-# Number of layers in the encoder
-_C.VIT.NUM_LAYERS = 12
-
-# Number of self attention heads
-_C.VIT.NUM_HEADS = 12
-
-# Hidden dimension
-_C.VIT.HIDDEN_DIM = 768
-
-# Dimension of the MLP in the encoder
-_C.VIT.MLP_DIM = 3072
-
-# Type of classifier select from {'token', 'pooled'}
-_C.VIT.CLASSIFIER_TYPE = "token"
-
-    """
+def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel=False):
 
 
-def build_model(model_size: str, layernorm_eps_in: float = 1e-6):
-    model_args = dict()
-    model_args["layernorm_eps"] = layernorm_eps_in
-
-    if model_size == "90M":
-        model_args = {
-            **model_args,
-            "image_size": 224,
-            "patch_size": 16,
-            "num_classes": NUM_CLASSES,
-            "mlp_dim": 3072,
-            "dropout": 0.1,
-            "emb_dropout": 0.1,
-            "c_stem_kernels": [],
-            "c_stem_strides": [],
-            "c_stem_dims": [],
-            "n_layers": 12,
-            "n_heads": 12,
-            "hidden_d": 1024,
-            "mlp_d": 3072,
-            "cls_type": "pooled",
-            "stem_type": "patchify",
-        }
-    elif model_size == "smartvit90":
+    if model_size == "smartvit90":
         model_args = {
             "patch_size": 16,
             "embed_dim": 1320,
             "depth": 16,
             "num_heads": 12,
-            "qkv_bias": True,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            # "input_size": (3, 224, 224),
-            # "pool_size": None,
-            # "crop_pct": 0.9,
-            # "interpolation": "bicubic",
-            # "fixed_input_size": True,
-            # "mean": IMAGENET_INCEPTION_MEAN,
-            # "std": IMAGENET_INCEPTION_STD,
-            # "first_conv": "patch_embed.proj",
-            # "classifier": "head",
+            
         }
+    elif model_size == "631M":
+
+        model_args = {
+            "patch_size": 14,
+            "embed_dim": 1280,
+            "depth": 32,
+            "num_heads": 16,
+            "num_classes": NUM_CLASSES,
+            "image_size": 224,
+            
+        }
+    elif model_size == "1B":
+        #model_args = dict(patch_size=14, embed_dim=1408, mlp_ratio=48/11, depth=40, num_heads=16)
+        model_args = {
+            "patch_size": 14,
+            "embed_dim": 1408,
+            "mlp_ratio":48/11,
+            "depth": 40,
+            "num_heads": 16,
+            "num_classes": NUM_CLASSES,
+            "image_size": 224,
+            
+        }
+
+    # core model args
+    model_args["layernorm_eps"] = layernorm_eps_in
+
+    # current control over parallel vs sequential attention blocks
+    if use_parallel:
+        model_args["use_parallel_attention"]= True
 
     assert model_args.get(
         "image_size"
     ), f"failed to build model args for {model_size=}...is your model size listed in config?"
-    # model = ViT(params=model_args)
+
     from models.smart_vit.vit_main import build_smart_vit
 
     model = build_smart_vit(model_args)

@@ -284,6 +284,7 @@ class ResPostBlock(nn.Module):
         drop_path=0.0,
         act_layer=nn.GELU,
         norm_layer=nn.LayerNorm,
+        use_fused_attention = True,
     ):
         super().__init__()
         self.init_values = init_values
@@ -296,6 +297,7 @@ class ResPostBlock(nn.Module):
             attn_drop=attn_drop,
             proj_drop=proj_drop,
             norm_layer=norm_layer,
+            use_fused_attention=use_fused_attention
         )
         self.norm1 = norm_layer(dim)
         self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
@@ -414,120 +416,6 @@ class ParallelLayersBlock(nn.Module):
         # add residual
         x = x + y
         return x
-
-
-
-        # 
-
-class ParallelScalingBlock(nn.Module):
-    """Parallel ViT block (MLP & Attention in parallel)
-    Based on:
-      'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
-    """
-
-    def __init__(
-        self,
-        dim,
-        num_heads,
-        mlp_ratio=4.0,
-        qkv_bias=False,
-        qk_norm=False,
-        proj_drop=0.0,
-        attn_drop=0.0,
-        init_values=None,
-        drop_path=0.0,
-        act_layer=nn.GELU,
-        norm_layer=nn.LayerNorm,
-        use_fused_attention=True,
-    ):
-        super().__init__()
-        assert dim % num_heads == 0, "dim should be divisible by num_heads"
-        self.num_heads = num_heads
-        self.head_dim = dim // num_heads
-        self.scale = self.head_dim**-0.5
-        self.fused_attn = use_fused_attention
-        mlp_hidden_dim = int(mlp_ratio * dim)
-        in_proj_out_dim = mlp_hidden_dim + 3 * dim
-
-        self.in_norm = norm_layer(dim)
-        self.in_proj = nn.Linear(dim, in_proj_out_dim, bias=qkv_bias)
-        self.in_split = [mlp_hidden_dim] + [dim] * 3
-        #if qkv_bias:
-        #    self.register_buffer("qkv_bias", None)
-        #    self.register_parameter("mlp_bias", None)
-        #else:
-        self.register_buffer("qkv_bias", torch.zeros(3 * dim), persistent=False)
-        self.mlp_bias = nn.Parameter(torch.zeros(mlp_hidden_dim))
-
-        self.q_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
-        self.k_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
-        self.attn_drop = nn.Dropout(attn_drop)
-        self.attn_out_proj = nn.Linear(dim, dim)
-
-        self.mlp_drop = nn.Dropout(proj_drop)
-        self.mlp_act = act_layer()
-        self.mlp_out_proj = nn.Linear(mlp_hidden_dim, dim, bias = True)
-
-        self.ls = (
-            LayerScale(dim, init_values=init_values)
-            if init_values is not None
-            else nn.Identity()
-        )
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
-        
-
-    def forward(self, x):
-        B, N, C = x.shape
-
-        # Combined MLP fc1 & qkv projections
-        y = self.in_norm(x)
-        #if self.mlp_bias is not None:
-            # Concat constant zero-bias for qkv w/ trainable mlp_bias.
-            # Appears faster than adding to x_mlp separately
-        
-        y = F.linear(
-                y, self.in_proj.weight, torch.cat((self.qkv_bias, self.mlp_bias))
-            )
-        
-        #else:
-        #    y = self.in_proj(y)
-        x_mlp, q, k, v = torch.split(y, self.in_split, dim=-1)
-
-        # Dot product attention w/ qk norm
-        q = self.q_norm(q.view(B, N, self.num_heads, self.head_dim)).transpose(1, 2)
-        k = self.k_norm(k.view(B, N, self.num_heads, self.head_dim)).transpose(1, 2)
-        v = v.view(B, N, self.num_heads, self.head_dim).transpose(1, 2)
-
-        if self.fused_attn:
-            x_attn = F.scaled_dot_product_attention(
-                q,
-                k,
-                v,
-                dropout_p=self.attn_drop.p,
-            )
-        else:
-            q = q * self.scale
-            attn = q @ k.transpose(-2, -1)
-            attn = attn.softmax(dim=-1)
-            attn = self.attn_drop(attn)
-            x_attn = attn @ v
-        x_attn = x_attn.transpose(1, 2).reshape(B, N, C)
-        x_attn = self.attn_out_proj(x_attn)
-
-        # MLP activation, dropout, fc2
-        #test_xmlp = x_mlp.clone()
-        #res = self.mlp_process(test_xmlp)
-        x_mlp = self.mlp_act(x_mlp)
-        x_mlp = self.mlp_drop(x_mlp)
-        x_mlp = self.mlp_out_proj(x_mlp)
-
-        #assert x_mlp == test_xmlp, f"mismatch using sequential {test_xmlp=}, {res=}"
-
-        # Add residual w/ drop path & layer scale applied
-        y = self.drop_path(self.ls(x_attn + x_mlp))
-        x = x + y
-        return x
-
 
 class ParallelThingsBlock(nn.Module):
     """Parallel ViT block (N parallel attention followed by N parallel MLP)
@@ -745,28 +633,51 @@ class VisionTransformer(nn.Module):
 
         #def __init__(self, dimension, num_heads, mlp_ratio=4.0, gk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None, 
         #         drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
-    
-        self.blocks = nn.Sequential(
-            *[
-                block_fn(
-                    dimension=embed_dim,
-                    num_heads=num_heads,
-                    mlp_ratio=mlp_ratio,
-                    #qkv_bias=qkv_bias,
-                    qk_normalization=qk_norm,
-                    init_values=init_values,
-                    projection_drop=proj_drop_rate,
-                    attention_drop=attn_drop_rate,
-                    drop_path=dpr[i],
-                    activation_layer=act_layer,
-                    normalization_layer=norm_layer,
-                    use_scaled_dpa = True, 
-                    use_attention_out_bias=True,
-                    
-                )
-                for i in range(depth)
-            ]
-        )
+        if block_fn == ParallelLayersBlock:
+
+            self.blocks = nn.Sequential(
+                *[
+                    block_fn(
+                        dimension=embed_dim,
+                        num_heads=num_heads,
+                        mlp_ratio=mlp_ratio,
+                        #qkv_bias=qkv_bias,
+                        qk_normalization=qk_norm,
+                        init_values=init_values,
+                        projection_drop=proj_drop_rate,
+                        attention_drop=attn_drop_rate,
+                        drop_path=dpr[i],
+                        activation_layer=act_layer,
+                        normalization_layer=norm_layer,
+                        use_scaled_dpa = True, 
+                        use_attention_out_bias=True,
+                        
+                    )
+                    for i in range(depth)
+                ]
+            )
+        else:
+            self.blocks = nn.Sequential(
+                *[
+                    block_fn(
+                        dim=embed_dim,
+                        num_heads=num_heads,
+                        mlp_ratio=mlp_ratio,
+                        #qkv_bias=qkv_bias,
+                        qk_norm=qk_norm,
+                        init_values=init_values,
+                        proj_drop=proj_drop_rate,
+                        attn_drop=attn_drop_rate,
+                        drop_path=dpr[i],
+                        act_layer=act_layer,
+                        norm_layer=norm_layer,
+                        use_fused_attention = True, 
+                        
+                    )
+                    for i in range(depth)
+                ]
+            )
+
         self.norm = norm_layer(embed_dim) if not use_fc_norm else nn.Identity()
 
         # Classifier Head
@@ -969,17 +880,27 @@ def resize_pos_embed(
 
 
 def build_smart_vit(model_params):
+    use_parallel = model_params.get('use_parallel_attention', False)
+    assert use_parallel, f"did not receive use_parallel {model_params=}"
+    if use_parallel:
+        print(f"Building with Parallel Layers Attention")
+        block_function = ParallelLayersBlock
+    else:
+        print(f"Building with Sequential Attention")
+        block_function = ResPostBlock
+
     model_kwargs = dict(
-        patch_size=16,
-        embed_dim=768,
-        depth=12,
-        num_heads=12,
+        #patch_size=16,
+        #embed_dim=768,
+        #depth=12,
+        #num_heads=12,
         qkv_bias=False,
         qk_norm=True, 
-        block_fn=ParallelLayersBlock,
+        block_fn=block_function,
         no_embed_class=True,
         #norm_layer=RmsNorm,
     )
+    
     merged_vals = {**model_kwargs, **model_params}
 
     model = VisionTransformer(**merged_vals)

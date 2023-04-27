@@ -258,7 +258,15 @@ def fsdp_main():
     if not use_timm:
         print("******************* bulding the model here ************")
         with init_empty_weights():
-            model = config.build_model(cfg.model_name)
+            use_parallel = False
+            try:
+                use_parallel = cfg.use_parallel_attention
+            except:
+                pass
+            if use_parallel:
+                model = config.build_model(cfg.model_name, use_parallel=True)
+            else:
+                model = config.build_model(cfg.model_name)
         print_memory_summary("vit","cuda")
         time.sleep(10)
     elif use_timm:
