@@ -34,8 +34,8 @@ class train_config(base_config):
         # "maxxvitv2_rmlp_base_rw_224"
         #"smartvit90"
         #"631M"
-        #"1B"
-        "1.8B"
+        "1B"
+        #"1.8B"
 
     )
 
@@ -259,8 +259,13 @@ def get_universal_dataset():
 
 
 def get_policy():
+    cfg = train_config()
     # todo - can't use autowrap policy with 2d
-    return None  # get_policy_base({ViTEncoderBlock})
+    from models.smart_vit.vit_main import ParallelLayersBlock, ResPostBlock
+    if cfg.use_parallel_attention:
+        return get_policy_base({ParallelLayersBlock})
+    else:
+        return get_policy_base({ResPostBlock})
 
 
 def fsdp_checkpointing(model):
