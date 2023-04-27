@@ -33,18 +33,22 @@ class train_config(base_config):
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         #"smartvit90"
-        "631M"
+        #"631M"
         #"1B"
+        "1.8B"
+
     )
 
     use_fused_attention: bool = True
-    use_parallel_attention: bool = False
+    use_parallel_attention: bool = True
 
     # use TP
     use_tp: bool = False
 
     # image size
     image_size: int = 224
+
+    batch_size_training: int = 32
 
     # use synthetic data
     use_synthetic_data: bool = False
@@ -138,6 +142,42 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel=Fa
             "image_size": 224,
             
         }
+    elif model_size =="1.8B":
+        # model_args = dict(patch_size=14, embed_dim=1664, mlp_ratio=64/13, depth=48, num_heads=16)
+        model_args = {
+            "patch_size": 14,
+            "embed_dim": 1664,
+            "mlp_ratio":64/13,
+            "depth": 48,
+            "num_heads": 16,
+            "num_classes": NUM_CLASSES,
+            "image_size": 224,
+            
+        }
+    elif model_size == "4B":
+        model_args = {
+            "patch_size": 14,
+            "embed_dim": 1792,
+            "mlp_ratio":8.571428571428571,
+            "depth": 56,
+            "num_heads": 16,
+            "num_classes": NUM_CLASSES,
+            "image_size": 224,
+            
+        }
+    elif model_size == "22B":
+        model_args = {
+            "patch_size": 14,
+            "embed_dim": 6144,
+            #"mlp_ratio":4.0,
+            "depth": 48,
+            "num_heads": 48,
+            "num_classes": NUM_CLASSES,
+            "image_size": 224,
+            
+        }
+
+
 
     # core model args
     #model_args["layernorm_eps"] = layernorm_eps_in
