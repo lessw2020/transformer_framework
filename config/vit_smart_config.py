@@ -33,10 +33,10 @@ class train_config(base_config):
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         #"smartvit90"
-        #"631M"
-        "1B"
+        "631M"
+        #"1B"
     )
-    model_num_heads = 12
+
     use_fused_attention: bool = True
     use_parallel_attention = True
 
@@ -145,7 +145,7 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel=Fa
         }
 
     # core model args
-    model_args["layernorm_eps"] = layernorm_eps_in
+    #model_args["layernorm_eps"] = layernorm_eps_in
 
     # current control over parallel vs sequential attention blocks
     if use_parallel:

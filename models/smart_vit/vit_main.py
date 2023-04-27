@@ -881,10 +881,11 @@ def resize_pos_embed(
 
 def build_smart_vit(model_params):
     use_parallel = model_params.get('use_parallel_attention', False)
-    assert use_parallel, f"did not receive use_parallel {model_params=}"
+    
     if use_parallel:
         print(f"Building with Parallel Layers Attention")
         block_function = ParallelLayersBlock
+        del model_params['use_parallel_attention']  # models don't understand this
     else:
         print(f"Building with Sequential Attention")
         block_function = ResPostBlock
