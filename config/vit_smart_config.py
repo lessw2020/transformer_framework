@@ -26,7 +26,7 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = 8
+    total_steps_to_run: int = 9
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
@@ -40,7 +40,7 @@ class train_config(base_config):
     )
 
     use_fused_attention: bool = True
-    use_parallel_attention: bool = True
+    use_parallel_attention: bool = False
 
     # use TP
     use_tp: bool = False
@@ -48,7 +48,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 32
+    batch_size_training: int = 16
 
     # use synthetic data
     use_synthetic_data: bool = False
@@ -259,6 +259,7 @@ def get_universal_dataset():
 
 
 def get_policy():
+    #return None
     cfg = train_config()
     # todo - can't use autowrap policy with 2d
     from models.smart_vit.vit_main import ParallelLayersBlock, ResPostBlock

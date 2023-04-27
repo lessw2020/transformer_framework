@@ -134,6 +134,7 @@ def setup_environ_flags(cfg, rank):
 
 
 def cleanup():
+    dist.barrier()
     dist.destroy_process_group()
 
 
@@ -192,7 +193,7 @@ def fsdp_main():
 
     my_auto_wrap_policy = config.get_policy()
     if rank == 0:
-        print(f"policy is {my_auto_wrap_policy}")
+        print(f"wrapping policy is {my_auto_wrap_policy}")
 
     use_pokemon = False
     use_beans = False
@@ -348,6 +349,9 @@ def fsdp_main():
             from torch.distributed.tensor.parallel import (
                 PairwiseParallel,
                 parallelize_module,
+                ColwiseParallelNoReshard,
+                ColwiseParallel,
+                RowwiseParallel,
                 # get_parallelization_fqn,
             )
 
@@ -382,7 +386,8 @@ def fsdp_main():
         rank_print(rank, f"{twod_mesh=}")
          
         # this is for parallelized vit - need to dynamically locate blocks
-        rank_print(rank, f"{model=}")
+        #rank_print(rank, f"{model=}")
+    
         #assert False, "remove"
         # tp parallelized block
         # col
@@ -393,27 +398,27 @@ def fsdp_main():
 
         blocks = model.get_submodule(f"blocks")
         total_blocks = len(blocks)
-        print(f"len block {total_blocks}")
+        # print(f"len block {total_blocks}")
         for i, block in enumerate(blocks):
             try:
                 rank_print(rank, f"\nparallelization of block {i}")
                 
-                #parallelized_block = parallelize_module(module = block, device_mesh=twod_mesh,
-                #                                        parallelize_plan={"in_proj": NewCol(),
-                #                                                          "mlp_proj": Rowwise(),
-                #                                                          attn_out_proj: Rowwise},
-                #tp_mesh_dim=1,
-                #)
-                # print(f"\nSuccess - {blocks[i]}\n")
+                parallelized_block = parallelize_module(module = block, device_mesh=twod_mesh,
+                                                        parallelize_plan={"in_projection": PairwiseParallel(),
+                                                                          "mlp_out_proj": PairwiseParallel(),
+                                                                          "attention_out_proj": PairwiseParallel()},
+                tp_mesh_dim=1,
+                )
+                print(f"\nSuccess - {blocks[i]}\n")
                 block = parallelized_block
-                rank_print(rank, f"{parallelized_block=}")
+                #rank_print(rank, f"{parallelized_block=}")
 
             except e:
                 print(f"{e=}")
                 assert False, f"failed to TP"
             #rank_print(rank, f"{blocks=}")
-        rank_print(rank, f"{model=}")
-        
+        #rank_print(rank, f"{model=}")
+        '''
         for i in range(12):
             block = model.get_submodule(f"encoder.block_{i}")
             parallelized_block = parallelize_module(
@@ -426,7 +431,7 @@ def fsdp_main():
                 tp_mesh_dim=1,
             )
             block = parallelized_block
-        
+        '''
         """
         if rank == 0:
             print(f"&&&&&&&&&&&\n {model=}")
@@ -689,7 +694,9 @@ def fsdp_main():
                     use_label_singular=use_label_singular,
                     metric_logger=_metric_logger,
                 )
-
+        #print(f"rank {local_rank} in front of barrier...")
+        #dist.barrier()
+        #print(f"rank {local_rank} past barrier...")
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
             if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
@@ -709,6 +716,7 @@ def fsdp_main():
             )
 
     # memory summary
+    print(f"** exit loop - rank {local_rank} reporting....")
     if local_rank == 0:
         # memory monitor
         memmax.stop()  # stop and display info

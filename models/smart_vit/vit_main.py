@@ -377,7 +377,7 @@ class ParallelLayersBlock(nn.Module):
         y = self.in_normalization(x)
 
         # process first full MLP layer for all (qkv bias is not trained)
-        y = F.linear(y, self.in_projection.weight,torch.cat((self.qkv_bias, self.mlp_bias)) )
+        y = F.linear(y, self.in_projection.weight, torch.cat((self.qkv_bias, self.mlp_bias)) )
 
         # split
         core_mlp, q, k, v = torch.split(y, self.in_proj_split, dim=-1)
