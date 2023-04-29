@@ -324,13 +324,13 @@ class ResPostBlock(nn.Module):
         x = x + self.drop_path2(self.norm2(self.mlp(x)))
         return x
 
-class ParallelLayersBlock(nn.Module):
+class ParallelAttentionBlock(nn.Module):
     """ Process MLP and Attention in parallel
         Based on 'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
         We do not use qkv bias
         Do use mlp bias
         Do use qk normalization
-        This code is heavily based on TIMM ParallelScalingBlock: 
+        This code was based on TIMM ParallelScalingBlock, but adds outer projection fusion: 
         https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
 
 
@@ -339,7 +339,7 @@ class ParallelLayersBlock(nn.Module):
                  drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
         super().__init__()
 
-        self.fuse_out_proj = True
+        self.fuse_out_proj = False
         assert dimension % num_heads==0, f"dimensions {dimension.shape} must be evenly divisible by num_heads {num_heads=}"
         self.num_heads = num_heads
         self.head_dim = dimension//num_heads
@@ -663,7 +663,7 @@ class VisionTransformer(nn.Module):
 
         #def __init__(self, dimension, num_heads, mlp_ratio=4.0, gk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None, 
         #         drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
-        if block_fn == ParallelLayersBlock:
+        if block_fn == ParallelAttentionBlock:
 
             self.blocks = nn.Sequential(
                 *[
@@ -914,7 +914,7 @@ def build_smart_vit(model_params):
     
     if use_parallel:
         print(f"Building with Parallel Layers Attention")
-        block_function = ParallelLayersBlock
+        block_function = ParallelAttentionBlock
         del model_params['use_parallel_attention']  # models don't understand this
     else:
         print(f"Building with Sequential Attention")

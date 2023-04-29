@@ -26,7 +26,7 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = 9
+    total_steps_to_run: int = 8
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
@@ -34,13 +34,15 @@ class train_config(base_config):
         # "maxxvitv2_rmlp_base_rw_224"
         #"smartvit90"
         #"631M"
-        "1B"
-        #"1.8B"
+        #"1B"
+        "1.8B"
+        #"4B"
 
     )
 
-    use_fused_attention: bool = True
     use_parallel_attention: bool = False
+
+    use_fused_attention: bool = True
 
     # use TP
     use_tp: bool = False
@@ -48,7 +50,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 16
+    batch_size_training: int = 12
 
     # use synthetic data
     use_synthetic_data: bool = False
@@ -262,9 +264,9 @@ def get_policy():
     #return None
     cfg = train_config()
     # todo - can't use autowrap policy with 2d
-    from models.smart_vit.vit_main import ParallelLayersBlock, ResPostBlock
+    from models.smart_vit.vit_main import ParallelAttentionBlock, ResPostBlock
     if cfg.use_parallel_attention:
-        return get_policy_base({ParallelLayersBlock})
+        return get_policy_base({ParallelAttentionBlock})
     else:
         return get_policy_base({ResPostBlock})
 
