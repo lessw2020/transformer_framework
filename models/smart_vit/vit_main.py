@@ -1,8 +1,8 @@
-# Builds upon code from Ross Wightman/timm:
+# Builds upon and modifies code from Ross Wightman/timm:
 # https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
 
 # adds DualPatchNormEmbedding, LinearMLP class
-# Important updates - qk norm, parallelized block
+# qk norm, parallelized block
 # fused attention
 
 
@@ -326,28 +326,29 @@ class ResPostBlock(nn.Module):
 
 class ParallelAttentionBlock(nn.Module):
     """ Process MLP and Attention in parallel
-        Based on 'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
+        Based on PaLM: 
+        and 'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
         We do not use qkv bias
         * Do use mlp bias
         * Do use qk normalization
-        This code is based on TIMM, but simplifies and adds upper/outer projection fusion: 
-        https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
 
 
     """
-    def __init__(self, dimension, num_heads, mlp_ratio=4.0, qk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None, 
-                 drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
+    def __init__(self, dimension, num_heads, mlp_ratio=4.0, qk_normalization=True, projection_drop = 0.0, 
+                 attention_drop = 0.0, init_values=None, 
+                 drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, 
+                 use_fused_attention=True, use_upper_fusion=True, 
+                 use_attention_out_bias=True):
         super().__init__()
 
         # use outer/upper fusion?  
-        self.fuse_out_proj = True 
-
-
+        self.fuse_out_proj = use_upper_fusion 
+        
         assert dimension % num_heads==0, f"dimensions {dimension.shape} must be evenly divisible by num_heads {num_heads=}"
         self.num_heads = num_heads
         self.head_dim = dimension//num_heads
         self.scale = self.head_dim**-0.5
-        self.fused_attention = use_scaled_dpa
+        self.fused_attention = use_fused_attention
         mlp_hidden_dim = int(mlp_ratio * dimension)  # 5120
         in_proj_out_dim = mlp_hidden_dim + 3*dimension # 3840
         
@@ -487,6 +488,8 @@ class VisionTransformer(nn.Module):
         act_layer: Optional[Callable] = None,
         block_fn: Callable = Block,
         input_size=224,
+        use_fused_attention: Optional[bool] = True,
+        use_upper_fusion: Optional[bool] = True,
     ):
         """
         Args:
@@ -579,6 +582,8 @@ class VisionTransformer(nn.Module):
                         normalization_layer=norm_layer,
                         use_scaled_dpa = True, 
                         use_attention_out_bias=True,
+                        use_fused_attention = use_fused_attention,
+                        use_upper_fusion = use_upper_fusion,
                         
                     )
                     for i in range(depth)
@@ -599,7 +604,7 @@ class VisionTransformer(nn.Module):
                         drop_path=dpr[i],
                         act_layer=act_layer,
                         norm_layer=norm_layer,
-                        use_fused_attention = True, 
+                        use_fused_attention = use_fused_attention,
                         
                     )
                     for i in range(depth)
@@ -808,26 +813,30 @@ def resize_pos_embed(
 
 
 def build_smart_vit(model_params):
+    # need to improve this but works for now
     use_parallel = model_params.get('use_parallel_attention', False)
+    use_fused_attention = model_params.get("use_fused_attention", False)
+    use_upper_fusion = model_params.get("use_upper_fusion", False)
+
     
     if use_parallel:
         print(f"Building with Parallel Layers Attention")
         block_function = ParallelAttentionBlock
         del model_params['use_parallel_attention']  # models don't understand this
+        use_upper_fusion = use_upper_fusion
+
     else:
         print(f"Building with Sequential Attention")
         block_function = ResPostBlock
+        del model_params['use_fused_attention']
 
     model_kwargs = dict(
-        #patch_size=16,
-        #embed_dim=768,
-        #depth=12,
-        #num_heads=12,
         qkv_bias=False,
         qk_norm=True, 
         block_fn=block_function,
         no_embed_class=True,
-        #norm_layer=RmsNorm,
+        use_upper_fusion = use_upper_fusion,
+        use_fused_attention = use_fused_attention,
     )
     
     merged_vals = {**model_kwargs, **model_params}

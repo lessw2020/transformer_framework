@@ -260,16 +260,19 @@ def fsdp_main():
         print("******************* bulding the model here ************")
         with init_empty_weights():
             use_parallel = False
+            use_upper_fusion = False
+            use_fused_attention = cfg.use_fused_attention
             try:
                 use_parallel = cfg.use_parallel_attention
+                use_upper_fusion = cfg.use_upper_fusion
             except:
                 pass
             if use_parallel:
-                model = config.build_model(cfg.model_name, use_parallel=True)
+                model = config.build_model(cfg.model_name, use_parallel=use_parallel, use_upper_fusion=use_upper_fusion, use_fused_attention=use_fused_attention)
             else:
-                model = config.build_model(cfg.model_name)
+                model = config.build_model(cfg.model_name, use_fused_attention=use_fused_attention )
         print_memory_summary("vit","cuda")
-        time.sleep(10)
+        time.sleep(5)
     elif use_timm:
         # if you are here and this import fails - run:
         # git clone https://github.com/huggingface/pytorch-image-models.git
