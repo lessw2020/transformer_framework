@@ -46,6 +46,10 @@ class train_config(base_config):
 
     use_fused_attention: bool = True
 
+    # profile
+    run_profiler: bool = False
+    profile_folder: str = "tp_fsdp/profile_tracing"
+
     # use TP
     use_tp: bool = False
 
