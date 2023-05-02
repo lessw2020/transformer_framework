@@ -28,7 +28,7 @@ class train_config(base_config):
     model_name = "250M"
 
     # profile
-    run_profiler: bool = True
+    run_profiler: bool = False
     profile_folder: str = "tp_fsdp/profile_tracing"
 
     use_timm = False
