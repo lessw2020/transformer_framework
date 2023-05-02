@@ -42,7 +42,7 @@ class train_config(base_config):
     )
 
     use_parallel_attention: bool = True
-    # upper fusion is controlled in /models/smart_vit/vit_main.py, self.fuse_out_proj: bool 
+    # upper fusion is default, but controlled in /models/smart_vit/vit_main.py, self.fuse_out_proj: bool 
 
     use_fused_attention: bool = True
 
