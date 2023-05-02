@@ -326,11 +326,12 @@ class ResPostBlock(nn.Module):
 
 class ParallelAttentionBlock(nn.Module):
     """ Process MLP and Attention in parallel
-        Based on PaLM: 
+        Based on PaLM: https://arxiv.org/abs/2204.02311
         and 'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
         We do not use qkv bias
         * Do use mlp bias
         * Do use qk normalization
+        # TODO - multi query attention? Dual residual? 
 
 
     """

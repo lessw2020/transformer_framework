@@ -45,10 +45,10 @@ class train_config(base_config):
 
     # only relevant if using parallel_attention...
     # parallel attention outer projection fusion
-    use_upper_fusion: bool = True  
+    use_upper_fusion: bool = False  
 
     # use scaled dot product attention
-    use_fused_attention: bool = False
+    use_fused_attention: bool = True
 
     # profile
     run_profiler: bool = False
@@ -60,7 +60,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 24
+    batch_size_training: int = 32
 
     # use synthetic data
     use_synthetic_data: bool = False
