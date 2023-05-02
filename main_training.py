@@ -22,6 +22,12 @@ import torch.distributed as dist
 
 import environment
 from contextlib import contextmanager
+from torch.distributed._spmd.api import compile as spmd_compile
+
+from torch.distributed._spmd.parallel_mode import DataParallel
+from torch.distributed._tensor import Replicate
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 
 bf16_ready = environment.verify_bfloat_support
 
@@ -33,6 +39,7 @@ colorama.init(autoreset=True)  # reset after every line
 import performance
 
 # import optimizers
+
 
 @contextmanager
 def init_empty_weights(include_buffers: bool = False):
@@ -64,8 +71,10 @@ def init_empty_weights(include_buffers: bool = False):
         if param is not None:
             param_cls = type(module._parameters[name])
             kwargs = module._parameters[name].__dict__
-            module._parameters[name] = param_cls(module._parameters[name].to(torch.device("meta")), **kwargs)
-            
+            module._parameters[name] = param_cls(
+                module._parameters[name].to(torch.device("meta")), **kwargs
+            )
+
     def register_empty_buffer(module, name, buffer):
         old_register_buffer(module, name, buffer)
         if buffer is not None:
@@ -81,6 +90,7 @@ def init_empty_weights(include_buffers: bool = False):
         if include_buffers:
             nn.Module.register_buffer = old_reg
 
+
 @torch.no_grad()
 def my_init_fn(module: nn.Module):
     for submodule in module.modules():
@@ -91,9 +101,6 @@ def my_init_fn(module: nn.Module):
                 )
                 # nn.init.uniform_(materialized_param)
                 setattr(submodule, param_name, materialized_param)
-
-
-
 
 
 def print_model(model, file_name, rank):
@@ -108,15 +115,16 @@ def print_model(model, file_name, rank):
 
 
 def print_memory_summary(prefix, device):
-        rank = int(os.getenv("RANK"))
-        if rank == 0:
-            peak_memory_active = torch.cuda.memory_stats().get("active_bytes.all.peak", 0)
-            print(
-                f"{prefix}, GPU peak memory allocation: {torch.cuda.max_memory_allocated(device) // 1e9}GB, "
-                f"GPU peak memory reserved: {torch.cuda.max_memory_reserved(device) // 1e9}GB, "
-                f"GPU peak memory active: {peak_memory_active // 1e9}GB"
-            )
-            torch.cuda.reset_peak_memory_stats(device)
+    rank = int(os.getenv("RANK"))
+    if rank == 0:
+        peak_memory_active = torch.cuda.memory_stats().get("active_bytes.all.peak", 0)
+        print(
+            f"{prefix}, GPU peak memory allocation: {torch.cuda.max_memory_allocated(device) // 1e9}GB, "
+            f"GPU peak memory reserved: {torch.cuda.max_memory_reserved(device) // 1e9}GB, "
+            f"GPU peak memory active: {peak_memory_active // 1e9}GB"
+        )
+        torch.cuda.reset_peak_memory_stats(device)
+
 
 def setup():
     """we use torchrun for init so no params needed here"""
@@ -225,7 +233,7 @@ def fsdp_main():
     else:
         dataset = config.get_dataset()
 
-    if use_beans or use_pokemon or use_food:
+    if not cfg.use_synthetic_data:  # use_beans or use_pokemon or use_food:
         if rank == 0:
             import collections
 
@@ -268,10 +276,19 @@ def fsdp_main():
             except:
                 pass
             if use_parallel:
-                model = config.build_model(cfg.model_name, use_parallel_attention=use_parallel, use_upper_fusion=use_upper_fusion, use_fused_attention=use_fused_attention)
+                model = config.build_model(
+                    cfg.model_name,
+                    use_parallel_attention=use_parallel,
+                    use_upper_fusion=use_upper_fusion,
+                    use_fused_attention=use_fused_attention,
+                )
             else:
-                model = config.build_model(cfg.model_name, use_parallel_attention=False, use_fused_attention=use_fused_attention )
-        print_memory_summary("vit","cuda")
+                model = config.build_model(
+                    cfg.model_name,
+                    use_parallel_attention=False,
+                    use_fused_attention=use_fused_attention,
+                )
+        print_memory_summary("vit", "cuda")
         time.sleep(2)
     elif use_timm:
         # if you are here and this import fails - run:
@@ -387,11 +404,11 @@ def fsdp_main():
             mesh=torch.arange(0, world_size).view(model_parallel_size, -1),
         )
         rank_print(rank, f"{twod_mesh=}")
-         
+
         # this is for parallelized vit - need to dynamically locate blocks
-        #rank_print(rank, f"{model=}")
-    
-        #assert False, "remove"
+        # rank_print(rank, f"{model=}")
+
+        # assert False, "remove"
         # tp parallelized block
         # col
         # in proj
@@ -405,23 +422,27 @@ def fsdp_main():
         for i, block in enumerate(blocks):
             try:
                 rank_print(rank, f"\nparallelization of block {i}")
-                
-                parallelized_block = parallelize_module(module = block, device_mesh=twod_mesh,
-                                                        parallelize_plan={"in_projection": PairwiseParallel(),
-                                                                          "mlp_out_proj": PairwiseParallel(),
-                                                                          "attention_out_proj": PairwiseParallel()},
-                tp_mesh_dim=1,
+
+                parallelized_block = parallelize_module(
+                    module=block,
+                    device_mesh=twod_mesh,
+                    parallelize_plan={
+                        "in_projection": PairwiseParallel(),
+                        "mlp_out_proj": PairwiseParallel(),
+                        "attention_out_proj": PairwiseParallel(),
+                    },
+                    tp_mesh_dim=1,
                 )
                 print(f"\nSuccess - {blocks[i]}\n")
                 block = parallelized_block
-                #rank_print(rank, f"{parallelized_block=}")
+                # rank_print(rank, f"{parallelized_block=}")
 
             except e:
                 print(f"{e=}")
                 assert False, f"failed to TP"
-            #rank_print(rank, f"{blocks=}")
-        #rank_print(rank, f"{model=}")
-        '''
+            # rank_print(rank, f"{blocks=}")
+        # rank_print(rank, f"{model=}")
+        """
         for i in range(12):
             block = model.get_submodule(f"encoder.block_{i}")
             parallelized_block = parallelize_module(
@@ -434,7 +455,7 @@ def fsdp_main():
                 tp_mesh_dim=1,
             )
             block = parallelized_block
-        '''
+        """
         """
         if rank == 0:
             print(f"&&&&&&&&&&&\n {model=}")
@@ -471,9 +492,9 @@ def fsdp_main():
         device_id=torch.cuda.current_device(),
         forward_prefetch=cfg.forward_prefetch,
         limit_all_gathers=False,
-        param_init_fn=my_init_fn
+        param_init_fn=my_init_fn,
     )
-    print_memory_summary("vit","cuda")
+    print_memory_summary("vit", "cuda")
 
     time.sleep(10)
 
@@ -697,9 +718,9 @@ def fsdp_main():
                     use_label_singular=use_label_singular,
                     metric_logger=_metric_logger,
                 )
-        #print(f"rank {local_rank} in front of barrier...")
-        #dist.barrier()
-        #print(f"rank {local_rank} past barrier...")
+        # print(f"rank {local_rank} in front of barrier...")
+        # dist.barrier()
+        # print(f"rank {local_rank} past barrier...")
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
             if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:

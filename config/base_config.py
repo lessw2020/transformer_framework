@@ -74,14 +74,14 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 16
+    batch_size_training: int = 8
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = False
 
     # validation
     run_validation: bool = True
-    val_batch_size = 24
+    val_batch_size = 8
 
     # logging
     track_memory = True
