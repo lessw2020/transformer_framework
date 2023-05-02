@@ -42,7 +42,7 @@ class train_config(base_config):
     )
 
     use_parallel_attention: bool = True
-    # upper fusion is default, but controlled in /models/smart_vit/vit_main.py, self.fuse_out_proj: bool 
+    use_upper_fusion: bool = True  # parallel attention outer projection fusion
 
     use_fused_attention: bool = True
 
@@ -114,7 +114,7 @@ class train_config(base_config):
     checkpoint_model_filename: str = "vit--1.pt"
 
 
-def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel=False):
+def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel_attention=True, use_upper_fusion=True, use_fused_attention=True):
 
 
     if model_size == "smartvit90":
@@ -191,8 +191,12 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel=Fa
     #model_args["layernorm_eps"] = layernorm_eps_in
 
     # current control over parallel vs sequential attention blocks
-    if use_parallel:
+    if use_parallel_attention:
         model_args["use_parallel_attention"]= True
+    if use_fused_attention:
+        model_args["use_fused_attention"]=True
+    if use_upper_fusion:
+        model_args["use_upper_fusion"]=True
 
     assert model_args.get(
         "image_size"
