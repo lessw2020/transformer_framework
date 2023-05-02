@@ -37,10 +37,12 @@ class train_config(base_config):
         #"1B"
         "1.8B"
         #"4B"
+        #"22B"
 
     )
 
-    use_parallel_attention: bool = False
+    use_parallel_attention: bool = True
+    # upper fusion is controlled in /models/smart_vit/vit_main.py, self.fuse_out_proj: bool 
 
     use_fused_attention: bool = True
 

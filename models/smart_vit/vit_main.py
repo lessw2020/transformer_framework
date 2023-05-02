@@ -328,9 +328,9 @@ class ParallelAttentionBlock(nn.Module):
     """ Process MLP and Attention in parallel
         Based on 'Scaling Vision Transformers to 22 Billion Parameters` - https://arxiv.org/abs/2302.05442
         We do not use qkv bias
-        Do use mlp bias
-        Do use qk normalization
-        This code was based on TIMM ParallelScalingBlock, but adds outer projection fusion: 
+        * Do use mlp bias
+        * Do use qk normalization
+        This code is based on TIMM, but simplifies and adds upper/outer projection fusion: 
         https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py
 
 
@@ -339,7 +339,10 @@ class ParallelAttentionBlock(nn.Module):
                  drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
         super().__init__()
 
-        self.fuse_out_proj = False
+        # use outer/upper fusion?  
+        self.fuse_out_proj = True 
+
+
         assert dimension % num_heads==0, f"dimensions {dimension.shape} must be evenly divisible by num_heads {num_heads=}"
         self.num_heads = num_heads
         self.head_dim = dimension//num_heads
@@ -446,111 +449,6 @@ class ParallelAttentionBlock(nn.Module):
         # add residual
         x = x + y
         return x
-
-class ParallelThingsBlock(nn.Module):
-    """Parallel ViT block (N parallel attention followed by N parallel MLP)
-    Based on:
-      `Three things everyone should know about Vision Transformers` - https://arxiv.org/abs/2203.09795
-    """
-
-    def __init__(
-        self,
-        dim,
-        num_heads,
-        num_parallel=2,
-        mlp_ratio=4.0,
-        qkv_bias=False,
-        qk_norm=False,
-        init_values=None,
-        proj_drop=0.0,
-        attn_drop=0.0,
-        drop_path=0.0,
-        act_layer=nn.GELU,
-        norm_layer=nn.LayerNorm,
-    ):
-        super().__init__()
-        self.num_parallel = num_parallel
-        self.attns = nn.ModuleList()
-        self.ffns = nn.ModuleList()
-        for _ in range(num_parallel):
-            self.attns.append(
-                nn.Sequential(
-                    OrderedDict(
-                        [
-                            ("norm", norm_layer(dim)),
-                            (
-                                "attn",
-                                Attention(
-                                    dim,
-                                    num_heads=num_heads,
-                                    qkv_bias=qkv_bias,
-                                    qk_norm=qk_norm,
-                                    attn_drop=attn_drop,
-                                    proj_drop=proj_drop,
-                                    norm_layer=norm_layer,
-                                ),
-                            ),
-                            (
-                                "ls",
-                                LayerScale(dim, init_values=init_values)
-                                if init_values
-                                else nn.Identity(),
-                            ),
-                            (
-                                "drop_path",
-                                DropPath(drop_path)
-                                if drop_path > 0.0
-                                else nn.Identity(),
-                            ),
-                        ]
-                    )
-                )
-            )
-            self.ffns.append(
-                nn.Sequential(
-                    OrderedDict(
-                        [
-                            ("norm", norm_layer(dim)),
-                            (
-                                "mlp",
-                                LinearMLP(
-                                    dim,
-                                    hidden_features=int(dim * mlp_ratio),
-                                    act_layer=act_layer,
-                                    drop=proj_drop,
-                                ),
-                            ),
-                            (
-                                "ls",
-                                LayerScale(dim, init_values=init_values)
-                                if init_values
-                                else nn.Identity(),
-                            ),
-                            (
-                                "drop_path",
-                                DropPath(drop_path)
-                                if drop_path > 0.0
-                                else nn.Identity(),
-                            ),
-                        ]
-                    )
-                )
-            )
-
-    def _forward_jit(self, x):
-        x = x + torch.stack([attn(x) for attn in self.attns]).sum(dim=0)
-        x = x + torch.stack([ffn(x) for ffn in self.ffns]).sum(dim=0)
-        return x
-
-    @torch.jit.ignore
-    def _forward(self, x):
-        x = x + sum(attn(x) for attn in self.attns)
-        x = x + sum(ffn(x) for ffn in self.ffns)
-        return x
-
-    def forward(self, x):
-        return self._forward(x)
-
 
 class VisionTransformer(nn.Module):
     """Vision Transformer
