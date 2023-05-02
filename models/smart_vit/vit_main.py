@@ -413,7 +413,7 @@ class ParallelAttentionBlock(nn.Module):
             q = q * self.scale
             attn = q @ k.transpose(-2, -1)
             attn = attn.softmax(dim=-1)
-            attn = self.attn_drop(attn)
+            attn = self.attention_drop(attn)
             final_attn = attn @ v
         #print(f"pre_transpose {final_attn.shape=}")
         # 2, 16, 257, 80
@@ -572,15 +572,12 @@ class VisionTransformer(nn.Module):
                         dimension=embed_dim,
                         num_heads=num_heads,
                         mlp_ratio=mlp_ratio,
-                        #qkv_bias=qkv_bias,
-                        qk_normalization=qk_norm,
                         init_values=init_values,
                         projection_drop=proj_drop_rate,
                         attention_drop=attn_drop_rate,
                         drop_path=dpr[i],
                         activation_layer=act_layer,
                         normalization_layer=norm_layer,
-                        use_scaled_dpa = True, 
                         use_attention_out_bias=True,
                         use_fused_attention = use_fused_attention,
                         use_upper_fusion = use_upper_fusion,
@@ -828,7 +825,6 @@ def build_smart_vit(model_params):
     else:
         print(f"Building with Sequential Attention")
         block_function = ResPostBlock
-        del model_params['use_fused_attention']
 
     model_kwargs = dict(
         qkv_bias=False,

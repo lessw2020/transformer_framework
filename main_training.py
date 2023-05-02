@@ -268,9 +268,9 @@ def fsdp_main():
             except:
                 pass
             if use_parallel:
-                model = config.build_model(cfg.model_name, use_parallel=use_parallel, use_upper_fusion=use_upper_fusion, use_fused_attention=use_fused_attention)
+                model = config.build_model(cfg.model_name, use_parallel_attention=use_parallel, use_upper_fusion=use_upper_fusion, use_fused_attention=use_fused_attention)
             else:
-                model = config.build_model(cfg.model_name, use_fused_attention=use_fused_attention )
+                model = config.build_model(cfg.model_name, use_parallel_attention=False, use_fused_attention=use_fused_attention )
         print_memory_summary("vit","cuda")
         time.sleep(5)
     elif use_timm:

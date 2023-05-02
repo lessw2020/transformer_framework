@@ -33,18 +33,22 @@ class train_config(base_config):
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         #"smartvit90"
-        #"631M"
+        "631M"
         #"1B"
-        "1.8B"
+        #"1.8B"
         #"4B"
         #"22B"
 
     )
 
-    use_parallel_attention: bool = True
-    use_upper_fusion: bool = True  # parallel attention outer projection fusion
+    use_parallel_attention: bool = False
 
-    use_fused_attention: bool = True
+    # only relevant if using parallel_attention...
+    # parallel attention outer projection fusion
+    use_upper_fusion: bool = True  
+
+    # use scaled dot product attention
+    use_fused_attention: bool = False
 
     # profile
     run_profiler: bool = False
@@ -56,7 +60,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 12
+    batch_size_training: int = 24
 
     # use synthetic data
     use_synthetic_data: bool = False
