@@ -272,7 +272,7 @@ def fsdp_main():
             else:
                 model = config.build_model(cfg.model_name, use_parallel_attention=False, use_fused_attention=use_fused_attention )
         print_memory_summary("vit","cuda")
-        time.sleep(5)
+        time.sleep(2)
     elif use_timm:
         # if you are here and this import fails - run:
         # git clone https://github.com/huggingface/pytorch-image-models.git
@@ -637,7 +637,7 @@ def fsdp_main():
     if cfg.total_steps_to_run:
         total_steps = cfg.total_steps_to_run - 1  # fix off by one for step count
 
-    if cfg.run_profiler and rank == 0:
+    if cfg.run_profiler:
         print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
 
         with torch.profiler.profile(
