@@ -41,6 +41,8 @@ import performance
 # import optimizers
 
 
+
+
 @contextmanager
 def init_empty_weights(include_buffers: bool = False):
     """
@@ -266,7 +268,7 @@ def fsdp_main():
 
     if not use_timm:
         print("******************* bulding the model here ************")
-        with init_empty_weights():
+        '''with init_empty_weights():
             use_parallel = False
             use_upper_fusion = False
             use_fused_attention = cfg.use_fused_attention
@@ -306,6 +308,13 @@ def fsdp_main():
             qk_norm=True,
             num_classes=cfg.num_categories,
         )
+        '''
+    model = config.build_model(
+                    cfg.model_name,
+                    use_parallel_attention=False,
+                    use_fused_attention=False,
+                )
+    model.to("cuda") 
 
     if local_rank == 0:
         print(f"--> {cfg.model_name} built.")
@@ -482,7 +491,7 @@ def fsdp_main():
         fsdp_pg = twod_mesh.get_dim_groups()[0]
         process_group_fsdp = fsdp_pg
     # ----- main FSDP init -----------
-    model = FSDP(
+    '''model = FSDP(
         model,
         process_group=process_group_fsdp,
         auto_wrap_policy=my_auto_wrap_policy,
@@ -497,7 +506,7 @@ def fsdp_main():
     print_memory_summary("vit", "cuda")
 
     time.sleep(10)
-
+    '''
     if (
         cfg.load_model_checkpoint
         and cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT
@@ -652,6 +661,58 @@ def fsdp_main():
     # load optimizer checkpoint
     if cfg.load_optimizer:
         model_checkpointing.load_optimizer_checkpoint(model, optimizer, rank, cfg)
+    
+
+    '''config.train(
+                model,
+                data_loader,
+                None,
+                optimizer,
+                memmax,
+                local_rank,
+                tracking_duration,
+                total_steps,
+                use_synthetic_data=cfg.use_synthetic_data,
+                use_label_singular=use_label_singular,
+            )
+    '''
+    def train_step(model, optimizer, batch):
+        
+        optimizer.zero_grad()
+        output = model(
+                input_ids=batch["source_ids"],
+                attention_mask=batch["source_mask"],
+                labels=batch["target_ids"],
+            )
+        loss = output["loss"]
+        loss.backward()
+
+        optimizer.step()
+
+        return loss
+    
+    compiled_fn = spmd_compile(parallel_mode=DataParallel('fully_shard'))(
+            train_step
+        )
+    print(f"compiled function completed. ")
+
+    def get_batch():
+        # TODO - this is a broken get batch..will only work for one iter but that's the immediate goal.
+        # we normally run the entire batch
+        for batch in data_loader:
+            for key in batch.keys():
+                batch[key] = batch[key].to(local_rank)
+            return batch
+        
+    batch = get_batch()
+    
+    compiled_fn(model, optimizer, batch) 
+    
+    print(f"Success - one iteration completed.  Need to fix get_batch to run training loop")
+    #  None, , memmax, local_rank, total_steps_to_run=4)
+    dist.barrier()
+    cleanup()
+    #assert False, "good stop"
 
     torch_profiler = None
     total_steps = None
