@@ -41,7 +41,7 @@ class train_config(base_config):
 
     )
 
-    use_parallel_attention: bool = False
+    use_parallel_attention: bool = True
 
     # only relevant if using parallel_attention...
     # parallel attention outer projection fusion
