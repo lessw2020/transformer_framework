@@ -26,15 +26,15 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = 8
+    total_steps_to_run: int = 10
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         #"smartvit90"
-        #"631M"
-        "1B"
+        "631M"
+        #"1B"
         #"1.8B"
         #"4B"
         #"22B"
@@ -60,7 +60,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 20
+    batch_size_training: int = 24
 
     # use synthetic data
     use_synthetic_data: bool = False
@@ -304,7 +304,7 @@ def train(
     cfg = train_config()
     label_smoothing_amount = cfg.label_smoothing_value
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
-    t0 = time.perf_counter()
+    
     for batch_index, (batch) in enumerate(data_loader, start=1):
         # print(f"{batch=}")
         if use_synthetic_data:
@@ -316,20 +316,26 @@ def train(
         else:
             inputs = batch["pixel_values"]
             targets = batch["labels"]
+
         inputs, targets = inputs.to(torch.cuda.current_device()), torch.squeeze(
             targets.to(torch.cuda.current_device()), -1
         )
+
         if optimizer:
             optimizer.zero_grad()
+        t0 = time.perf_counter()
         outputs = model(inputs)
         loss = loss_function(outputs, targets)
         loss.backward()
+        mini_batch_time = time.perf_counter() - t0
+
         if optimizer:
             optimizer.step()
 
         # update durations and memory tracking
+        
+        mini_batch_time = time.perf_counter() - t0
         if local_rank == 0:
-            mini_batch_time = time.perf_counter() - t0
             tracking_duration.append(mini_batch_time)
             if memmax:
                 memmax.update()

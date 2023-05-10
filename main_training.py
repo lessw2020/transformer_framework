@@ -164,13 +164,15 @@ def fsdp_main():
 
     cfg = config.train_config()  # loads from defaults
 
-    torch.cuda.manual_seed(cfg.seed)
-    torch.manual_seed(cfg.seed)
+    
 
     # torchrun specific
     local_rank = int(os.environ["LOCAL_RANK"])
     rank = int(os.environ["RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
+
+    torch.cuda.manual_seed(cfg.seed+ local_rank)
+    torch.manual_seed(cfg.seed + local_rank)
 
     if rank == 0:
         print(f"--> World Size = {world_size}\n")
