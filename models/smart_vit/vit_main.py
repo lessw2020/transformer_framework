@@ -20,6 +20,7 @@ from collections import OrderedDict
 from weight_init.weight_init import trunc_normal_, lecun_normal_
 
 from packaging import version
+
 _logger = logging.getLogger(__name__)
 import torch.distributed as dist
 
@@ -191,7 +192,7 @@ class Attention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.fused_attn:
-            #_log(f"running fused attention")
+            # _log(f"running fused attention")
             x = F.scaled_dot_product_attention(
                 q,
                 k,
@@ -284,7 +285,9 @@ class ResPostBlock(nn.Module):
         drop_path=0.0,
         act_layer=nn.GELU,
         norm_layer=nn.LayerNorm,
-        use_fused_attention = True,
+        # dummy params only used in pattention_blocks, to keep things simple
+        use_fused_attention=True,
+        use_multi_query_attention=False,
     ):
         super().__init__()
         self.init_values = init_values
@@ -297,7 +300,7 @@ class ResPostBlock(nn.Module):
             attn_drop=attn_drop,
             proj_drop=proj_drop,
             norm_layer=norm_layer,
-            use_fused_attention=use_fused_attention
+            use_fused_attention=True,  # use_fused_attention,
         )
         self.norm1 = norm_layer(dim)
         self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
@@ -325,61 +328,64 @@ class ResPostBlock(nn.Module):
         return x
 
 
-# Merged impl 
-# add fused outer projection
-# add Scaled DPA option
-# standardize impl overall
-
-
 class ParallelAttentionBlock(nn.Module):
     """
-    Transformer layer multi-head attention and MLP, in a parallelized fashion rather than sequential, 
-    with optional attention masking. 
+    Transformer layer multi-head attention and MLP, in a parallelized fashion rather than sequential,
+    with optional attention masking.
     Inspired by PaLM:  https://arxiv.org/abs/2204.02311
 
     args & options TODO
-    Swish -> SwiGLU
-    Swish is termed SiLU in PyTorch (hence nn.SiLU)
+    * We use SwiGLU for the activation function
 
     """
-   
-    def __init__(self, 
-                 emb_dimension, 
-                 num_heads, 
-                 head_dimension = None, 
-                 mlp_expansion_ratio: float = 2.6875, # 8/3 is param matching
-                 use_in_projection_bias: bool = True, 
-                 qk_normalization: bool =True, 
-                 projection_dropout: float = 0.0, 
-                 attention_dropout: float = 0.0, 
-                 activation_fn = nn.SiLU, 
-                 normalization_layer=nn.LayerNorm, 
-                 use_scaled_dpa: bool =True, 
-                 use_upper_fusion: bool =True, 
-                 multi_query_attention: bool = False, 
-                 do_cross: bool = False, 
-                 use_cross_bias: bool = False):
-        
+
+    def __init__(
+        self,
+        emb_dimension,
+        num_heads,
+        head_dimension=None,
+        mlp_expansion_ratio: float = 2.6875,  # 8/3 is param matching
+        use_in_projection_bias: bool = True,
+        qk_normalization: bool = True,
+        projection_dropout: float = 0.0,
+        attention_dropout: float = 0.0,
+        normalization_layer=nn.LayerNorm,
+        use_scaled_dpa: bool = True,
+        multi_query_attention: bool = False,
+        use_out_projection_bias: bool = True,
+        do_cross: bool = False,
+    ):
         super().__init__()
 
+        version_check = not version.parse(torch.__version__) < version.parse("2.0.0")
+        assert (
+            version_check
+        ), f"Parallel Attention Blocks requires PT 2.0+, you are running {torch.__version__}.\nPlease upgrade your PyTorch version."
+
+        if dist.get_global_rank == 0:
+            if multi_query_attention:
+                print(f"^^^^  Using multi query attention!  ^^^^^^^")
         self.num_heads = num_heads
         self.emb_dim = emb_dimension
         self.head_dim = head_dimension if head_dimension else emb_dimension // num_heads
-        assert self.emb_dim % self.num_heads==0, f"dimensions {self.emb_dim.shape} must be evenly divisible by num_heads {num_heads=}"
-        
+        assert (
+            self.emb_dim % self.num_heads == 0
+        ), f"dimensions {self.emb_dim.shape} must be evenly divisible by num_heads {num_heads=}"
+
         self.mlp_hidden_dim = int(mlp_expansion_ratio * self.emb_dim)
-        self.mlp_activation = activation_fn
-        
+
         self.qk_norm: bool = qk_normalization
 
         self.attention_dropout = nn.Dropout(attention_dropout)
         self.mlp_dropout = nn.Dropout(projection_dropout)
-        self.mlp_activation = activation_fn()
+
+        # this is for the Swi in SwiGLU (Swish = SiLU in PT)
+        self.mlp_activation = nn.SiLU()
 
         self.single_kv = multi_query_attention
         self.do_cross = do_cross
         self.num_q = 2 if do_cross else 1
-        
+
         self.in_proj_dims = [
             self.head_dim * num_heads * self.num_q,
             self.head_dim if self.single_kv else self.head_dim * num_heads,
@@ -389,130 +395,152 @@ class ParallelAttentionBlock(nn.Module):
         ]  # q, k, v, mlp, gate
 
         self.flash_attention = use_scaled_dpa
-        if self.flash_attention:
-            version_check = not version.parse(torch.__version__) < version.parse('2.0.0')
-            flash_available_attr = hasattr(torch.nn.functional, "scaled_dot_product_attention") and self.attention_dropout.p == 0.0
-            assert flash_available_attr and version_check, f"Scaled DPA requires PT 2.0 and attention dropout = 0.0"
-        
-        self.fuse_out_proj = use_upper_fusion 
-        self.flash_attention = use_scaled_dpa
 
         # layer objects
-        self.in_normalization = normalization_layer(emb_dimension)
-        self.in_projection = nn.Linear(emb_dimension, sum(self.in_proj_dims), bias = use_in_projection_bias)
-        
+        self.in_norm = normalization_layer(emb_dimension)
+        self.in_proj = nn.Linear(
+            emb_dimension, sum(self.in_proj_dims), bias=use_in_projection_bias
+        )
 
         if do_cross:
             self.c_fused_dims = [
                 self.head_dim if self.single_kv else self.head_dim * num_heads,
-            ] * 2 # k and v projections from cross-input
-            self.c_w_in = nn.Linear(emb_dimension, sum(self.c_fused_dims), bias=use_cross_bias)
-            self.c_w_out = nn.Linear(num_heads * self.head_dim, emb_dimension, bias=use_cross_bias)
+            ] * 2  # k and v projections from cross-input
+            self.c_in_proj = nn.Linear(
+                emb_dimension, sum(self.c_fused_dims), bias=use_in_projection_bias
+            )
+            self.c_out_proj = nn.Linear(
+                num_heads * self.head_dim, emb_dimension, bias=False
+            )
             self.c_q_norm = normalization_layer(self.head_dim)
             self.c_k_norm = normalization_layer(self.head_dim)
 
         self.q_norm = normalization_layer(self.head_dim)
         self.k_norm = normalization_layer(self.head_dim)
-        
-        # fused out projection
-        if self.fuse_out_proj:
-            fused_out_input_dim = emb_dimension + self.mlp_hidden_dim 
-            self.out_fused_proj = nn.Linear(fused_out_input_dim, emb_dimension, bias = False)
-            #self.register_buffer("attn_out_bias", torch.zeros(dimension), persistent=False)
-            self.mlp_out_bias = nn.Parameter(torch.zeros(emb_dimension))
-        else:
-            self.attention_out_proj = nn.Linear(emb_dimension, emb_dimension, bias= False)
-            self.mlp_out_proj = nn.Linear(self.mlp_hidden_dim, emb_dimension, bias = True)
 
-    def forward(self, x, cross_x:bool  = False, mask=None, cross_mask = None, rel_pos_bias = None ):
+        # fused out projection
+        fused_out_input_dim = emb_dimension + self.mlp_hidden_dim
+        self.out_fused_proj = nn.Linear(
+            fused_out_input_dim, emb_dimension, bias=use_out_projection_bias
+        )
+
+    def forward(
+        self,
+        x,
+        cross_x: Optional[torch.Tensor] = None,
+        mask=None,
+        cross_mask=None,
+        rel_pos_bias=None,
+    ):
+        """TODO:  if using do_cross, this will not work for nn.Sequential"""
+
         # TODO: No kv cache support yet (add assert)
 
         batch_size, seq_len, channels = x.shape
-        
-        y = self.in_normalization(x)
-        y = self.in_projection(y)
+
+        y = self.in_norm(x)
+        y = self.in_proj(y)
 
         q, k, v, inner_mlp, gate = torch.split(y, self.in_proj_dims, dim=-1)
-        
+
         # b n nq h d
         q = q.view(batch_size, seq_len, self.num_q, self.num_heads, self.head_dim)
-        k = k.view(batch_size, seq_len, 1 if self.single_kv else self.num_heads, self.head_dim)
+        k = k.view(
+            batch_size, seq_len, 1 if self.single_kv else self.num_heads, self.head_dim
+        )
 
         if self.do_cross:
             # b h n d
-            cq = q[:,:, 1].transpose(2,1)
-        
+            cq = q[:, :, 1].transpose(2, 1)
+
         q = q[:, :, 0].transpose(2, 1)
+
         if self.qk_norm:
             q = self.q_norm(q)
             k = self.k_norm(k)
 
         if self.single_kv:
-            v = v.unsqueeze(1) # b 1 n d
+            v = v.unsqueeze(1)  # b 1 n d
         else:
-            v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(2,1) # b h n d
+            v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(
+                2, 1
+            )  # b h n d
 
         if self.flash_attention:
-            k = k.transpose(2,1) 
+            k = k.transpose(2, 1)
         else:
-            k = k.permute(0, 2, 3, 1) # b h d n
-        
+            k = k.permute(0, 2, 3, 1)  # b h d n
+
         if self.flash_attention:
             final_attn = F.scaled_dot_product_attention(
-                q, k, v,
-                dropout_p = self.attention_dropout.p,
+                q,
+                k,
+                v,
+                dropout_p=self.attention_dropout.p,
             )
-        
+
         else:
             final_attn = self._attend(q, k, self.head_dim, rel_pos_bias, mask)
             final_attn = final_attn.matmul(v)
-            
-        final_attn = final_attn.transpose(2,1).contiguous().view(
-            batch_size, seq_len, self.head_dim * self.num_heads)
-        
+
+        final_attn = (
+            final_attn.transpose(2, 1)
+            .contiguous()
+            .view(batch_size, seq_len, self.head_dim * self.num_heads)
+        )
+
         # swiglu
         activated_mlp = self.mlp_activation(inner_mlp) * gate
 
         if self.mlp_dropout.p:
             activated_mlp = self.mlp_dropout(activated_mlp)
-        
-        if self.fuse_out_proj:
-            y = torch.cat((final_attn, activated_mlp), dim=2) 
-            y = F.linear(y, self.out_fused_proj.weight, self.mlp_out_bias)
-        else:
-            final_mlp = self.mlp_out_proj(activated_mlp)
-            final_attn = self.attention_out_proj(final_attn)
-            y = final_attn+final_mlp
-        
+
+        y = torch.cat((final_attn, activated_mlp), dim=2)
+
+        y = self.out_fused_proj(y)
+
         # cross attention
         if self.do_cross:
             c_len = cross_x.size(1)
-            ck, cv = self.c_w_in(cross_x).split(self.c_fused_dims, dim=2)
-            ck = ck.view(batch_size, c_len, 1 if self.single_kv else self.num_heads, self.head_dim)
+            ck, cv = self.c_in_proj(cross_x).split(self.c_fused_dims, dim=2)
+            ck = ck.view(
+                batch_size,
+                c_len,
+                1 if self.single_kv else self.num_heads,
+                self.head_dim,
+            )
             if self.kq_norm:
                 cq = self.c_q_norm(cq)
                 ck = self.c_k_norm(ck)
+
             if self.single_kv:
                 cv = cv.unsqueeze(1)  # b 1 n d
             else:
                 cv = cv.view(
                     batch_size, c_len, self.num_heads, self.head_dim
-                ).transpose(2, 1)  # b h n d
-            ck = ck.permute(0, 2, 3, 1)  # b h d n
-            c_attn = self._attend(cq, ck, self.head_dim, None, cross_mask) # TODO: support flash attn under right conditions?
+                ).transpose(
+                    2, 1
+                )  # b h n d
 
-            if self.attention_dropout:
-                c_attn = self.attention_dropout(c_attn)
-            cattn = c_attn.matmul(cv).transpose(2, 1)  # b n h d
-            cattn = cattn.contiguous().view(
-                batch_size, seq_len, self.head_dim * self.num_heads
+            ck = ck.transpose(2, 1)  # b h n d
+
+            # We don't use relative biases, so mask can be passed as is
+            cattn = F.scaled_dot_product_attention(
+                cq, ck, cv, attn_mask=cross_mask, dropout_p=self.attention_dropout
             )
-            y = y + self.c_w_out(cattn)
-        
+
+            # b h n d -> b n h d -> b n h*d
+            cattn = (
+                cattn.transpose(2, 1)
+                .contiguous()
+                .view(batch_size, seq_len, self.head_dim * self.num_heads)
+            )
+            y = y + self.c_out_proj(cattn)
+
         # Add residual
         x = x + y
         return x
-    
+
     def _attend(self, q, k, d, rel_pos_bias, mask):
         scaled_dot = q.matmul(k).div(d**0.5)  # bs x nheads x q_len x kv_len
 
@@ -526,7 +554,7 @@ class ParallelAttentionBlock(nn.Module):
 
         return F.softmax(scaled_dot, dim=3)
 
-        
+
 # Code for weights init for PaLM blocks
 #            elif isinstance(module, UnifiedAttention):
 #                module.w_in.weight.data[:-module.mlp_inner*2
@@ -543,7 +571,6 @@ class ParallelAttentionBlock(nn.Module):
 #                    module.w2.bias.data.zero_()
 
 
-    
 class VisionTransformer(nn.Module):
     """Vision Transformer
 
@@ -583,6 +610,7 @@ class VisionTransformer(nn.Module):
         input_size=224,
         use_fused_attention: Optional[bool] = True,
         use_upper_fusion: Optional[bool] = True,
+        use_multi_query_attention: Optional[bool] = False,
     ):
         """
         Args:
@@ -655,13 +683,13 @@ class VisionTransformer(nn.Module):
             x.item() for x in torch.linspace(0, drop_path_rate, depth)
         ]  # stochastic depth decay rule
 
-        #def __init__(self, dimension, num_heads, mlp_ratio=4.0, gk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None, 
+        # def __init__(self, dimension, num_heads, mlp_ratio=4.0, gk_normalization=True, projection_drop = 0.0, attention_drop = 0.0, init_values=None,
         #         drop_path = 0.0, activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, use_scaled_dpa=True, use_attention_out_bias=True):
         if block_fn == ParallelAttentionBlock:
-            # dimension, num_heads, mlp_ratio=4.0, qk_normalization=True, 
-            #     projection_dropout = 0.0, attention_dropout = 0.0, 
-            #     activation_layer = nn.GELU, normalization_layer=nn.LayerNorm, 
-            #     use_scaled_dpa=True, use_upper_fusion=True, 
+            # dimension, num_heads, mlp_ratio=4.0, qk_normalization=True,
+            #     projection_dropout = 0.0, attention_dropout = 0.0,
+            #     activation_layer = nn.GELU, normalization_layer=nn.LayerNorm,
+            #     use_scaled_dpa=True, use_upper_fusion=True,
             #     use_attention_out_bias=True):
             self.blocks = nn.Sequential(
                 *[
@@ -671,12 +699,11 @@ class VisionTransformer(nn.Module):
                         mlp_expansion_ratio=mlp_ratio,
                         projection_dropout=proj_drop_rate,
                         attention_dropout=attn_drop_rate,
-                        #activation_layer=act_layer,
-                        #normalization_layer=norm_layer,
+                        # activation_layer=act_layer,
+                        # normalization_layer=norm_layer,
                         # use_attention_out_bias=True,
-                        use_scaled_dpa = use_fused_attention,
-                        use_upper_fusion = use_upper_fusion,
-                        
+                        use_scaled_dpa=use_fused_attention,
+                        multi_query_attention=use_multi_query_attention,
                     )
                     for i in range(depth)
                 ]
@@ -688,7 +715,7 @@ class VisionTransformer(nn.Module):
                         dim=embed_dim,
                         num_heads=num_heads,
                         mlp_ratio=mlp_ratio,
-                        #qkv_bias=qkv_bias,
+                        # qkv_bias=qkv_bias,
                         qk_norm=qk_norm,
                         init_values=init_values,
                         proj_drop=proj_drop_rate,
@@ -696,8 +723,7 @@ class VisionTransformer(nn.Module):
                         drop_path=dpr[i],
                         act_layer=act_layer,
                         norm_layer=norm_layer,
-                        use_fused_attention = use_fused_attention,
-                        
+                        # use_fused_attention=use_fused_attention,
                     )
                     for i in range(depth)
                 ]
@@ -906,30 +932,35 @@ def resize_pos_embed(
 
 def build_smart_vit(model_params):
     # need to improve this but works for now
-    use_parallel = model_params.get('use_parallel_attention', False)
+    print(f"{model_params}")
+    use_parallel = model_params.get("use_parallel_attention", False)
     use_fused_attention = model_params.get("use_fused_attention", False)
-    use_upper_fusion = model_params.get("use_upper_fusion", False)
+    # use_upper_fusion = model_params.get("use_upper_fusion", False)
+    use_mqa = model_params.get("use_multi_query_attention", False)
 
-    
     if use_parallel:
         print(f"Building with Parallel Layers Attention")
         block_function = ParallelAttentionBlock
-        del model_params['use_parallel_attention']  # models don't understand this
-        use_upper_fusion = use_upper_fusion
+        del model_params["use_parallel_attention"]  # models don't understand this
+        # use_upper_fusion = use_upper_fusion
+        multi_query_attention = use_mqa
+        del model_params["use_multi_query_attention"]
 
     else:
         print(f"Building with Sequential Attention")
         block_function = ResPostBlock
+        multi_query_attention = False  # does not exist in sequential
 
     model_kwargs = dict(
         qkv_bias=False,
-        qk_norm=True, 
+        qk_norm=True,
         block_fn=block_function,
         no_embed_class=True,
-        use_upper_fusion = use_upper_fusion,
-        use_fused_attention = use_fused_attention,
+        # use_upper_fusion=use_upper_fusion,
+        use_fused_attention=use_fused_attention,
+        use_multi_query_attention=multi_query_attention,
     )
-    
+
     merged_vals = {**model_kwargs, **model_params}
 
     model = VisionTransformer(**merged_vals)

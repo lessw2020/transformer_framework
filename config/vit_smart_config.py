@@ -1,6 +1,7 @@
 import time
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Optional
+from torch import Tensor
 import os
 
 import torch
@@ -32,20 +33,18 @@ class train_config(base_config):
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
-        #"smartvit90"
+        # "smartvit90"
         "631M"
-        #"1B"
-        #"1.8B"
-        #"4B"
-        #"22B"
-
+        # "1B"
+        # "1.8B"
+        # "4B"
+        # "22B"
     )
 
-    use_parallel_attention: bool = True
+    use_parallel_attention: bool = False
 
-    # only relevant if using parallel_attention...
-    # parallel attention outer projection fusion
-    use_upper_fusion: bool = True  
+    # only relevant if use_parallel_attention True
+    use_multi_query_attention: bool = False
 
     # use scaled dot product attention
     use_fused_attention: bool = True
@@ -118,9 +117,14 @@ class train_config(base_config):
     checkpoint_model_filename: str = "vit--1.pt"
 
 
-def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel_attention=True, use_upper_fusion=True, use_fused_attention=True):
-
-
+def build_model(
+    model_size: str,
+    layernorm_eps_in: float = 1e-6,
+    use_parallel_attention=True,
+    use_upper_fusion=True,
+    use_fused_attention=True,
+    use_multi_query_attention=False,
+):
     if model_size == "smartvit90":
         model_args = {
             "patch_size": 16,
@@ -129,10 +133,8 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel_at
             "num_heads": 12,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            
         }
     elif model_size == "631M":
-
         model_args = {
             "patch_size": 14,
             "embed_dim": 1280,
@@ -140,67 +142,61 @@ def build_model(model_size: str, layernorm_eps_in: float = 1e-6, use_parallel_at
             "num_heads": 16,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            
         }
     elif model_size == "1B":
-        #model_args = dict(patch_size=14, embed_dim=1408, mlp_ratio=48/11, depth=40, num_heads=16)
+        # model_args = dict(patch_size=14, embed_dim=1408, mlp_ratio=48/11, depth=40, num_heads=16)
         model_args = {
             "patch_size": 14,
             "embed_dim": 1408,
-            "mlp_ratio":48/11,
+            "mlp_ratio": 48 / 11,
             "depth": 40,
             "num_heads": 16,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            
         }
-    elif model_size =="1.8B":
+    elif model_size == "1.8B":
         # model_args = dict(patch_size=14, embed_dim=1664, mlp_ratio=64/13, depth=48, num_heads=16)
         model_args = {
             "patch_size": 14,
             "embed_dim": 1664,
-            "mlp_ratio":64/13,
+            "mlp_ratio": 64 / 13,
             "depth": 48,
             "num_heads": 16,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            
         }
     elif model_size == "4B":
         model_args = {
             "patch_size": 14,
             "embed_dim": 1792,
-            "mlp_ratio":8.571428571428571,
+            "mlp_ratio": 8.571428571428571,
             "depth": 56,
             "num_heads": 16,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            
         }
     elif model_size == "22B":
         model_args = {
             "patch_size": 14,
             "embed_dim": 6144,
-            #"mlp_ratio":4.0,
+            # "mlp_ratio":4.0,
             "depth": 48,
             "num_heads": 48,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
-            
         }
 
-
-
     # core model args
-    #model_args["layernorm_eps"] = layernorm_eps_in
+    # model_args["layernorm_eps"] = layernorm_eps_in
 
     # current control over parallel vs sequential attention blocks
     if use_parallel_attention:
-        model_args["use_parallel_attention"]= True
+        model_args["use_parallel_attention"] = True
     if use_fused_attention:
-        model_args["use_fused_attention"]=True
+        model_args["use_fused_attention"] = True
     if use_upper_fusion:
-        model_args["use_upper_fusion"]=True
+        model_args["use_upper_fusion"] = True
+    model_args["use_multi_query_attention"] = use_multi_query_attention
 
     assert model_args.get(
         "image_size"
@@ -275,10 +271,11 @@ def get_universal_dataset():
 
 
 def get_policy():
-    #return None
+    # return None
     cfg = train_config()
     # todo - can't use autowrap policy with 2d
     from models.smart_vit.vit_main import ParallelAttentionBlock, ResPostBlock
+
     if cfg.use_parallel_attention:
         return get_policy_base({ParallelAttentionBlock})
     else:
@@ -304,7 +301,7 @@ def train(
     cfg = train_config()
     label_smoothing_amount = cfg.label_smoothing_value
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
-    
+
     for batch_index, (batch) in enumerate(data_loader, start=1):
         # print(f"{batch=}")
         if use_synthetic_data:
@@ -333,7 +330,7 @@ def train(
             optimizer.step()
 
         # update durations and memory tracking
-        
+
         mini_batch_time = time.perf_counter() - t0
         if local_rank == 0:
             tracking_duration.append(mini_batch_time)
