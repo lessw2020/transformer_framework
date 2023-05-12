@@ -41,7 +41,7 @@ class train_config(base_config):
         # "22B"
     )
 
-    use_parallel_attention: bool = False
+    use_parallel_attention: bool = True
 
     # only relevant if use_parallel_attention True
     use_multi_query_attention: bool = True
@@ -59,7 +59,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 24
+    batch_size_training: int = 30
 
     # use synthetic data
     use_synthetic_data: bool = False
