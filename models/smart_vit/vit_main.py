@@ -345,13 +345,12 @@ class ParallelAttentionBlock(nn.Module):
         num_heads,
         head_dimension=None,
         mlp_expansion_ratio: float = 2.6875,  # 8/3 is param matching
-        use_in_projection_bias: bool = True,
         qk_normalization: bool = True,
         projection_dropout: float = 0.0,
         attention_dropout: float = 0.0,
-        normalization_layer=nn.LayerNorm,
         use_scaled_dpa: bool = True,
-        multi_query_attention: bool = False,
+        use_multi_query_attention: bool = False,
+        use_in_projection_bias: bool = True,
         use_out_projection_bias: bool = True,
         do_cross: bool = False,
     ):
@@ -362,9 +361,6 @@ class ParallelAttentionBlock(nn.Module):
             version_check
         ), f"Parallel Attention Blocks requires PT 2.0+, you are running {torch.__version__}.\nPlease upgrade your PyTorch version."
 
-        if dist.get_global_rank == 0:
-            if multi_query_attention:
-                print(f"^^^^  Using multi query attention!  ^^^^^^^")
         self.num_heads = num_heads
         self.emb_dim = emb_dimension
         self.head_dim = head_dimension if head_dimension else emb_dimension // num_heads
@@ -379,10 +375,11 @@ class ParallelAttentionBlock(nn.Module):
         self.attention_dropout = nn.Dropout(attention_dropout)
         self.mlp_dropout = nn.Dropout(projection_dropout)
 
-        # this is for the Swi in SwiGLU (Swish = SiLU in PT)
+        # previous init params, moved to internal defaults for streamlining
+        normalization_layer = nn.LayerNorm
         self.mlp_activation = nn.SiLU()
 
-        self.single_kv = multi_query_attention
+        self.single_kv = use_multi_query_attention
         self.do_cross = do_cross
         self.num_q = 2 if do_cross else 1
 
@@ -447,10 +444,10 @@ class ParallelAttentionBlock(nn.Module):
         q = q.view(batch_size, seq_len, self.num_q, self.num_heads, self.head_dim)
         k = k.view(
             batch_size, seq_len, 1 if self.single_kv else self.num_heads, self.head_dim
-        )
+        )  # b n hnum dimh
 
         if self.do_cross:
-            # b h n d
+            # b hnum n dimh
             cq = q[:, :, 1].transpose(2, 1)
 
         q = q[:, :, 0].transpose(2, 1)
@@ -460,16 +457,16 @@ class ParallelAttentionBlock(nn.Module):
             k = self.k_norm(k)
 
         if self.single_kv:
-            v = v.unsqueeze(1)  # b 1 n d
+            v = v.unsqueeze(1)  # b 1 n dimh
         else:
             v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(
                 2, 1
-            )  # b h n d
+            )  # b hnum n dimh
 
         if self.flash_attention:
-            k = k.transpose(2, 1)
+            k = k.transpose(2, 1)  # b hnum n dimh
         else:
-            k = k.permute(0, 2, 3, 1)  # b h d n
+            k = k.permute(0, 2, 3, 1)  # b hnum dimh n
 
         if self.flash_attention:
             final_attn = F.scaled_dot_product_attention(
@@ -699,11 +696,8 @@ class VisionTransformer(nn.Module):
                         mlp_expansion_ratio=mlp_ratio,
                         projection_dropout=proj_drop_rate,
                         attention_dropout=attn_drop_rate,
-                        # activation_layer=act_layer,
-                        # normalization_layer=norm_layer,
-                        # use_attention_out_bias=True,
                         use_scaled_dpa=use_fused_attention,
-                        multi_query_attention=use_multi_query_attention,
+                        use_multi_query_attention=use_multi_query_attention,
                     )
                     for i in range(depth)
                 ]
@@ -943,13 +937,13 @@ def build_smart_vit(model_params):
         block_function = ParallelAttentionBlock
         del model_params["use_parallel_attention"]  # models don't understand this
         # use_upper_fusion = use_upper_fusion
-        multi_query_attention = use_mqa
+        use_multi_query_attention = use_mqa
         del model_params["use_multi_query_attention"]
 
     else:
         print(f"Building with Sequential Attention")
         block_function = ResPostBlock
-        multi_query_attention = False  # does not exist in sequential
+        use_multi_query_attention = False  # does not exist in sequential
 
     model_kwargs = dict(
         qkv_bias=False,
@@ -958,7 +952,7 @@ def build_smart_vit(model_params):
         no_embed_class=True,
         # use_upper_fusion=use_upper_fusion,
         use_fused_attention=use_fused_attention,
-        use_multi_query_attention=multi_query_attention,
+        use_multi_query_attention=use_multi_query_attention,
     )
 
     merged_vals = {**model_kwargs, **model_params}

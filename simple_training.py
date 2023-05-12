@@ -36,7 +36,6 @@ def print_model(model, file_name, rank):
 
     fn = file_name
     with open(fn, "w") as external_file:
-
         print(f"model wrapping = \n{model}\n\n", file=external_file)
 
         external_file.close()
@@ -238,9 +237,7 @@ def fsdp_main():
         )
         # checkpointing for model and optimizer
         if cfg.save_model_checkpoint:
-
             if cfg.checkpoint_type == StateDictType.FULL_STATE_DICT:
-
                 model_checkpointing.save_model_checkpoint(
                     model, optimizer, rank, cfg, epoch=1
                 )
@@ -254,7 +251,6 @@ def fsdp_main():
 
     # memory summary
     if local_rank == 0:
-
         # memory monitor
         memmax.stop()  # stop and display info
 

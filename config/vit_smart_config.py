@@ -44,7 +44,7 @@ class train_config(base_config):
     use_parallel_attention: bool = False
 
     # only relevant if use_parallel_attention True
-    use_multi_query_attention: bool = False
+    use_multi_query_attention: bool = True
 
     # use scaled dot product attention
     use_fused_attention: bool = True
