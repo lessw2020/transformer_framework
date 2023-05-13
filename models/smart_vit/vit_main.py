@@ -41,6 +41,7 @@ def named_apply(
     depth_first: bool = True,
     include_root: bool = False,
 ) -> nn.Module:
+    print(f"")
     if not depth_first and include_root:
         fn(module=module, name=name)
     for child_name, child_module in module.named_children():
@@ -353,6 +354,9 @@ class ParallelAttentionBlock(nn.Module):
         use_in_projection_bias: bool = True,
         use_out_projection_bias: bool = True,
         do_cross: bool = False,
+        use_weight_init: bool = True,
+        weight_init_style: str = "trunc",  # trunc, llama, palm
+        num_layers: int = 1,
     ):
         super().__init__()
 
@@ -374,6 +378,12 @@ class ParallelAttentionBlock(nn.Module):
 
         self.attention_dropout = nn.Dropout(attention_dropout)
         self.mlp_dropout = nn.Dropout(projection_dropout)
+
+        self.num_layers = num_layers
+        self.init_style = weight_init_style
+
+        self.use_in_projection_bias = use_in_projection_bias
+        self.use_out_projection_bias = use_out_projection_bias
 
         # previous init params, moved to internal defaults for streamlining
         normalization_layer = nn.LayerNorm
@@ -420,6 +430,73 @@ class ParallelAttentionBlock(nn.Module):
         self.out_fused_proj = nn.Linear(
             fused_out_input_dim, emb_dimension, bias=use_out_projection_bias
         )
+
+        # init weights
+        if use_weight_init:
+            if self.init_style != "palm":
+                self.apply(self._init_weights)
+            else:
+                self._init_weights_palm()
+
+    def _init_weights_palm(
+        self,
+    ):
+        """Implement PaLM style init for fused projections"""
+        # TODO - this needs a code review...
+
+        in_width = sum(self.in_proj_dims)
+        mlp_section = self.mlp_hidden_dim * 2
+
+        self.in_proj.weight.data[:-mlp_section].normal_(
+            0, 1 / math.sqrt(in_width)
+        )  # qkv, fan in
+        self.in_proj.weight.data[-mlp_section : -self.mlp_hidden_dim].normal_(
+            0, 1 / math.sqrt(in_width)
+        )  # mlp, fan in
+        self.in_proj.weight.data[-self.mlp_hidden_dim :].normal_(
+            0, 1 / math.sqrt(in_width)
+        )  # mlp, fan out
+
+        if self.in_proj.bias is not None:
+            nn.init.zeros_(self.in_proj.bias)
+
+        # upper projection layer
+        self.out_proj = self.out_fused_proj
+        out_width = self.emb_dim + self.mlp_hidden_dim
+
+        self.out_proj.weight.data[: -self.mlp_hidden_dim].normal_(
+            0, 1 / math.sqrt(self.emb_dim)
+        )  # fan in
+        self.out_proj.weight.data[-self.mlp_hidden_dim :].normal_(
+            0, 1 / math.sqrt(self.mlp_hidden_dim)
+        )  # fan out
+
+        if self.out_fused_proj.bias is not None:
+            nn.init.zeros_(self.in_proj.bias)
+
+        print(f"PALM style INIT")
+
+    def _init_weights(self, module: nn.Module):
+        """init weights using a style"""
+        if isinstance(module, nn.Linear):
+            if self.init_style == "trunc":
+                nn.init.trunc_normal_(module.weight, std=0.02)
+                print(f"Trunc style INIT")
+            elif self.init_style == "llama":
+                assert (
+                    self.num_layers > 1
+                ), f"Need to pass in global num layers for this style"
+                torch.nn.init.normal_(
+                    module.weight,
+                    mean=0.0,
+                    std=0.02 / math.sqrt(2 * self.num_layers),
+                )
+                print(f"LLama style INIT")
+            else:
+                assert False, f"weight init style {self.init_style=} is not supported"
+
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
 
     def forward(
         self,
@@ -552,22 +629,6 @@ class ParallelAttentionBlock(nn.Module):
         return F.softmax(scaled_dot, dim=3)
 
 
-# Code for weights init for PaLM blocks
-#            elif isinstance(module, UnifiedAttention):
-#                module.w_in.weight.data[:-module.mlp_inner*2
-#                                       ].normal_(0, 1/math.sqrt(self.width)) # q/k/v, fan out
-#                module.w_in.weight.data[-module.mlp_inner*2:-module.mlp_inner
-#                                        ].normal_(0, math.sqrt(2)/math.sqrt(self.width)) # mlp, fan out
-#                module.w_in.weight.data[-module.mlp_inner:
-#                                        ].normal_(0, 1/math.sqrt(self.width)) # mlp, fan out
-#                module.fc.weight.data.normal_(0, 1/math.sqrt(module.emb_v_per_head*module.nheads)) # Fan out
-#                module.w2.weight.data.normal_(0, 1/math.sqrt(module.mlp_inner)) # Fan out
-#                if module.use_bias:
-#                    module.w_in.bias.data.zero_()
-#                    module.fc.bias.data.zero_()
-#                    module.w2.bias.data.zero_()
-
-
 class VisionTransformer(nn.Module):
     """Vision Transformer
 
@@ -698,6 +759,8 @@ class VisionTransformer(nn.Module):
                         attention_dropout=attn_drop_rate,
                         use_scaled_dpa=use_fused_attention,
                         use_multi_query_attention=use_multi_query_attention,
+                        weight_init_style="llama",
+                        num_layers=depth,
                     )
                     for i in range(depth)
                 ]
@@ -733,16 +796,20 @@ class VisionTransformer(nn.Module):
         )
 
         if weight_init != "skip":
-            self.init_weights(weight_init)
+            patten_block = False
+            if block_fn == ParallelAttentionBlock:
+                patten_block = True
+            self.init_weights(weight_init, is_pattn=patten_block)
 
-    def init_weights(self, mode=""):
+    def init_weights(self, mode="", is_pattn: bool = False):
         _log(f"init mode = {mode=}")
         assert mode in ("jax", "jax_nlhb", "moco", "")
         head_bias = -math.log(self.num_classes) if "nlhb" in mode else 0.0
         trunc_normal_(self.pos_embed, std=0.02)
         if self.cls_token is not None:
             nn.init.normal_(self.cls_token, std=1e-6)
-        named_apply(get_init_weights_vit(mode, head_bias), self)
+        if not is_pattn:
+            named_apply(get_init_weights_vit(mode, head_bias), self)
 
     def _init_weights(self, m):
         # this fn left here for compat with downstream users
@@ -827,10 +894,14 @@ class VisionTransformer(nn.Module):
 def init_weights_vit_timm(module: nn.Module, name: str = ""):
     """ViT weight initialization, original timm impl (for reproducibility)"""
     if isinstance(module, nn.Linear):
-        trunc_normal_(module.weight, std=0.02)
+        # print(f"=====>  {module=}")
+        nn.init.trunc_normal_(module.weight, std=0.02)
+        # trunc_normal_(module.weight, std=0.02)
         if module.bias is not None:
             nn.init.zeros_(module.bias)
     elif hasattr(module, "init_weights"):
+        # assert False, "module init"
+        print(f"init_weights, module {module=}")
         module.init_weights()
 
 
