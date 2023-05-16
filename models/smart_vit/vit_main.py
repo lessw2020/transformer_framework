@@ -349,13 +349,11 @@ class ParallelAttentionBlock(nn.Module):
         qk_normalization: bool = True,
         projection_dropout: float = 0.0,
         attention_dropout: float = 0.0,
-        use_scaled_dpa: bool = True,
         use_multi_query_attention: bool = False,
         use_in_projection_bias: bool = True,
         use_out_projection_bias: bool = True,
         do_cross: bool = False,
         use_weight_init: bool = True,
-        weight_init_style: str = "trunc",  # trunc, llama, palm
         num_layers: int = 1,
     ):
         super().__init__()
@@ -379,8 +377,15 @@ class ParallelAttentionBlock(nn.Module):
         self.attention_dropout = nn.Dropout(attention_dropout)
         self.mlp_dropout = nn.Dropout(projection_dropout)
 
+        # weight init
         self.num_layers = num_layers
-        self.init_style = weight_init_style
+        self.use_weight_init = use_weight_init
+        if self.use_weight_init:
+            assert (
+                self.num_layers > 1
+            ), f"Need to pass in global num layers for weight init"
+
+        self.weight_init_standard_dev = 0.02 / math.sqrt(2 * self.num_layers)
 
         self.use_in_projection_bias = use_in_projection_bias
         self.use_out_projection_bias = use_out_projection_bias
@@ -400,8 +405,6 @@ class ParallelAttentionBlock(nn.Module):
             self.mlp_hidden_dim,
             self.mlp_hidden_dim,
         ]  # q, k, v, mlp, gate
-
-        self.flash_attention = use_scaled_dpa
 
         # layer objects
         self.in_norm = normalization_layer(emb_dimension)
@@ -433,78 +436,28 @@ class ParallelAttentionBlock(nn.Module):
 
         # init weights
         if use_weight_init:
-            if self.init_style != "palm":
-                self.apply(self._init_weights)
-            else:
-                self._init_weights_palm()
-
-    def _init_weights_palm(
-        self,
-    ):
-        """Implement PaLM style init for fused projections"""
-        # TODO - this needs a code review...
-
-        in_width = sum(self.in_proj_dims)
-        mlp_section = self.mlp_hidden_dim * 2
-
-        self.in_proj.weight.data[:-mlp_section].normal_(
-            0, 1 / math.sqrt(in_width)
-        )  # qkv, fan in
-        self.in_proj.weight.data[-mlp_section : -self.mlp_hidden_dim].normal_(
-            0, 1 / math.sqrt(in_width)
-        )  # mlp, fan in
-        self.in_proj.weight.data[-self.mlp_hidden_dim :].normal_(
-            0, 1 / math.sqrt(in_width)
-        )  # mlp, fan out
-
-        if self.in_proj.bias is not None:
-            nn.init.zeros_(self.in_proj.bias)
-
-        # upper projection layer
-        self.out_proj = self.out_fused_proj
-        out_width = self.emb_dim + self.mlp_hidden_dim
-
-        self.out_proj.weight.data[: -self.mlp_hidden_dim].normal_(
-            0, 1 / math.sqrt(self.emb_dim)
-        )  # fan in
-        self.out_proj.weight.data[-self.mlp_hidden_dim :].normal_(
-            0, 1 / math.sqrt(self.mlp_hidden_dim)
-        )  # fan out
-
-        if self.out_fused_proj.bias is not None:
-            nn.init.zeros_(self.in_proj.bias)
-
-        print(f"PALM style INIT")
+            self.apply(self._init_weights)
 
     def _init_weights(self, module: nn.Module):
-        """init weights using a style"""
+        """init weights using trunc + llama style depth scaling"""
         if isinstance(module, nn.Linear):
-            if self.init_style == "trunc":
-                nn.init.trunc_normal_(module.weight, std=0.02)
-                print(f"Trunc style INIT")
-            elif self.init_style == "llama":
-                assert (
-                    self.num_layers > 1
-                ), f"Need to pass in global num layers for this style"
-                torch.nn.init.normal_(
-                    module.weight,
-                    mean=0.0,
-                    std=0.02 / math.sqrt(2 * self.num_layers),
-                )
-                print(f"LLama style INIT")
-            else:
-                assert False, f"weight init style {self.init_style=} is not supported"
+            torch.nn.init.trunc_normal_(
+                module.weight,
+                mean=0.0,
+                # std_dev = 0.02 / math.sqrt(2 * self.num_layers)
+                std=self.weight_init_standard_dev,
+            )
 
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
 
     def forward(
         self,
-        x,
+        x: torch.Tensor,
         cross_x: Optional[torch.Tensor] = None,
-        mask=None,
-        cross_mask=None,
-        rel_pos_bias=None,
+        mask: Optional[torch.Tensor] = None,
+        cross_mask: Optional[torch.Tensor] = None,
+        rel_pos_bias: Optional[torch.Tensor] = None,
     ):
         """TODO:  if using do_cross, this will not work for nn.Sequential"""
 
@@ -540,22 +493,29 @@ class ParallelAttentionBlock(nn.Module):
                 2, 1
             )  # b hnum n dimh
 
-        if self.flash_attention:
-            k = k.transpose(2, 1)  # b hnum n dimh
-        else:
-            k = k.permute(0, 2, 3, 1)  # b hnum dimh n
+        k = k.transpose(2, 1)  # b hnum n dimh
 
-        if self.flash_attention:
-            final_attn = F.scaled_dot_product_attention(
-                q,
-                k,
-                v,
-                dropout_p=self.attention_dropout.p,
-            )
-
+        # Merge rel pos bias and mask into single float mask
+        if rel_pos_bias is None:
+            # Given SDPA API, we expect users to either provide a boolean mask if
+            # they expect masked_fill to be done inside SDPA, or provide the float
+            # mask already with the correct -inf
+            attn_mask = mask  # b? ...? nq nk
         else:
-            final_attn = self._attend(q, k, self.head_dim, rel_pos_bias, mask)
-            final_attn = final_attn.matmul(v)
+            attn_mask = rel_pos_bias  # b? ...? nq nk
+
+            # We expect the shapes of mask and rel_pos_bias to be at least broadcastable
+            if mask is not None:
+                # Can't do in-place op in case broadcast makes attn_mask bigger
+                attn_mask = attn_mask.masked_fill(mask == 0, -float("inf"))
+
+        final_attn = F.scaled_dot_product_attention(
+            q,
+            k,
+            v,
+            attn_mask=attn_mask,
+            dropout_p=self.attention_dropout.p,
+        )
 
         final_attn = (
             final_attn.transpose(2, 1)
@@ -614,19 +574,6 @@ class ParallelAttentionBlock(nn.Module):
         # Add residual
         x = x + y
         return x
-
-    def _attend(self, q, k, d, rel_pos_bias, mask):
-        scaled_dot = q.matmul(k).div(d**0.5)  # bs x nheads x q_len x kv_len
-
-        if rel_pos_bias is not None:
-            scaled_dot = scaled_dot + rel_pos_bias
-
-        if mask is not None:
-            while len(mask.size()) != 4:  # expects bs (x nheads) x q_len x kv_len
-                mask = mask.unsqueeze(1)
-            scaled_dot = scaled_dot.masked_fill(mask == 0, -1e9)
-
-        return F.softmax(scaled_dot, dim=3)
 
 
 class VisionTransformer(nn.Module):
@@ -757,9 +704,7 @@ class VisionTransformer(nn.Module):
                         mlp_expansion_ratio=mlp_ratio,
                         projection_dropout=proj_drop_rate,
                         attention_dropout=attn_drop_rate,
-                        use_scaled_dpa=use_fused_attention,
                         use_multi_query_attention=use_multi_query_attention,
-                        weight_init_style="llama",
                         num_layers=depth,
                     )
                     for i in range(depth)
@@ -785,7 +730,8 @@ class VisionTransformer(nn.Module):
                     for i in range(depth)
                 ]
             )
-
+        if dist.get_rank() == 0:
+            print(f"Model has {depth} layers\n")
         self.norm = norm_layer(embed_dim) if not use_fc_norm else nn.Identity()
 
         # Classifier Head

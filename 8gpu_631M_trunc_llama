@@ -1,0 +1,979 @@
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+--> World Size = 8
+
+--> Device_count = 8
+--> running with these defaults train_config(seed=2023, verbose=True, total_steps_to_run=None, warmup_steps=3, print_memory_summary=False, num_epochs=2, model_weights_bf16=False, use_mixed_precision=True, use_low_precision_gradient_policy=False, use_tf32=True, optimizer='AdamW', ap_use_kahan_summation=False, sharding_strategy=<ShardingStrategy.FULL_SHARD: 1>, print_sharding_plan=False, run_profiler=False, profile_folder='tp_fsdp/profile_tracing', log_every=1, num_workers_dataloader=2, batch_size_training=24, fsdp_activation_checkpointing=False, run_validation=True, memory_report=True, nccl_debug_handler=True, distributed_debug=True, use_non_recursive_wrapping=False, use_parallel_attention=True, use_multi_query_attention=False, use_fused_attention=True, use_tp=False, image_size=224, use_synthetic_data=False, use_pokemon_dataset=False, use_beans_dataset=False, save_model_checkpoint=False, load_model_checkpoint=False, checkpoint_max_save_count=2, save_optimizer=False, load_optimizer=False, optimizer_checkpoint_file='Adam-vit--1.pt', checkpoint_model_filename='vit--1.pt')
+clearing gpu cache for all ranks
+--> running with torch dist debug set to detail
+--> total memory per gpu (GB) = 22.035
+wrapping policy is functools.partial(<function transformer_auto_wrap_policy at 0x7efe357fa040>, transformer_layer_cls={<class 'models.smart_vit.vit_main.ParallelAttentionBlock'>})
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+******************* bulding the model here ************
+LLama style INIT
+LLama style INIT
+LLama style INIT
+**** Use MQA = False
+LLama style INIT
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+
+--> Prepping 631M model ...
+
+stats is ready....? _stats=defaultdict(<class 'list'>, {'best_accuracy': 0.0}), local_rank=0, rank=0
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+******************* bulding the model here ************
+**** Use MQA = False
+{'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': False}
+Building with Parallel Layers Attention
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INITLLama style INIT
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+Model has 32 layers
+
+LLama style INIT
+LLama style INIT
+LLama style INIT
+vit, GPU peak memory allocation: 0.0GB, GPU peak memory reserved: 0.0GB, GPU peak memory active: 0.0GB
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+LLama style INIT
+--> 631M built.
+built model with 635.267456M params
+bf16 check passed
+
+--> Running with mixed precision MixedPrecision(param_dtype=torch.bfloat16, reduce_dtype=torch.bfloat16, buffer_dtype=torch.bfloat16, keep_low_precision_grads=False, cast_forward_inputs=False, cast_root_forward_inputs=True) policy
+backward prefetch set to BackwardPrefetch.BACKWARD_PRE
+sharding set to ShardingStrategy.FULL_SHARD
+--> Batch Size = 24
+vit, GPU peak memory allocation: 0.0GB, GPU peak memory reserved: 0.0GB, GPU peak memory active: 0.0GB
+local rank 0 init time = 10.773164509000026
+memory stats reset, ready to track
+Running with AdamW optimizer, with fusion set to True
+Epoch: 0 starting...
+step: 1: time taken for the last 1 steps is 3.6783290079999915, loss is 6.90625
+step: 2: time taken for the last 1 steps is 2.0938441810000086, loss is 6.90625
+step: 3: time taken for the last 1 steps is 2.1095253569999954, loss is 6.90625
+step: 4: time taken for the last 1 steps is 2.1096925389999797, loss is 6.90625
+step: 5: time taken for the last 1 steps is 2.0986985950000303, loss is 6.90625
+step: 6: time taken for the last 1 steps is 2.085672843999987, loss is 6.90625
+step: 7: time taken for the last 1 steps is 2.0864165539999817, loss is 6.90625
+step: 8: time taken for the last 1 steps is 2.1176690539999754, loss is 6.90625
+step: 9: time taken for the last 1 steps is 2.0983382510000297, loss is 6.90625
+step: 10: time taken for the last 1 steps is 2.1032958559999884, loss is 6.90625
+step: 11: time taken for the last 1 steps is 2.1065488579999965, loss is 6.90625
+step: 12: time taken for the last 1 steps is 2.101775915000019, loss is 6.875
+step: 13: time taken for the last 1 steps is 2.112647548000041, loss is 6.875
+step: 14: time taken for the last 1 steps is 2.1201102869999886, loss is 6.875
+step: 15: time taken for the last 1 steps is 2.1016662740000243, loss is 6.875
+step: 16: time taken for the last 1 steps is 2.1112557739999716, loss is 6.875
+step: 17: time taken for the last 1 steps is 2.103962562999982, loss is 6.875
+step: 18: time taken for the last 1 steps is 2.1065280400000006, loss is 6.875
+step: 19: time taken for the last 1 steps is 2.1068397340000047, loss is 6.875
+step: 20: time taken for the last 1 steps is 2.1056063269999754, loss is 6.875
+step: 21: time taken for the last 1 steps is 2.1333095370000024, loss is 6.875
+step: 22: time taken for the last 1 steps is 2.1111205849999806, loss is 6.875
+step: 23: time taken for the last 1 steps is 2.107321071000001, loss is 6.875
+step: 24: time taken for the last 1 steps is 2.11718621, loss is 6.875
+step: 25: time taken for the last 1 steps is 2.11138661800004, loss is 6.875
+step: 26: time taken for the last 1 steps is 2.1078201579999813, loss is 6.875
+step: 27: time taken for the last 1 steps is 2.1273712330000194, loss is 6.875
+step: 28: time taken for the last 1 steps is 2.1112857759999883, loss is 6.875
+step: 29: time taken for the last 1 steps is 2.1203168739999683, loss is 6.875
+step: 30: time taken for the last 1 steps is 2.112497553999958, loss is 6.875
+step: 31: time taken for the last 1 steps is 2.105489395999996, loss is 6.875
+step: 32: time taken for the last 1 steps is 2.091647880000039, loss is 6.84375
+step: 33: time taken for the last 1 steps is 2.1017928149999534, loss is 6.84375
+step: 34: time taken for the last 1 steps is 2.1136634360000244, loss is 6.84375
+step: 35: time taken for the last 1 steps is 2.0963417610000192, loss is 6.84375
+step: 36: time taken for the last 1 steps is 2.099922365999987, loss is 6.84375
+step: 37: time taken for the last 1 steps is 2.109125726000002, loss is 6.84375
+step: 38: time taken for the last 1 steps is 2.108472457000005, loss is 6.84375
+step: 39: time taken for the last 1 steps is 2.113353621999977, loss is 6.84375
+step: 40: time taken for the last 1 steps is 2.132474272999957, loss is 6.84375
+step: 41: time taken for the last 1 steps is 2.0880472149999605, loss is 6.84375
+step: 42: time taken for the last 1 steps is 2.1184877900000174, loss is 6.84375
+step: 43: time taken for the last 1 steps is 2.105136915999992, loss is 6.84375
+step: 44: time taken for the last 1 steps is 2.112246894000009, loss is 6.84375
+step: 45: time taken for the last 1 steps is 2.100101198999937, loss is 6.84375
+step: 46: time taken for the last 1 steps is 2.130359301999988, loss is 6.84375
+step: 47: time taken for the last 1 steps is 2.0921941070000685, loss is 6.84375
+step: 48: time taken for the last 1 steps is 2.107078549999983, loss is 6.84375
+step: 49: time taken for the last 1 steps is 2.100387167000008, loss is 6.84375
+step: 50: time taken for the last 1 steps is 2.1042320069999505, loss is 6.84375
+step: 51: time taken for the last 1 steps is 2.1174804489999133, loss is 6.8125
+step: 52: time taken for the last 1 steps is 2.0894126389999883, loss is 6.8125
+step: 53: time taken for the last 1 steps is 2.0927316590000373, loss is 6.8125
+step: 54: time taken for the last 1 steps is 2.094537177999996, loss is 6.8125
+step: 55: time taken for the last 1 steps is 2.1001409240000157, loss is 6.8125
+step: 56: time taken for the last 1 steps is 2.1101538960000426, loss is 6.8125
+step: 57: time taken for the last 1 steps is 2.0932082770000306, loss is 6.8125
+step: 58: time taken for the last 1 steps is 2.1038909809999495, loss is 6.8125
+step: 59: time taken for the last 1 steps is 2.113700351000034, loss is 6.8125
+step: 60: time taken for the last 1 steps is 2.108184966999943, loss is 6.8125
+step: 61: time taken for the last 1 steps is 2.101813659000072, loss is 6.8125
+step: 62: time taken for the last 1 steps is 2.12275178099992, loss is 6.8125
+step: 63: time taken for the last 1 steps is 2.105150434000052, loss is 6.8125
+step: 64: time taken for the last 1 steps is 2.1010290499999655, loss is 6.8125
+step: 65: time taken for the last 1 steps is 2.1167007010000134, loss is 6.8125
+step: 66: time taken for the last 1 steps is 2.097885191000046, loss is 6.8125
+step: 67: time taken for the last 1 steps is 2.107741932000067, loss is 6.8125
+step: 68: time taken for the last 1 steps is 2.1131138450000435, loss is 6.8125
+step: 69: time taken for the last 1 steps is 2.111285546999966, loss is 6.8125
+step: 70: time taken for the last 1 steps is 2.1018587119999665, loss is 6.78125
+step: 71: time taken for the last 1 steps is 2.1020239439999386, loss is 6.78125
+step: 72: time taken for the last 1 steps is 2.0995925879999504, loss is 6.78125
+step: 73: time taken for the last 1 steps is 2.110866611000006, loss is 6.78125
+step: 74: time taken for the last 1 steps is 2.1020268439999654, loss is 6.78125
+step: 75: time taken for the last 1 steps is 2.1226172609999594, loss is 6.78125
+step: 76: time taken for the last 1 steps is 2.1208024430000023, loss is 6.78125
+step: 77: time taken for the last 1 steps is 2.1208981349999476, loss is 6.78125
+step: 78: time taken for the last 1 steps is 2.1135628240000415, loss is 6.78125
+step: 79: time taken for the last 1 steps is 2.1117702730000474, loss is 6.78125
+step: 80: time taken for the last 1 steps is 2.1161412980000023, loss is 6.78125
+step: 81: time taken for the last 1 steps is 2.0976055129999622, loss is 6.78125
+step: 82: time taken for the last 1 steps is 2.112611136000055, loss is 6.78125
+step: 83: time taken for the last 1 steps is 2.0996435729999803, loss is 6.78125
+step: 84: time taken for the last 1 steps is 2.107398537999984, loss is 6.78125
+step: 85: time taken for the last 1 steps is 2.112255720999997, loss is 6.78125
+step: 86: time taken for the last 1 steps is 2.103009724000003, loss is 6.78125
+step: 87: time taken for the last 1 steps is 2.119270674000063, loss is 6.78125
+step: 88: time taken for the last 1 steps is 2.102693507999902, loss is 6.78125
+step: 89: time taken for the last 1 steps is 2.1057117830000607, loss is 6.78125
+step: 90: time taken for the last 1 steps is 2.1257453010000518, loss is 6.78125
+step: 91: time taken for the last 1 steps is 2.1020898790000047, loss is 6.75
+step: 92: time taken for the last 1 steps is 2.108592485999907, loss is 6.75
+step: 93: time taken for the last 1 steps is 2.0980667089999088, loss is 6.75
+step: 94: time taken for the last 1 steps is 2.1001767070000597, loss is 6.75
+step: 95: time taken for the last 1 steps is 2.1179611290000366, loss is 6.75
+step: 96: time taken for the last 1 steps is 2.1135357420000673, loss is 6.75
+step: 97: time taken for the last 1 steps is 2.091478584000015, loss is 6.75
+step: 98: time taken for the last 1 steps is 2.1045909839999695, loss is 6.75
+step: 99: time taken for the last 1 steps is 2.099502816999916, loss is 6.75
+step: 100: time taken for the last 1 steps is 2.112752649000072, loss is 6.75
+step: 101: time taken for the last 1 steps is 2.107549370000015, loss is 6.75
+step: 102: time taken for the last 1 steps is 2.1013852050000423, loss is 6.75
+step: 103: time taken for the last 1 steps is 2.1187211110000135, loss is 6.75
+step: 104: time taken for the last 1 steps is 2.1042719289999923, loss is 6.75
+step: 105: time taken for the last 1 steps is 2.117791377000003, loss is 6.75
+step: 106: time taken for the last 1 steps is 2.112622557000009, loss is 6.75
+step: 107: time taken for the last 1 steps is 2.112430484000015, loss is 6.75
+step: 108: time taken for the last 1 steps is 2.119552723999959, loss is 6.75
+step: 109: time taken for the last 1 steps is 2.118724674999953, loss is 6.75
+step: 110: time taken for the last 1 steps is 2.114618604000043, loss is 6.75
+step: 111: time taken for the last 1 steps is 2.108489107999958, loss is 6.75
+step: 112: time taken for the last 1 steps is 2.1070340250000754, loss is 6.71875
+step: 113: time taken for the last 1 steps is 2.10349554000004, loss is 6.71875
+step: 114: time taken for the last 1 steps is 2.092954864000035, loss is 6.71875
+step: 115: time taken for the last 1 steps is 2.103026861999979, loss is 6.71875
+step: 116: time taken for the last 1 steps is 2.103332175999981, loss is 6.71875
+step: 117: time taken for the last 1 steps is 2.1201579899999388, loss is 6.71875
+step: 118: time taken for the last 1 steps is 2.1079042489999438, loss is 6.71875
+step: 119: time taken for the last 1 steps is 2.119764102999966, loss is 6.71875
+step: 120: time taken for the last 1 steps is 2.0957997890000115, loss is 6.71875
+step: 121: time taken for the last 1 steps is 2.112668332999988, loss is 6.71875
+step: 122: time taken for the last 1 steps is 2.107499432000054, loss is 6.71875
+step: 123: time taken for the last 1 steps is 2.099334024999962, loss is 6.71875
+step: 124: time taken for the last 1 steps is 2.1001273269999956, loss is 6.71875
+step: 125: time taken for the last 1 steps is 2.1071920729999647, loss is 6.71875
+step: 126: time taken for the last 1 steps is 2.099360790999981, loss is 6.71875
+step: 127: time taken for the last 1 steps is 2.093787023999994, loss is 6.71875
+step: 128: time taken for the last 1 steps is 2.090835136999999, loss is 6.71875
+step: 129: time taken for the last 1 steps is 2.11053403599999, loss is 6.71875
+step: 130: time taken for the last 1 steps is 2.1030789390000564, loss is 6.6875
+step: 131: time taken for the last 1 steps is 2.1089163899999903, loss is 6.71875
+step: 132: time taken for the last 1 steps is 2.1085697260000416, loss is 6.6875
+step: 133: time taken for the last 1 steps is 2.110454484999991, loss is 6.6875
+step: 134: time taken for the last 1 steps is 2.1105279859999655, loss is 6.6875
+step: 135: time taken for the last 1 steps is 2.1001674739999316, loss is 6.6875
+step: 136: time taken for the last 1 steps is 2.11978471000009, loss is 6.6875
+step: 137: time taken for the last 1 steps is 2.1032759620001116, loss is 6.6875
+step: 138: time taken for the last 1 steps is 2.095912467000062, loss is 6.6875
+step: 139: time taken for the last 1 steps is 2.096506205999958, loss is 6.6875
+step: 140: time taken for the last 1 steps is 2.0988685759999726, loss is 6.6875
+step: 141: time taken for the last 1 steps is 2.1032394220000015, loss is 6.6875
+step: 142: time taken for the last 1 steps is 2.135222651000049, loss is 6.6875
+step: 143: time taken for the last 1 steps is 2.111624484999993, loss is 6.6875
+step: 144: time taken for the last 1 steps is 2.111688036999908, loss is 6.6875
+step: 145: time taken for the last 1 steps is 2.0971096449999322, loss is 6.6875
+step: 146: time taken for the last 1 steps is 2.119352137999954, loss is 6.6875
+step: 147: time taken for the last 1 steps is 2.1042777280000564, loss is 6.6875
+step: 148: time taken for the last 1 steps is 2.103977084999997, loss is 6.6875
+step: 149: time taken for the last 1 steps is 2.090827934999993, loss is 6.6875
+step: 150: time taken for the last 1 steps is 2.0998242179999806, loss is 6.6875
+step: 151: time taken for the last 1 steps is 2.108284463000018, loss is 6.6875
+step: 152: time taken for the last 1 steps is 2.111592854000037, loss is 6.6875
+step: 153: time taken for the last 1 steps is 2.106612315999996, loss is 6.65625
+step: 154: time taken for the last 1 steps is 2.1129644369999596, loss is 6.65625
+step: 155: time taken for the last 1 steps is 2.116200527999922, loss is 6.65625
+step: 156: time taken for the last 1 steps is 2.095370628000069, loss is 6.65625
+step: 157: time taken for the last 1 steps is 2.0976400050000166, loss is 6.65625
+step: 158: time taken for the last 1 steps is 2.097136945999978, loss is 6.65625
+step: 159: time taken for the last 1 steps is 2.098887894000086, loss is 6.65625
+step: 160: time taken for the last 1 steps is 2.114328242000056, loss is 6.65625
+step: 161: time taken for the last 1 steps is 2.1255644430000302, loss is 6.65625
+step: 162: time taken for the last 1 steps is 2.0989561859998958, loss is 6.65625
+step: 163: time taken for the last 1 steps is 2.125508682000145, loss is 6.65625
+step: 164: time taken for the last 1 steps is 2.1000468530000944, loss is 6.65625
+step: 165: time taken for the last 1 steps is 2.1151458249998996, loss is 6.65625
+step: 166: time taken for the last 1 steps is 2.103186734000019, loss is 6.65625
+step: 167: time taken for the last 1 steps is 2.103474978000122, loss is 6.65625
+step: 168: time taken for the last 1 steps is 2.1021704479999244, loss is 6.65625
+step: 169: time taken for the last 1 steps is 2.102672886000164, loss is 6.65625
+step: 170: time taken for the last 1 steps is 2.1113259740000103, loss is 6.65625
+step: 171: time taken for the last 1 steps is 2.0952292760000546, loss is 6.625
+step: 172: time taken for the last 1 steps is 2.1023925199999667, loss is 6.625
+step: 173: time taken for the last 1 steps is 2.096370514, loss is 6.625
+step: 174: time taken for the last 1 steps is 2.1041022680001333, loss is 6.625
+step: 175: time taken for the last 1 steps is 2.11415063000004, loss is 6.625
+step: 176: time taken for the last 1 steps is 2.0914162850001503, loss is 6.625
+step: 177: time taken for the last 1 steps is 2.1137876939999387, loss is 6.625
+step: 178: time taken for the last 1 steps is 2.1110337299999173, loss is 6.625
+step: 179: time taken for the last 1 steps is 2.115756344999909, loss is 6.625
+step: 180: time taken for the last 1 steps is 2.118098223000061, loss is 6.625
+step: 181: time taken for the last 1 steps is 2.1001670450000347, loss is 6.625
+step: 182: time taken for the last 1 steps is 2.1176551860000927, loss is 6.625
+step: 183: time taken for the last 1 steps is 2.1082517049999296, loss is 6.625
+step: 184: time taken for the last 1 steps is 2.1201154340001267, loss is 6.625
+step: 185: time taken for the last 1 steps is 2.100765424999963, loss is 6.625
+step: 186: time taken for the last 1 steps is 2.1161899139999605, loss is 6.625
+step: 187: time taken for the last 1 steps is 2.0932684330000484, loss is 6.625
+step: 188: time taken for the last 1 steps is 2.102627964000021, loss is 6.625
+step: 189: time taken for the last 1 steps is 2.092811385999994, loss is 6.625
+step: 190: time taken for the last 1 steps is 2.0910895469999105, loss is 6.625
+step: 191: time taken for the last 1 steps is 2.082009511000024, loss is 6.625
+step: 192: time taken for the last 1 steps is 2.0919631010001467, loss is 6.625
+step: 193: time taken for the last 1 steps is 2.109158819999948, loss is 6.625
+step: 194: time taken for the last 1 steps is 2.119292163999944, loss is 6.59375
+step: 195: time taken for the last 1 steps is 2.1079196890000276, loss is 6.59375
+step: 196: time taken for the last 1 steps is 2.1014559150000878, loss is 6.59375
+step: 197: time taken for the last 1 steps is 2.0912800309999966, loss is 6.59375
+step: 198: time taken for the last 1 steps is 2.0906363100000362, loss is 6.59375
+step: 199: time taken for the last 1 steps is 2.114720120000129, loss is 6.59375
+step: 200: time taken for the last 1 steps is 2.1128785399998833, loss is 6.59375
+step: 201: time taken for the last 1 steps is 2.103548169000078, loss is 6.59375
+step: 202: time taken for the last 1 steps is 2.1089906270001393, loss is 6.59375
+step: 203: time taken for the last 1 steps is 2.111353225999892, loss is 6.59375
+step: 204: time taken for the last 1 steps is 2.107555833999868, loss is 6.59375
+step: 205: time taken for the last 1 steps is 2.1044924949999313, loss is 6.59375
+step: 206: time taken for the last 1 steps is 2.0884434849999707, loss is 6.59375
+step: 207: time taken for the last 1 steps is 2.1021002259999477, loss is 6.59375
+step: 208: time taken for the last 1 steps is 2.101806680999971, loss is 6.59375
+step: 209: time taken for the last 1 steps is 2.1187097439999434, loss is 6.59375
+step: 210: time taken for the last 1 steps is 2.1054137690000516, loss is 6.59375
+step: 211: time taken for the last 1 steps is 2.1012168310001016, loss is 6.59375
+step: 212: time taken for the last 1 steps is 2.0982314230000156, loss is 6.59375
+step: 213: time taken for the last 1 steps is 2.1094730439999694, loss is 6.5625
+step: 214: time taken for the last 1 steps is 2.101742999999942, loss is 6.5625
+step: 215: time taken for the last 1 steps is 2.1076015439998628, loss is 6.5625
+step: 216: time taken for the last 1 steps is 2.1159444200000053, loss is 6.5625
+step: 217: time taken for the last 1 steps is 2.104671943999847, loss is 6.5625
+step: 218: time taken for the last 1 steps is 2.116914571000052, loss is 6.5625
+step: 219: time taken for the last 1 steps is 2.120183752999992, loss is 6.5625
+step: 220: time taken for the last 1 steps is 2.1010235369999464, loss is 6.5625
+step: 221: time taken for the last 1 steps is 2.104367940999964, loss is 6.5625
+step: 222: time taken for the last 1 steps is 2.1101812130000326, loss is 6.5625
+step: 223: time taken for the last 1 steps is 2.104715705999979, loss is 6.5625
+step: 224: time taken for the last 1 steps is 2.0933160039999166, loss is 6.5625
+step: 225: time taken for the last 1 steps is 2.097277806999955, loss is 6.5625
+step: 226: time taken for the last 1 steps is 2.1195582830000603, loss is 6.5625
+step: 227: time taken for the last 1 steps is 2.090962505999869, loss is 6.5625
+step: 228: time taken for the last 1 steps is 2.109289919000048, loss is 6.5625
+step: 229: time taken for the last 1 steps is 2.1238783720000356, loss is 6.5625
+step: 230: time taken for the last 1 steps is 2.1200878810000177, loss is 6.5625
+step: 231: time taken for the last 1 steps is 2.1235186970000086, loss is 6.5625
+step: 232: time taken for the last 1 steps is 2.112783884999999, loss is 6.5625
+step: 233: time taken for the last 1 steps is 2.0895786439998574, loss is 6.5625
+step: 234: time taken for the last 1 steps is 2.1011964889999035, loss is 6.5625
+step: 235: time taken for the last 1 steps is 2.1001074620000963, loss is 6.5625
+step: 236: time taken for the last 1 steps is 2.09719823599994, loss is 6.53125
+step: 237: time taken for the last 1 steps is 2.1092676089999713, loss is 6.53125
+step: 238: time taken for the last 1 steps is 2.118371514000046, loss is 6.53125
+step: 239: time taken for the last 1 steps is 2.125421426999992, loss is 6.53125
+step: 240: time taken for the last 1 steps is 2.1183837440000843, loss is 6.53125
+step: 241: time taken for the last 1 steps is 2.1307380020000437, loss is 6.53125
+step: 242: time taken for the last 1 steps is 2.1210951569998997, loss is 6.53125
+step: 243: time taken for the last 1 steps is 2.1068387000000257, loss is 6.53125
+step: 244: time taken for the last 1 steps is 2.10801550899987, loss is 6.53125
+step: 245: time taken for the last 1 steps is 2.1076807540000573, loss is 6.53125
+step: 246: time taken for the last 1 steps is 2.1111855589999777, loss is 6.53125
+step: 247: time taken for the last 1 steps is 2.1037034690000382, loss is 6.53125
+step: 248: time taken for the last 1 steps is 2.115375958999948, loss is 6.53125
+step: 249: time taken for the last 1 steps is 2.1183149240000603, loss is 6.53125
+step: 250: time taken for the last 1 steps is 2.102063912999938, loss is 6.53125
+step: 251: time taken for the last 1 steps is 2.101134947999981, loss is 6.53125
+step: 252: time taken for the last 1 steps is 2.0991028360001565, loss is 6.53125
+step: 253: time taken for the last 1 steps is 2.1204765089999, loss is 6.53125
+step: 254: time taken for the last 1 steps is 2.118479046999937, loss is 6.5
+step: 255: time taken for the last 1 steps is 2.103811351000104, loss is 6.53125
+step: 256: time taken for the last 1 steps is 2.127485730999979, loss is 6.5
+step: 257: time taken for the last 1 steps is 2.1122613459999684, loss is 6.5
+step: 258: time taken for the last 1 steps is 2.112163005999946, loss is 6.5
+step: 259: time taken for the last 1 steps is 2.116199001000041, loss is 6.5
+step: 260: time taken for the last 1 steps is 2.106559655999945, loss is 6.5
+step: 261: time taken for the last 1 steps is 2.113824902999795, loss is 6.5
+step: 262: time taken for the last 1 steps is 2.112564313000121, loss is 6.5
+step: 263: time taken for the last 1 steps is 2.1114108130000204, loss is 6.5
+step: 264: time taken for the last 1 steps is 2.0934486540002126, loss is 6.5
+step: 265: time taken for the last 1 steps is 2.103547386999935, loss is 6.5
+step: 266: time taken for the last 1 steps is 2.100998385999901, loss is 6.5
+step: 267: time taken for the last 1 steps is 2.1070656629999576, loss is 6.5
+step: 268: time taken for the last 1 steps is 2.111903701000074, loss is 6.5
+step: 269: time taken for the last 1 steps is 2.1055721089999224, loss is 6.5
+step: 270: time taken for the last 1 steps is 2.0870329320000565, loss is 6.5
+step: 271: time taken for the last 1 steps is 2.103436585000054, loss is 6.5
+step: 272: time taken for the last 1 steps is 2.1127055939998627, loss is 6.5
+step: 273: time taken for the last 1 steps is 2.1167823600001157, loss is 6.5
+step: 274: time taken for the last 1 steps is 2.1079859079998187, loss is 6.5
+step: 275: time taken for the last 1 steps is 2.1049230589999297, loss is 6.5
+step: 276: time taken for the last 1 steps is 2.1089929150000444, loss is 6.5
+step: 277: time taken for the last 1 steps is 2.1120882840000377, loss is 6.5
+step: 278: time taken for the last 1 steps is 2.115072932000203, loss is 6.46875
+step: 279: time taken for the last 1 steps is 2.0858862920001684, loss is 6.46875
+step: 280: time taken for the last 1 steps is 2.101781700999936, loss is 6.46875
+step: 281: time taken for the last 1 steps is 2.11423806300013, loss is 6.46875
+step: 282: time taken for the last 1 steps is 2.095086211999842, loss is 6.46875
+step: 283: time taken for the last 1 steps is 2.0982919030000176, loss is 6.46875
+step: 284: time taken for the last 1 steps is 2.107649505999916, loss is 6.46875
+step: 285: time taken for the last 1 steps is 2.1175068039999587, loss is 6.46875
+step: 286: time taken for the last 1 steps is 2.113737852999975, loss is 6.46875
+step: 287: time taken for the last 1 steps is 2.1049091910001607, loss is 6.46875
+step: 288: time taken for the last 1 steps is 2.1280611559998306, loss is 6.46875
+step: 289: time taken for the last 1 steps is 2.087898914999869, loss is 6.46875
+step: 290: time taken for the last 1 steps is 2.1161804639998536, loss is 6.46875
+step: 291: time taken for the last 1 steps is 2.109469504999879, loss is 6.46875
+step: 292: time taken for the last 1 steps is 2.124271574999966, loss is 6.46875
+step: 293: time taken for the last 1 steps is 2.107225478999908, loss is 6.46875
+step: 294: time taken for the last 1 steps is 2.1109445690001394, loss is 6.46875
+step: 295: time taken for the last 1 steps is 2.10199621400011, loss is 6.46875
+step: 296: time taken for the last 1 steps is 2.1210493119999683, loss is 6.46875
+step: 297: time taken for the last 1 steps is 2.120086307000065, loss is 6.46875
+step: 298: time taken for the last 1 steps is 2.0999137189999146, loss is 6.46875
+step: 299: time taken for the last 1 steps is 2.0946468239999376, loss is 6.46875
+step: 300: time taken for the last 1 steps is 2.094331798999974, loss is 6.4375
+step: 301: time taken for the last 1 steps is 2.1242104549999112, loss is 6.4375
+step: 302: time taken for the last 1 steps is 2.1073306299999786, loss is 6.4375
+step: 303: time taken for the last 1 steps is 2.1093277630000102, loss is 6.4375
+step: 304: time taken for the last 1 steps is 2.09359356799996, loss is 6.4375
+step: 305: time taken for the last 1 steps is 2.1153154700000414, loss is 6.4375
+step: 306: time taken for the last 1 steps is 2.101459974999898, loss is 6.4375
+step: 307: time taken for the last 1 steps is 2.075844429000199, loss is 6.4375
+step: 308: time taken for the last 1 steps is 2.0971892860000025, loss is 6.4375
+step: 309: time taken for the last 1 steps is 2.108647870999903, loss is 6.4375
+step: 310: time taken for the last 1 steps is 2.1013861040000847, loss is 6.4375
+step: 311: time taken for the last 1 steps is 2.1064146050000545, loss is 6.4375
+step: 312: time taken for the last 1 steps is 2.1021780769999623, loss is 6.4375
+step: 313: time taken for the last 1 steps is 2.0956546530001106, loss is 6.4375
+step: 314: time taken for the last 1 steps is 2.095942416000071, loss is 6.4375
+step: 315: time taken for the last 1 steps is 2.121653050000077, loss is 6.4375
+step: 316: time taken for the last 1 steps is 2.0966731489997983, loss is 6.4375
+step: 317: time taken for the last 1 steps is 2.1137402130000282, loss is 6.4375
+step: 318: time taken for the last 1 steps is 2.0889548749998994, loss is 6.4375
+step: 319: time taken for the last 1 steps is 2.107007665000083, loss is 6.4375
+step: 320: time taken for the last 1 steps is 2.1016727690000607, loss is 6.4375
+step: 321: time taken for the last 1 steps is 2.1133451569999124, loss is 6.40625
+step: 322: time taken for the last 1 steps is 2.0968322210001133, loss is 6.40625
+step: 323: time taken for the last 1 steps is 2.103554319000068, loss is 6.40625
+step: 324: time taken for the last 1 steps is 2.101061949000041, loss is 6.40625
+step: 325: time taken for the last 1 steps is 2.121812681999927, loss is 6.40625
+step: 326: time taken for the last 1 steps is 2.102315118999968, loss is 6.40625
+step: 327: time taken for the last 1 steps is 2.1077483660001235, loss is 6.40625
+step: 328: time taken for the last 1 steps is 2.1166528789999575, loss is 6.40625
+step: 329: time taken for the last 1 steps is 2.104713017999984, loss is 6.40625
+step: 330: time taken for the last 1 steps is 2.099707207000165, loss is 6.40625
+step: 331: time taken for the last 1 steps is 2.1002334259999316, loss is 6.40625
+step: 332: time taken for the last 1 steps is 2.120974358000012, loss is 6.40625
+step: 333: time taken for the last 1 steps is 2.1116968400001497, loss is 6.40625
+step: 334: time taken for the last 1 steps is 2.1009234260000085, loss is 6.40625
+step: 335: time taken for the last 1 steps is 2.0921421160001046, loss is 6.40625
+step: 336: time taken for the last 1 steps is 2.1017924509999375, loss is 6.40625
+step: 337: time taken for the last 1 steps is 2.1131217529998594, loss is 6.40625
+step: 338: time taken for the last 1 steps is 2.108693510999956, loss is 6.40625
+step: 339: time taken for the last 1 steps is 2.105249945999958, loss is 6.40625
+step: 340: time taken for the last 1 steps is 2.110655143000031, loss is 6.40625
+step: 341: time taken for the last 1 steps is 2.1231731739999304, loss is 6.40625
+step: 342: time taken for the last 1 steps is 2.091155110000045, loss is 6.375
+step: 343: time taken for the last 1 steps is 2.107873427999948, loss is 6.375
+step: 344: time taken for the last 1 steps is 2.1054077890000826, loss is 6.375
+step: 345: time taken for the last 1 steps is 2.111286032999942, loss is 6.375
+step: 346: time taken for the last 1 steps is 2.105321858000025, loss is 6.375
+step: 347: time taken for the last 1 steps is 2.0989113139999063, loss is 6.375
+step: 348: time taken for the last 1 steps is 2.1059560369999417, loss is 6.375
+step: 349: time taken for the last 1 steps is 2.119882620999988, loss is 6.375
+step: 350: time taken for the last 1 steps is 2.111644978999948, loss is 6.375
+step: 351: time taken for the last 1 steps is 2.1090994780001893, loss is 6.375
+step: 352: time taken for the last 1 steps is 2.1127028050000263, loss is 6.375
+step: 353: time taken for the last 1 steps is 2.1273099110001112, loss is 6.375
+step: 354: time taken for the last 1 steps is 2.116157891000057, loss is 6.375
+step: 355: time taken for the last 1 steps is 2.1308611869999368, loss is 6.375
+step: 356: time taken for the last 1 steps is 2.1234249489998547, loss is 6.375
+step: 357: time taken for the last 1 steps is 2.105045152999992, loss is 6.375
+step: 358: time taken for the last 1 steps is 2.1130145710001216, loss is 6.375
+step: 359: time taken for the last 1 steps is 2.1108409159999155, loss is 6.375
+step: 360: time taken for the last 1 steps is 2.1099235720000706, loss is 6.375
+step: 361: time taken for the last 1 steps is 2.126803392000056, loss is 6.375
+step: 362: time taken for the last 1 steps is 2.1195161749999443, loss is 6.375
+step: 363: time taken for the last 1 steps is 2.101062168999988, loss is 6.375
+step: 364: time taken for the last 1 steps is 2.108959066000125, loss is 6.34375
+step: 365: time taken for the last 1 steps is 2.094102776999989, loss is 6.34375
+step: 366: time taken for the last 1 steps is 2.1164563760000874, loss is 6.34375
+step: 367: time taken for the last 1 steps is 2.1104379900000367, loss is 6.375
+step: 368: time taken for the last 1 steps is 2.097344450000037, loss is 6.34375
+step: 369: time taken for the last 1 steps is 2.107681475000163, loss is 6.34375
+step: 370: time taken for the last 1 steps is 2.109727297999825, loss is 6.34375
+step: 371: time taken for the last 1 steps is 2.1093348770000375, loss is 6.34375
+step: 372: time taken for the last 1 steps is 2.112328990000151, loss is 6.34375
+step: 373: time taken for the last 1 steps is 2.111841510999966, loss is 6.34375
+step: 374: time taken for the last 1 steps is 2.1172863670001334, loss is 6.34375
+step: 375: time taken for the last 1 steps is 2.1150750420001714, loss is 6.34375
+step: 376: time taken for the last 1 steps is 2.1263488419999703, loss is 6.34375
+step: 377: time taken for the last 1 steps is 2.102476753000019, loss is 6.34375
+step: 378: time taken for the last 1 steps is 2.1093371009999373, loss is 6.34375
+step: 379: time taken for the last 1 steps is 2.110653392000131, loss is 6.34375
+step: 380: time taken for the last 1 steps is 2.1227076339998803, loss is 6.34375
+step: 381: time taken for the last 1 steps is 2.1178340069998285, loss is 6.34375
+step: 382: time taken for the last 1 steps is 2.112536140999964, loss is 6.34375
+step: 383: time taken for the last 1 steps is 2.1103214970000863, loss is 6.34375
+step: 384: time taken for the last 1 steps is 2.099472773999878, loss is 6.3125
+step: 385: time taken for the last 1 steps is 2.126142209000136, loss is 6.34375
+step: 386: time taken for the last 1 steps is 2.1188499429999865, loss is 6.3125
+step: 387: time taken for the last 1 steps is 2.1162574510001377, loss is 6.3125
+step: 388: time taken for the last 1 steps is 2.103740612000138, loss is 6.34375
+step: 389: time taken for the last 1 steps is 2.109876989999975, loss is 6.3125
+step: 390: time taken for the last 1 steps is 2.1179271379999136, loss is 6.3125
+step: 391: time taken for the last 1 steps is 2.1085915300000124, loss is 6.3125
+step: 392: time taken for the last 1 steps is 2.111567665999928, loss is 6.3125
+step: 393: time taken for the last 1 steps is 2.1089639259998876, loss is 6.3125
+step: 394: time taken for the last 1 steps is 2.0964103649998833, loss is 6.3125
+step: 395: time taken for the last 1 steps is 2.230096533000051, loss is 6.3125
+val_loss : 6.3152 :  val_acc: 0.0099
+
+updating stats...
+Epoch: 1 starting...

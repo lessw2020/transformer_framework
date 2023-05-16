@@ -27,7 +27,10 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = 10
+    total_steps_to_run: int = 9
+    # training
+    num_epochs: int = 2
+
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
@@ -59,7 +62,10 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 30
+    batch_size_training: int = 24
+    # validation
+    run_validation: bool = True
+    val_batch_size = 24
 
     # use synthetic data
     use_synthetic_data: bool = False

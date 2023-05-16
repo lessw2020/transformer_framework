@@ -707,16 +707,17 @@ def fsdp_main():
             if cfg.run_validation:
                 if rank == 0:
                     assert _stats is not None, "no stats in main"
-                config.validation(
-                    model,
-                    local_rank,
-                    rank,
-                    val_loader,
-                    world_size,
-                    stats=_stats,
-                    use_label_singular=use_label_singular,
-                    metric_logger=_metric_logger,
-                )
+                with torch.no_grad():
+                    config.validation(
+                        model,
+                        local_rank,
+                        rank,
+                        val_loader,
+                        world_size,
+                        stats=_stats,
+                        use_label_singular=use_label_singular,
+                        metric_logger=_metric_logger,
+                    )
         # print(f"rank {local_rank} in front of barrier...")
         # dist.barrier()
         # print(f"rank {local_rank} past barrier...")
