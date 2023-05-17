@@ -27,17 +27,17 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = 9
+    total_steps_to_run: int = None
     # training
-    num_epochs: int = 2
+    num_epochs: int = 4
 
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
-        # "smartvit90"
-        "631M"
+        "smartvit90"
+        # "631M"
         # "1B"
         # "1.8B"
         # "4B"
@@ -75,18 +75,20 @@ class train_config(base_config):
     if use_pokemon_dataset:
         NUM_CLASSES = 150
 
-    use_beans_dataset: bool = False
+    use_beans_dataset: bool = True
     if use_beans_dataset:
         NUM_CLASSES = 3
+        print("dataset num classes = 3")
 
-    use_food = True
+    use_food = False
 
     if use_food:
         NUM_CLASSES = 101
-        use_label_singular = True
+        use_label_singular = False
 
     # real dset
     num_categories = NUM_CLASSES
+
     label_smoothing_value = 0.0
     # train_data_path = "datasets_vision/pets/train"
     # val_data_path = "datasets_vision/pets/val"
@@ -113,7 +115,7 @@ class train_config(base_config):
     layernorm_eps = 1e-6
 
     # optimizers load and save
-    optimizer = "dadapt_adam"
+    optimizer = "dadapt_adanip"
 
     save_optimizer: bool = False
     load_optimizer: bool = False
@@ -131,6 +133,10 @@ def build_model(
     use_fused_attention=True,
     use_multi_query_attention=False,
 ):
+    local_cfg = train_config()
+    print(f"{local_cfg.NUM_CLASSES=}")
+    NUM_CLASSES = local_cfg.NUM_CLASSES
+
     if model_size == "smartvit90":
         model_args = {
             "patch_size": 16,
@@ -210,6 +216,7 @@ def build_model(
 
     from models.smart_vit.vit_main import build_smart_vit
 
+    assert NUM_CLASSES == 3, "214 vit config"
     model = build_smart_vit(model_args)
     return model
 
@@ -303,6 +310,7 @@ def train(
     total_steps_to_run,
     use_synthetic_data=False,
     use_label_singular=False,
+    stats=None,
 ):
     cfg = train_config()
     label_smoothing_amount = cfg.label_smoothing_value
@@ -336,6 +344,9 @@ def train(
             optimizer.step()
 
         # update durations and memory tracking
+        if stats:
+            stats["training_loss"].append(loss)
+            stats["training_iter_time"].append(mini_batch_time)
 
         mini_batch_time = time.perf_counter() - t0
         if local_rank == 0:

@@ -220,8 +220,10 @@ def fsdp_main():
         dataset, val_dataset = config.get_pokemon_dataset()
 
     elif use_beans:
+        assert not use_food and not use_pokemon, f"multiple datasets enabled."
         dataset, val_dataset = config.get_beans_dataset()
     elif use_food:
+        assert not use_beans and not use_pokemon, f"multiple datasets enabled."
         dataset, val_dataset = config.get_universal_dataset()
         use_label_singular = True
     else:
@@ -495,7 +497,7 @@ def fsdp_main():
     )
     print_memory_summary("vit", "cuda")
 
-    time.sleep(10)
+    time.sleep(2)
 
     if (
         cfg.load_model_checkpoint
@@ -568,7 +570,7 @@ def fsdp_main():
 
     # optimizer ----------
     optimizer = None
-    lr = 8e-4
+    lr = 9e-4
     weight_decay = 0.002
 
     if cfg.optimizer == "int8":
@@ -645,7 +647,7 @@ def fsdp_main():
         from metric_logging.metric_logger import get_date_time
 
         curr_time = get_date_time()
-        file_description = "stats_smartvit_food101_" + curr_time + ".txt"
+        file_description = "stats_" + curr_time + ".txt"
         _metric_logger = file_description
 
     # load optimizer checkpoint
@@ -700,6 +702,7 @@ def fsdp_main():
                 total_steps,
                 use_synthetic_data=cfg.use_synthetic_data,
                 use_label_singular=use_label_singular,
+                stats=_stats,
             )
             if cfg.total_steps_to_run is not None:
                 break
@@ -748,8 +751,26 @@ def fsdp_main():
         if _stats:
             total_loss_curve = _stats["loss"]
             total_acc_curve = _stats["accuracy"]
-            for loss, acc in zip(total_loss_curve, total_acc_curve):
-                print(f"{loss=}, {acc=}")
+            training_loss_curve = _stats["training_loss"]
+            print(f"Training loss data")
+            for i, loss in enumerate(training_loss_curve):
+                print(f"{loss}")
+
+            print(f"\nValidation loss data")
+            for i, loss in enumerate(total_loss_curve):
+                print(f"{loss}")
+
+            print(f"Accuracy validation")
+            for i, accuracy in enumerate(total_acc_curve):
+                print(f"{accuracy}")
+
+            print(f"Training time average iter")
+            total_training_iter_times = _stats["training_iter_time"]
+            denom = len(total_training_iter_times)
+            total_times = sum(total_training_iter_times)
+            average_iter = round(total_times / denom, 5)
+            print(f"Average iter = {average_iter}")
+
             best_val_acc = 0
             if total_acc_curve:
                 best_val_acc = 100 * float(max(total_acc_curve))

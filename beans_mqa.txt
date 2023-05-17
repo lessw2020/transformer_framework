@@ -1,0 +1,144 @@
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+******* loading model args.model='vitsmart'
+--> World Size = 8
+
+--> Device_count = 8
+--> running with these defaults train_config(seed=2023, verbose=True, total_steps_to_run=None, warmup_steps=3, print_memory_summary=False, num_epochs=2, model_weights_bf16=False, use_mixed_precision=True, use_low_precision_gradient_policy=False, use_tf32=True, optimizer='AdamW', ap_use_kahan_summation=False, sharding_strategy=<ShardingStrategy.FULL_SHARD: 1>, print_sharding_plan=False, run_profiler=False, profile_folder='tp_fsdp/profile_tracing', log_every=1, num_workers_dataloader=2, batch_size_training=24, fsdp_activation_checkpointing=False, run_validation=True, memory_report=True, nccl_debug_handler=True, distributed_debug=True, use_non_recursive_wrapping=False, use_parallel_attention=True, use_multi_query_attention=True, use_fused_attention=True, use_tp=False, image_size=224, use_synthetic_data=False, use_pokemon_dataset=False, use_beans_dataset=True, save_model_checkpoint=False, load_model_checkpoint=False, checkpoint_max_save_count=2, save_optimizer=False, load_optimizer=False, optimizer_checkpoint_file='Adam-vit--1.pt', checkpoint_model_filename='vit--1.pt')
+clearing gpu cache for all ranks
+--> running with torch dist debug set to detail
+--> total memory per gpu (GB) = 22.035
+wrapping policy is functools.partial(<function transformer_auto_wrap_policy at 0x7fcfb84430d0>, transformer_layer_cls={<class 'models.smart_vit.vit_main.ParallelAttentionBlock'>})
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+Classifer head set for num_classes=1000
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+Classifer head set for num_classes=1000
+Classifer head set for num_classes=1000
+
+--> Prepping smartvit90 model ...
+
+stats is ready....? _stats=defaultdict(<class 'list'>, {'best_accuracy': 0.0}), local_rank=0, rank=0
+******************* bulding the model here ************
+**** Use MQA = True
+{'patch_size': 16, 'embed_dim': 1320, 'depth': 16, 'num_heads': 12, 'num_classes': 1000, 'image_size': 224, 'use_parallel_attention': True, 'use_fused_attention': True, 'use_upper_fusion': True, 'use_multi_query_attention': True}
+Building with Parallel Layers Attention
+Classifer head set for num_classes=1000
+Classifer head set for num_classes=1000
+Classifer head set for num_classes=1000
+Classifer head set for num_classes=1000
+Model has 16 layers
+
+Classifer head set for num_classes=1000
+vit, GPU peak memory allocation: 0.0GB, GPU peak memory reserved: 0.0GB, GPU peak memory active: 0.0GB
+--> smartvit90 built.
+built model with 287.95128M params
+bf16 check passed
+
+--> Running with mixed precision MixedPrecision(param_dtype=torch.bfloat16, reduce_dtype=torch.bfloat16, buffer_dtype=torch.bfloat16, keep_low_precision_grads=False, cast_forward_inputs=False, cast_root_forward_inputs=True) policy
+backward prefetch set to BackwardPrefetch.BACKWARD_PRE
+sharding set to ShardingStrategy.FULL_SHARD
+--> Batch Size = 24
+vit, GPU peak memory allocation: 0.0GB, GPU peak memory reserved: 0.0GB, GPU peak memory active: 0.0GB
+local rank 0 init time = 2.8934278180004185
+memory stats reset, ready to track
+Running with AdamW optimizer, with fusion set to True
+Epoch: 0 starting...
+step: 1: time taken for the last 1 steps is 2.370999185999608, loss is 6.90625
+step: 2: time taken for the last 1 steps is 0.0720439010001428, loss is 6.90625
+step: 3: time taken for the last 1 steps is 0.0749572859986074, loss is 6.90625
+step: 4: time taken for the last 1 steps is 0.07529658100065717, loss is 6.90625
+step: 5: time taken for the last 1 steps is 0.07180252899888728, loss is 6.90625
+step: 6: time taken for the last 1 steps is 0.14839440399919113, loss is 6.90625
+val_loss : 6.8958 :  val_acc: 0.3235
+
+updating stats...
+Epoch: 1 starting...
+step: 1: time taken for the last 1 steps is 2.3026151900012337, loss is 6.895809650421143
+step: 2: time taken for the last 1 steps is 0.27215686999988975, loss is 6.893819332122803
+step: 3: time taken for the last 1 steps is 0.28287082000133523, loss is 6.891826629638672
+step: 4: time taken for the last 1 steps is 0.27648033300101815, loss is 6.889843463897705
+step: 5: time taken for the last 1 steps is 0.28075282399913704, loss is 6.8878493309021
+step: 6: time taken for the last 1 steps is 0.15191245599999093, loss is 6.885861396789551
+val_loss : 6.8839 :  val_acc: 0.3235
+
+updating stats...
+** exit loop - rank 1 reporting....
+** exit loop - rank 2 reporting....
+** exit loop - rank 4 reporting....
+** exit loop - rank 7 reporting....
+** exit loop - rank 3 reporting....
+** exit loop - rank 6 reporting....
+** exit loop - rank 5 reporting....
+** exit loop - rank 0 reporting....
+
+--> cuda max reserved memory = 16.8555
+--> max reserved percentage = 76.49 %
+
+--> cuda max memory allocated = 8.1583
+--> max allocated percentage = 37.02 %
+
+--> peak active memory = 9.2212
+--> peak active memory 41.85 %
+
+cudaMalloc retries = 0
+cuda OOM = 0
+
+Training loss data
+6.90625
+6.90625
+6.90625
+6.90625
+6.90625
+6.90625
+6.895809650421143
+6.893819332122803
+6.891826629638672
+6.889843463897705
+6.8878493309021
+6.885861396789551
+
+Validation loss data
+6.8958
+6.8839
+Training time average iter
+Average iter = 0.52605
+
+--> Highest Val Accuracy =  32.35
+
+This was run with TensorParallel? = False
+Batch size used = 24
+
+
+--> Model Size =  287.95128 M Params
+

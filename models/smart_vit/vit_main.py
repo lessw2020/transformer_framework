@@ -304,7 +304,7 @@ class ResPostBlock(nn.Module):
             use_fused_attention=True,  # use_fused_attention,
         )
         self.norm1 = norm_layer(dim)
-        self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        # self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
         self.mlp = LinearMLP(
             in_features=dim,
@@ -313,7 +313,7 @@ class ResPostBlock(nn.Module):
             drop=proj_drop,
         )
         self.norm2 = norm_layer(dim)
-        self.drop_path2 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        # self.drop_path2 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
         self.init_weights()
 
@@ -324,8 +324,8 @@ class ResPostBlock(nn.Module):
             nn.init.constant_(self.norm2.weight, self.init_values)
 
     def forward(self, x):
-        x = x + self.drop_path1(self.norm1(self.attn(x)))
-        x = x + self.drop_path2(self.norm2(self.mlp(x)))
+        x = x + self.norm1(self.attn(x))
+        x = x + self.norm2(self.mlp(x))
         return x
 
 
@@ -740,6 +740,7 @@ class VisionTransformer(nn.Module):
         self.head = (
             nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
         )
+        print(f"Classifer head set for {num_classes=}")
 
         if weight_init != "skip":
             patten_block = False
@@ -948,6 +949,9 @@ def build_smart_vit(model_params):
     use_fused_attention = model_params.get("use_fused_attention", False)
     # use_upper_fusion = model_params.get("use_upper_fusion", False)
     use_mqa = model_params.get("use_multi_query_attention", False)
+    input_num_classes = model_params.get("num_classes", None)
+    assert input_num_classes is not None, f"Failed to get num_classes for ViT creation"
+    print(f"Num classes = {input_num_classes}")
 
     if use_parallel:
         print(f"Building with Parallel Layers Attention")
@@ -970,6 +974,7 @@ def build_smart_vit(model_params):
         # use_upper_fusion=use_upper_fusion,
         use_fused_attention=use_fused_attention,
         use_multi_query_attention=use_multi_query_attention,
+        num_classes=input_num_classes,
     )
 
     merged_vals = {**model_kwargs, **model_params}
