@@ -76,7 +76,8 @@ class train_config(base_config):
     use_mixed_precision: bool = False
 
     # checkpoint models
-    save_model_checkpoint: bool = False
+    save_model_checkpoint: bool = True
+    save_using_num_threads: int = 24
     # only for local and sharded dist
     single_file_per_rank = True
 

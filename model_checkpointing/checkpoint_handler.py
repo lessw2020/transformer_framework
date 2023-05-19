@@ -18,7 +18,10 @@ from torch.distributed._shard.checkpoint import (
     save_state_dict,
     load_state_dict,
 )
-
+from torch.distributed.checkpoint.default_planner import (
+    DefaultSavePlanner,
+    DefaultLoadPlanner,
+)
 # state dict updates
 # import spmd.checkpoint.adv_planner as ap
 # import spmd.checkpoint.optimizer as opt
@@ -84,8 +87,8 @@ def load_model_sharded(model, rank, cfg, verbose=True):
         print(f"Sharded state checkpoint loaded from {load_dir}")
 
 
-def save_model_sharded(model, rank, cfg, verbose=True):
-    """save model via sharded_state_dict to save_dir"""
+def save_model_and_optimizer_sharded(model, rank, cfg,optim=None, verbose=True):
+    """save model and optimizer via sharded_state_dict to save_dir"""
     folder_name = (
         cfg.dist_checkpoint_root_folder
         + "/"
@@ -100,18 +103,23 @@ def save_model_sharded(model, rank, cfg, verbose=True):
 
     distributed_writer = dist_cp.FileSystemWriter(
         save_dir,
-        single_file_per_rank=False,
-        thread_count=cfg.save_using_num_threads,
+        # single_file_per_rank=False,
+        # thread_count=cfg.save_using_num_threads,
         # per_thread_copy_ahead=20_000_000,
     )
     t0 = time.perf_counter()
 
     with FSDP.state_dict_type(model, StateDictType.SHARDED_STATE_DICT):
-        checkpoint = model.state_dict()
+
+        state_dict = {"model": model.state_dict()}
+        if optim is not None:
+            state_dict["optim"] = FSDP.optim_state_dict(model, optim)
 
         dist_cp.save_state_dict(
-            state_dict=checkpoint,
+            state_dict=state_dict,
             storage_writer=distributed_writer,
+            planner=DefaultSavePlanner(),
+            
         )
     dist.barrier()
     t1 = time.perf_counter()
@@ -120,8 +128,7 @@ def save_model_sharded(model, rank, cfg, verbose=True):
         print(
             f"Checkpoint Time = {t1-t0:.4f}\n using {cfg.save_using_num_threads=} total threads"
         )
-
-
+        
 def save_model_checkpoint(
     model,
     optimizer,

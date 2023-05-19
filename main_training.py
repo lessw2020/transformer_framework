@@ -654,12 +654,12 @@ def fsdp_main():
                 model_checkpointing.save_model_checkpoint(
                     model, optimizer, rank, cfg, epoch=1
                 )
-            elif cfg.checkpoint_type == StateDictType.LOCAL_STATE_DICT:
-                print(f"Saving Model via Distributed Checkpoint")
-                model_checkpointing.save_distributed_model_checkpoint(model, rank, cfg)
 
             elif cfg.checkpoint_type == StateDictType.SHARDED_STATE_DICT:
-                model_checkpointing.save_model_sharded(model, rank, cfg)
+                print("==================================== here we are saving the sharded model =====================")
+                model_checkpointing.save_model_and_optimizer_sharded(model, rank, cfg)
+                if cfg.save_optimizer:
+                    model_checkpointing.save_model_and_optimizer_sharded(model, rank, cfg, optim=optimizer)
 
         if cfg.save_optimizer:
             model_checkpointing.save_optimizer_checkpoint(
