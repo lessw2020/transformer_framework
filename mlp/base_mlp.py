@@ -27,7 +27,9 @@ class LinearMLP(nn.Module):
         self.drop = drop
         self.activation_fn = act_layer()
 
-        self.linear1 = nn.Linear(self.in_features, sum(self.in_proj_split), bias=self.bias)
+        self.linear1 = nn.Linear(
+            self.in_features, sum(self.in_proj_split), bias=self.bias
+        )
         self.linear2 = nn.Linear(
             self.hidden_features, self.out_features, bias=self.bias
         )
