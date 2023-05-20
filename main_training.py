@@ -275,9 +275,14 @@ def fsdp_main():
 
     if not use_timm:
         print("******************* bulding the model here ************")
+        use_deferred_init = True
+        try:
+            use_deferred_init = cfg.use_deferred_init
+        except:
+            pass
 
         with init_empty_weights() if cfg.use_deferred_init else _none_context:
-            _zero_print(f"using deferred? {cfg.use_deferred_init}")
+            _zero_print(f"using deferred? {use_deferred_init}")
             use_parallel = False
             use_upper_fusion = False
             use_fused_attention = cfg.use_fused_attention
@@ -674,33 +679,33 @@ def fsdp_main():
     if cfg.total_steps_to_run:
         total_steps = cfg.total_steps_to_run - 1  # fix off by one for step count
 
+    @contextlib.contextmanager
+    def maybe_run_profiler(cfg, *args, **kwargs):
+        use_profiler: bool = cfg.run_profiler
+
+        if use_profiler:
+            with torch.profiler.profile(
+                activities=[
+                    torch.profiler.ProfilerActivity.CPU,
+                    torch.profiler.ProfilerActivity.CUDA,
+                ],
+                schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
+                on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                    cfg.profile_folder
+                ),
+                profile_memory=True,
+                with_stack=False,
+                record_shapes=True,
+            ) as torch_profiler:
+                yield torch_profiler
+        else:
+            torch_profiler = contextlib.nullcontext()
+            yield torch_profiler
+
     if cfg.run_profiler:
         print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
 
-        with torch.profiler.profile(
-            activities=[
-                torch.profiler.ProfilerActivity.CPU,
-                torch.profiler.ProfilerActivity.CUDA,
-            ],
-            schedule=torch.profiler.schedule(wait=1, warmup=2, active=3, repeat=1),
-            on_trace_ready=torch.profiler.tensorboard_trace_handler(cfg.profile_folder),
-            profile_memory=True,
-            with_stack=False,
-            record_shapes=True,
-        ) as torch_profiler:
-            config.train(
-                model,
-                data_loader,
-                torch_profiler,
-                optimizer,
-                memmax,
-                local_rank,
-                tracking_duration,
-                total_steps,
-                use_synthetic_data=cfg.use_synthetic_data,
-                use_label_singular=use_label_singular,
-            )
-    else:
+    with maybe_run_profiler(cfg):
         for i in range(cfg.num_epochs):
             if rank == 0:
                 print(f"Epoch: {i} starting...")
