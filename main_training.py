@@ -700,7 +700,7 @@ def fsdp_main():
                 yield torch_profiler
         else:
             torch_profiler = contextlib.nullcontext()
-            yield torch_profiler
+            yield None
 
     if cfg.run_profiler:
         print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
@@ -714,7 +714,7 @@ def fsdp_main():
             config.train(
                 model,
                 data_loader,
-                None,
+                torch_profiler,
                 optimizer,
                 memmax,
                 local_rank,

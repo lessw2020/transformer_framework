@@ -347,6 +347,7 @@ def train(
 
         if optimizer:
             optimizer.zero_grad()
+
         t0 = time.perf_counter()
         outputs = model(inputs)
         loss = loss_function(outputs, targets)
@@ -361,7 +362,6 @@ def train(
             stats["training_loss"].append(loss)
             stats["training_iter_time"].append(mini_batch_time)
 
-        mini_batch_time = time.perf_counter() - t0
         if local_rank == 0:
             tracking_duration.append(mini_batch_time)
             if memmax:
@@ -372,8 +372,6 @@ def train(
                 f"step: {batch_index}: time taken for the last {cfg.log_every} steps is {mini_batch_time}, loss is {loss}"
             )
 
-        # reset timer
-        t0 = time.perf_counter()
         if torch_profiler is not None:
             torch_profiler.step()
         if total_steps_to_run is not None and batch_index > total_steps_to_run:
