@@ -789,7 +789,7 @@ def fsdp_main():
             denom = len(total_training_iter_times)
             total_times = sum(total_training_iter_times)
             average_iter = round(total_times / denom, 5)
-            print(f"Average iter = {average_iter}")
+            print(f"\nAverage iter = {average_iter}")
 
             best_val_acc = 0
             if total_acc_curve:

@@ -443,12 +443,13 @@ def validation(
             stats["accuracy"].append(acc)
             if metric_logger:
                 epoch_results = f"accuracy: {acc}, best_acc: {best_acc}, loss: {loss}\n"
-                try:
+                """try:
                     with open(metric_logger, "a") as fwriter:
                         fwriter.write(epoch_results)
 
                 except OSError as oserr:
                     print("Error while writing stats to disc ", oserr)
+                """
 
             # print(f"{stats=}")
     return
