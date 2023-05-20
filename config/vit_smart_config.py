@@ -19,6 +19,7 @@ import torchvision.transforms as tvt
 from models.vit import ViT, ViTEncoderBlock
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
+from models.smart_vit.vit_main import ParallelAttentionBlock, ResPostBlock
 
 NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 
@@ -36,8 +37,8 @@ class train_config(base_config):
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
-        "smartvit90"
-        # "631M"
+        # "smartvit90"
+        "631M"
         # "1B"
         # "1.8B"
         # "4B"
@@ -69,6 +70,8 @@ class train_config(base_config):
     # validation
     run_validation: bool = True
     val_batch_size = 24
+
+    fsdp_activation_checkpointing: bool = True
 
     # use synthetic data
     use_synthetic_data: bool = False
@@ -290,7 +293,6 @@ def get_policy():
     # return None
     cfg = train_config()
     # todo - can't use autowrap policy with 2d
-    from models.smart_vit.vit_main import ParallelAttentionBlock, ResPostBlock
 
     if cfg.use_parallel_attention:
         return get_policy_base({ParallelAttentionBlock})
@@ -299,7 +301,15 @@ def get_policy():
 
 
 def fsdp_checkpointing(model):
-    return fsdp_checkpointing_base(model, ViTEncoderBlock)
+    cfg = train_config()
+
+    if cfg.use_parallel_attention:
+        print(f"Checkpointing with ParallelAttention")
+        return fsdp_checkpointing_base(model, ParallelAttentionBlock)
+    else:
+        print(f"Checkpointing with ResPostBlock")
+        return fsdp_checkpointing_base(model, ResPostBlock)
+    # return fsdp_checkpointing_base(model, ViTEncoderBlock)
 
 
 def train(

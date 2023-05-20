@@ -125,7 +125,7 @@ def fsdp_checkpointing_base(model, blocks):
     """
     non_reentrant_wrapper = functools.partial(
         checkpoint_wrapper,
-        offload_to_cpu=False,
+        # offload_to_cpu=False,
         checkpoint_impl=CheckpointImpl.NO_REENTRANT,
     )
     check_fn = lambda submodule: isinstance(submodule, blocks)
