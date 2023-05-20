@@ -66,7 +66,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 24
+    batch_size_training: int = 64
     # validation
     run_validation: bool = True
     val_batch_size = 24
@@ -121,7 +121,7 @@ class train_config(base_config):
     layernorm_eps = 1e-6
 
     # optimizers load and save
-    optimizer = "dadapt_adanip"
+    optimizer = "AdamW"  # "dadapt_adanip"
 
     save_optimizer: bool = False
     load_optimizer: bool = False
@@ -304,10 +304,10 @@ def fsdp_checkpointing(model):
     cfg = train_config()
 
     if cfg.use_parallel_attention:
-        print(f"Checkpointing with ParallelAttention")
+        print(f"Activation Checkpointing with Parallel - ParallelAttention")
         return fsdp_checkpointing_base(model, ParallelAttentionBlock)
     else:
-        print(f"Checkpointing with ResPostBlock")
+        print(f"Activation Checkpointing with Sequential - ResPostBlock")
         return fsdp_checkpointing_base(model, ResPostBlock)
     # return fsdp_checkpointing_base(model, ViTEncoderBlock)
 
@@ -324,6 +324,7 @@ def train(
     use_synthetic_data=False,
     use_label_singular=False,
     stats=None,
+    lr_scheduler=None,
 ):
     cfg = train_config()
     label_smoothing_amount = cfg.label_smoothing_value
@@ -356,6 +357,10 @@ def train(
 
         if optimizer:
             optimizer.step()
+        if lr_scheduler:
+            lr_scheduler.step()
+
+        total_batch_time = time.perf_counter() - t0
 
         # update durations and memory tracking
         if stats:
@@ -369,7 +374,7 @@ def train(
 
         if batch_index % cfg.log_every == 0 and torch.distributed.get_rank() == 0:
             print(
-                f"step: {batch_index}: time taken for the last {cfg.log_every} steps is {mini_batch_time}, loss is {loss}"
+                f"step: {batch_index}: time taken for the last {cfg.log_every} steps is {mini_batch_time:.4f}, including opt {total_batch_time:4f}, loss is {loss}"
             )
 
         if torch_profiler is not None:

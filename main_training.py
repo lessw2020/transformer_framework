@@ -661,6 +661,12 @@ def fsdp_main():
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
+    # linear warmup
+    from torch.optim.lr_scheduler import LinearLR
+
+    warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=20)
+    # (optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=- 1, verbose=False)
+
     # start adding in logged metrics...
     _metric_logger = None
     if cfg.run_validation:
@@ -723,6 +729,7 @@ def fsdp_main():
                 use_synthetic_data=cfg.use_synthetic_data,
                 use_label_singular=use_label_singular,
                 stats=_stats,
+                lr_scheduler=warmup_scheduler,
             )
             if cfg.total_steps_to_run is not None:
                 break
