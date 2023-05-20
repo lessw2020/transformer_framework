@@ -31,6 +31,10 @@ from torch.distributed.fsdp._common_utils import _is_fsdp_flattened
 colorama.init(autoreset=True)  # reset after every line
 
 import performance
+import contextlib
+
+_none_context = contextlib.nullcontext()
+
 
 # import optimizers
 
@@ -160,6 +164,11 @@ def rank_print(rank, x):
         print(x)
 
 
+def zero_print(rank, x):
+    if rank == 0:
+        print(x)
+
+
 # ------ main code loop -----------------
 def fsdp_main():
     """main process,  within each rank process"""
@@ -184,6 +193,10 @@ def fsdp_main():
 
     if torch.distributed.is_initialized():
         torch.cuda.set_device(local_rank)
+
+    from functools import partial
+
+    _zero_print = partial(zero_print, local_rank)
 
     # setup memory tracking for perf
     if local_rank == 0:
@@ -262,7 +275,9 @@ def fsdp_main():
 
     if not use_timm:
         print("******************* bulding the model here ************")
-        with init_empty_weights():
+
+        with init_empty_weights() if cfg.use_deferred_init else _none_context:
+            _zero_print(f"using deferred? {cfg.use_deferred_init}")
             use_parallel = False
             use_upper_fusion = False
             use_fused_attention = cfg.use_fused_attention

@@ -56,6 +56,9 @@ class train_config(base_config):
     run_profiler: bool = False
     profile_folder: str = "tp_fsdp/profile_tracing"
 
+    # use deferred init
+    use_deferred_init: bool = False
+
     # use TP
     use_tp: bool = False
 
@@ -139,10 +142,10 @@ def build_model(
 
     if model_size == "smartvit90":
         model_args = {
-            "patch_size": 16,
-            "embed_dim": 1320,
-            "depth": 16,
-            "num_heads": 12,
+            "patch_size": 14,
+            "embed_dim": 1024,
+            "depth": 8,
+            "num_heads": 8,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
         }
