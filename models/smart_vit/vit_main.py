@@ -41,7 +41,6 @@ def named_apply(
     depth_first: bool = True,
     include_root: bool = False,
 ) -> nn.Module:
-    print(f"")
     if not depth_first and include_root:
         fn(module=module, name=name)
     for child_name, child_module in module.named_children():
@@ -848,7 +847,7 @@ def init_weights_vit_timm(module: nn.Module, name: str = ""):
             nn.init.zeros_(module.bias)
     elif hasattr(module, "init_weights"):
         # assert False, "module init"
-        print(f"init_weights, module {module=}")
+        # print(f"init_weights, module {module=}")
         module.init_weights()
 
 
