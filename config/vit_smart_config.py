@@ -30,7 +30,7 @@ class train_config(base_config):
     # model_name = "90M"
     total_steps_to_run: int = None
     # training
-    num_epochs: int = 4
+    num_epochs: int = 3
 
     use_timm = False
     model_name = (
@@ -38,14 +38,14 @@ class train_config(base_config):
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
-        "631M"
-        # "1B"
+        # "631M"
+        "1B"
         # "1.8B"
         # "4B"
         # "22B"
     )
 
-    use_parallel_attention: bool = False
+    use_parallel_attention: bool = True
 
     # only relevant if use_parallel_attention True
     use_multi_query_attention: bool = False
@@ -66,10 +66,10 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 64
+    batch_size_training: int = 40
     # validation
     run_validation: bool = True
-    val_batch_size = 24
+    val_batch_size = 32
 
     fsdp_activation_checkpointing: bool = True
 
@@ -156,7 +156,7 @@ def build_model(
         model_args = {
             "patch_size": 14,
             "embed_dim": 1280,
-            "depth": 32,
+            "depth": 50,
             "num_heads": 16,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
@@ -166,8 +166,8 @@ def build_model(
         model_args = {
             "patch_size": 14,
             "embed_dim": 1408,
-            "mlp_ratio": 48 / 11,
-            "depth": 40,
+            # "mlp_ratio": 48 / 11,
+            "depth": 52,
             "num_heads": 16,
             "num_classes": NUM_CLASSES,
             "image_size": 224,
@@ -177,7 +177,7 @@ def build_model(
         model_args = {
             "patch_size": 14,
             "embed_dim": 1664,
-            "mlp_ratio": 64 / 13,
+            # "mlp_ratio": 64 / 13,
             "depth": 48,
             "num_heads": 16,
             "num_classes": NUM_CLASSES,

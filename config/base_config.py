@@ -23,7 +23,7 @@ class base_config:
     # how many mini batches to time with
     total_steps_to_run: int = 8
     # ignores warmup steps for avg time calcs
-    warmup_steps: int = 3
+    warmup_steps: int = 5
 
     # stats
     print_memory_summary: bool = False

@@ -650,7 +650,7 @@ def fsdp_main():
 
         optimizer = torch.optim.AdamW(
             model.parameters(),
-            lr=0.001,
+            lr=0.0005,
             weight_decay=weight_decay,
             fused=use_fused_optimizer,
         )
@@ -664,7 +664,7 @@ def fsdp_main():
     # linear warmup
     from torch.optim.lr_scheduler import LinearLR
 
-    warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=20)
+    warmup_scheduler = LinearLR(optimizer, start_factor=0.1, total_iters=50)
     # (optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=- 1, verbose=False)
 
     # start adding in logged metrics...
@@ -803,6 +803,19 @@ def fsdp_main():
                 best_val_acc = 100 * float(max(total_acc_curve))
             print(Fore.GREEN + f"\n--> Highest Val Accuracy =  {best_val_acc}\n")
 
+            warmup_steps = cfg.warmup_steps
+            iters_to_avg = total_training_iter_times[warmup_steps:]
+
+            stable_sum = sum(iters_to_avg)
+            # print(f"len iters_to_avg = {len(iters_to_avg)}")
+            total_steps_measured = denom - warmup_steps
+            stable_avg = stable_sum / total_steps_measured
+            stable_avg = round(stable_avg, 4)
+            print(
+                Fore.GREEN
+                + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds, excluding {warmup_steps} steps"
+            )
+
         if cfg.total_steps_to_run is not None:
             warmup_steps = cfg.warmup_steps
             iters_to_avg = tracking_duration[warmup_steps:]
@@ -816,7 +829,9 @@ def fsdp_main():
                 Fore.GREEN
                 + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds"
             )
-        print(f"This was run with TensorParallel? = {cfg.use_tp}")
+        print(f"This was run with TensorParallel? = {cfg.use_tp}\n")
+        print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
+        print(f"Run with MQA? {cfg.use_multi_query_attention}\n")
         print(f"Batch size used = {cfg.batch_size_training}\n")
 
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params\n")
