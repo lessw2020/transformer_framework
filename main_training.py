@@ -390,7 +390,6 @@ def fsdp_main():
             from torch.distributed.tensor.parallel import (
                 PairwiseParallel,
                 parallelize_module,
-                ColwiseParallelNoReshard,
                 ColwiseParallel,
                 RowwiseParallel,
                 # get_parallelization_fqn,
@@ -425,6 +424,7 @@ def fsdp_main():
             mesh=torch.arange(0, world_size).view(model_parallel_size, -1),
         )
         rank_print(rank, f"{twod_mesh=}")
+        # rank_print(rank, f"{model=}")
 
         # this is for parallelized vit - need to dynamically locate blocks
         # rank_print(rank, f"{model=}")
@@ -448,13 +448,14 @@ def fsdp_main():
                     module=block,
                     device_mesh=twod_mesh,
                     parallelize_plan={
-                        "in_projection": PairwiseParallel(),
-                        "mlp_out_proj": PairwiseParallel(),
-                        "attention_out_proj": PairwiseParallel(),
+                        "attn.qkv": ColwiseParallel(),
+                        "attn.out_proj": RowwiseParallel(),
+                        "mlp.linear1": ColwiseParallel(),
+                        "mlp.linear2": RowwiseParallel(),
                     },
                     tp_mesh_dim=1,
                 )
-                print(f"\nSuccess - {blocks[i]}\n")
+                # print(f"\nSuccess - {blocks[i]}\n")
                 block = parallelized_block
                 # rank_print(rank, f"{parallelized_block=}")
 

@@ -28,9 +28,9 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = None
+    total_steps_to_run: int = 8
     # training
-    num_epochs: int = 3
+    num_epochs: int = 2
 
     use_timm = False
     model_name = (
@@ -45,10 +45,10 @@ class train_config(base_config):
         # "22B"
     )
 
-    use_parallel_attention: bool = True
+    use_parallel_attention: bool = False
 
     # only relevant if use_parallel_attention True
-    use_multi_query_attention: bool = False
+    use_multi_query_attention: bool = True
 
     # use scaled dot product attention
     use_fused_attention: bool = True
@@ -58,10 +58,10 @@ class train_config(base_config):
     profile_folder: str = "tp_fsdp/profile_tracing"
 
     # use deferred init
-    use_deferred_init: bool = False
+    use_deferred_init: bool = True
 
     # use TP
-    use_tp: bool = False
+    use_tp: bool = True
 
     # image size
     image_size: int = 224
@@ -222,7 +222,6 @@ def build_model(
 
     from models.smart_vit.vit_main import build_smart_vit
 
-    assert NUM_CLASSES == 3, "214 vit config"
     model = build_smart_vit(model_args)
     return model
 
