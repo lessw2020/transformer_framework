@@ -26,13 +26,17 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 
 @dataclass
 class train_config(base_config):
-    # model
-    # model_name = "90M"
+    # training - set total_steps = None to run epochs,
+    #  otherwise step count is used and breaks.
     total_steps_to_run: int = None
-    # training
     num_epochs: int = 4
 
-    use_timm = False
+    # Framework to run - DDP or FSDP.
+    # DDP = False means using FSDP.
+    use_ddp: bool = True
+    ddp_bucket_size: float = 25
+    ddp_use_gradient_view: bool = False
+
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
@@ -45,6 +49,7 @@ class train_config(base_config):
         # "22B"
     )
 
+    use_timm = False
     use_parallel_attention: bool = False
 
     # only relevant if use_parallel_attention True
@@ -58,7 +63,7 @@ class train_config(base_config):
     profile_folder: str = "tp_fsdp/profile_tracing"
 
     # use deferred init
-    use_deferred_init: bool = True
+    use_deferred_init: bool = False
 
     # use TP
     use_tp: bool = False

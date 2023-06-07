@@ -25,8 +25,14 @@ class base_config:
     # ignores warmup steps for avg time calcs
     warmup_steps: int = 5
 
+    # DDP
+    use_ddp: bool = True
+    ddp_bucket_size: float = 25
+    ddp_use_gradient_view: bool = False
+
     # stats
     print_memory_summary: bool = False
+    print_training_loss_data: bool = False
 
     # training
     num_epochs: int = 2

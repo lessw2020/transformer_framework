@@ -35,6 +35,9 @@ import contextlib
 
 _none_context = contextlib.nullcontext()
 
+# add DDP support
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 
 # import optimizers
 
@@ -503,19 +506,30 @@ def fsdp_main():
     if cfg.use_tp:
         fsdp_pg = twod_mesh.get_dim_groups()[0]
         process_group_fsdp = fsdp_pg
-    # ----- main FSDP init -----------
-    model = FSDP(
-        model,
-        process_group=process_group_fsdp,
-        auto_wrap_policy=my_auto_wrap_policy,
-        mixed_precision=mp_policy,
-        backward_prefetch=prefetch_policy,
-        sharding_strategy=cfg.sharding_strategy,
-        device_id=torch.cuda.current_device(),
-        forward_prefetch=cfg.forward_prefetch,
-        limit_all_gathers=False,
-        param_init_fn=my_init_fn,
-    )
+
+    # ----- main FSDP or DDP init -----------
+    if cfg.use_ddp:
+        model.to("cuda")
+        model = DDP(
+            model,
+            device_ids=[local_rank],
+            bucket_cap_mb=cfg.ddp_bucket_size,
+            gradient_as_bucket_view=cfg.ddp_use_gradient_view,
+        )
+
+    else:
+        model = FSDP(
+            model,
+            process_group=process_group_fsdp,
+            auto_wrap_policy=my_auto_wrap_policy,
+            mixed_precision=mp_policy,
+            backward_prefetch=prefetch_policy,
+            sharding_strategy=cfg.sharding_strategy,
+            device_id=torch.cuda.current_device(),
+            forward_prefetch=cfg.forward_prefetch,
+            limit_all_gathers=False,
+            param_init_fn=my_init_fn,
+        )
     print_memory_summary("vit", "cuda")
 
     time.sleep(2)
@@ -780,24 +794,26 @@ def fsdp_main():
             total_loss_curve = _stats["loss"]
             total_acc_curve = _stats["accuracy"]
             training_loss_curve = _stats["training_loss"]
-            print(f"Training loss data")
-            for i, loss in enumerate(training_loss_curve):
-                print(f"{loss}")
+
+            if cfg.print_training_loss_data:
+                print(f"Training loss data")
+                for i, loss in enumerate(training_loss_curve):
+                    print(f"{loss}")
 
             print(f"\nValidation loss data")
             for i, loss in enumerate(total_loss_curve):
                 print(f"{loss}")
 
-            print(f"Accuracy validation")
+            print(f"\nAccuracy validation")
             for i, accuracy in enumerate(total_acc_curve):
                 print(f"{accuracy}")
 
-            print(f"Training time average iter")
+            # print(f"Training time average iter")
             total_training_iter_times = _stats["training_iter_time"]
             denom = len(total_training_iter_times)
-            total_times = sum(total_training_iter_times)
-            average_iter = round(total_times / denom, 5)
-            print(f"\nAverage iter = {average_iter}")
+            # total_times = sum(total_training_iter_times)
+            # average_iter = round(total_times / denom, 5)
+            # print(f"\nAverage iter = {average_iter}")
 
             best_val_acc = 0
             if total_acc_curve:
@@ -814,7 +830,7 @@ def fsdp_main():
             stable_avg = round(stable_avg, 4)
             print(
                 Fore.GREEN
-                + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds, excluding {warmup_steps} steps"
+                + f"\n--> Step avg speed (in seconds) based on {total_steps_measured} steps: {stable_avg}\nexcluding {warmup_steps} steps as warmup"
             )
 
         if cfg.total_steps_to_run is not None:
@@ -838,7 +854,12 @@ def fsdp_main():
                 )
         except:
             pass
-
+        training_framework = "DDP" if cfg.use_ddp else "FSDP"
+        print(Fore.GREEN + f"\nDist Training Framework used = {training_framework}\n")
+        if cfg.use_ddp:
+            print(
+                f"DDP settings:  \nddp_bucket_size={cfg.ddp_bucket_size},\nddp_use_gradient_view={cfg.ddp_use_gradient_view}\n"
+            )
         print(f"This was run with TensorParallel? = {cfg.use_tp}\n")
         print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
         print(f"Run with MQA? {cfg.use_multi_query_attention}\n")
