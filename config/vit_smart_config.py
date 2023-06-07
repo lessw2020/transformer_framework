@@ -33,7 +33,7 @@ class train_config(base_config):
 
     # Framework to run - DDP or FSDP.
     # DDP = False means using FSDP.
-    use_ddp: bool = True
+    use_ddp: bool = False
     ddp_bucket_size: float = 25
     ddp_use_gradient_view: bool = False
 

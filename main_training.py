@@ -89,7 +89,7 @@ def init_empty_weights(include_buffers: bool = False):
     finally:
         nn.Module.register_parameter = old_register_parameter
         if include_buffers:
-            nn.Module.register_buffer = old_reg
+            nn.Module.register_buffer = old_register_buffer
 
 
 @torch.no_grad()
