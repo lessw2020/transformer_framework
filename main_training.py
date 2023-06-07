@@ -830,6 +830,15 @@ def fsdp_main():
                 Fore.GREEN
                 + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds"
             )
+        try:
+            if cfg.use_deferred_init:
+                print(
+                    Fore.LIGHTBLUE_EX
+                    + f"\n ==>> This run used deferred init! \nIf you are training and seeing no/poor training results, \n pls set this to False in the config file.**\n"
+                )
+        except:
+            pass
+
         print(f"This was run with TensorParallel? = {cfg.use_tp}\n")
         print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
         print(f"Run with MQA? {cfg.use_multi_query_attention}\n")

@@ -28,18 +28,18 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # model
     # model_name = "90M"
-    total_steps_to_run: int = 8
+    total_steps_to_run: int = None
     # training
-    num_epochs: int = 2
+    num_epochs: int = 4
 
     use_timm = False
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
-        # "smartvit90"
+        "smartvit90"
         # "631M"
-        "1B"
+        # "1B"
         # "1.8B"
         # "4B"
         # "22B"
@@ -61,7 +61,7 @@ class train_config(base_config):
     use_deferred_init: bool = True
 
     # use TP
-    use_tp: bool = True
+    use_tp: bool = False
 
     # image size
     image_size: int = 224
