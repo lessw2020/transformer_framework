@@ -245,7 +245,7 @@ def fsdp_main():
     else:
         dataset = config.get_dataset()
 
-    if use_beans or use_pokemon or use_food:
+    if not cfg.use_synthetic_data:
         if rank == 0:
             import collections
 
@@ -861,9 +861,16 @@ def fsdp_main():
                 f"DDP settings:  \nddp_bucket_size={cfg.ddp_bucket_size},\nddp_use_gradient_view={cfg.ddp_use_gradient_view}\n"
             )
         print(f"This was run with TensorParallel? = {cfg.use_tp}\n")
-        print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
-        print(f"Run with MQA? {cfg.use_multi_query_attention}\n")
+        try:
+            print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
+            print(f"Run with MQA? {cfg.use_multi_query_attention}\n")
+        except:
+            pass
         print(f"Batch size used = {cfg.batch_size_training}\n")
+        if not cfg.use_ddp:
+            print(
+                f"FSDP Activation Checkpointing? = {cfg.fsdp_activation_checkpointing}"
+            )
 
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params\n")
         if cfg.print_memory_summary:

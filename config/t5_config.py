@@ -18,9 +18,8 @@ from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
 
 @dataclass
 class train_config(base_config):
-
-    # model
-    model_name = "t5-base"
+    # tokenizer - usually no need to match model..
+    tokenizer = "t5-large"
     # available models
     # t5-small / base / large  - 1.0 pretrained
     # or
@@ -30,14 +29,26 @@ class train_config(base_config):
     # google/t5-v1_1-xl  #2b
     # google/t5-v1_1-xxl #8b
     # t5-11b
-    tokenizer = "t5-large"
+
+    model_name = "t5-small"
 
     # important - if you want trackable loss stats, please ensure you use real data:
     use_real_data = True
+    use_synthetic_data: bool = False
+
+    use_deferred_init: bool = False
+
+    # DDP
+    use_ddp: bool = False
+    ddp_bucket_size: float = 25
+    ddp_use_gradient_view: bool = False
+
+    # activation checkpointing
+    fsdp_activation_checkpointing: bool = True
 
     # checkpoint models
-    save_model_checkpoint: bool = True
-    load_model_checkpoint: bool = True
+    save_model_checkpoint: bool = False
+    load_model_checkpoint: bool = False
     checkpoint_type = StateDictType.SHARDED_STATE_DICT
     dist_checkpoint_root_folder = "distributed_checkpoints"
     dist_checkpoint_folder = "T5_local_checkpoint"
@@ -60,7 +71,11 @@ class train_config(base_config):
     dataset_test = "datasets_grammar/grammar_validation.csv"
 
 
-def build_model(model_name: str):
+def build_model(
+    model_name: str,
+    use_parallel_attention=False,
+    use_fused_attention=False,
+):
     cfg = train_config()
     if cfg.use_real_data:
         return AutoModelForSeq2SeqLM.from_pretrained(model_name)
@@ -230,6 +245,12 @@ def train(
     local_rank,
     tracking_duration,
     total_steps_to_run,
+    use_parallel_attention=False,
+    use_fused_attention=True,
+    use_synthetic_data: bool = False,
+    use_label_singular: bool = False,
+    stats=None,
+    lr_scheduler=None,
 ):
     cfg = train_config()
     model.train()

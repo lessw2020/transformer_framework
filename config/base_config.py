@@ -85,6 +85,10 @@ class base_config:
     # activation checkpointing
     fsdp_activation_checkpointing: bool = False
 
+    # parallel_attention related:
+    use_fused_attention: bool = False
+    use_parallel_attention: bool = False
+
     # validation
     run_validation: bool = True
     val_batch_size = 24
