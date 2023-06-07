@@ -277,8 +277,8 @@ def fsdp_main():
         pass  # means older config w/o timm support flag
 
     if not use_timm:
-        print("******************* bulding the model here ************")
-        use_deferred_init = True
+        print("***** building the model  ******")
+        use_deferred_init = False
         try:
             use_deferred_init = cfg.use_deferred_init
         except:
@@ -314,6 +314,12 @@ def fsdp_main():
                 )
         print_memory_summary("vit", "cuda")
         time.sleep(2)
+
+        # TODO - we used to run HF checkpointing generically...adding this for now.
+        if cfg.hf_t5_checkpointing:
+            model.decoder.gradient_checkpointing = True
+            model.encoder.gradient_checkpointing = True
+
     elif use_timm:
         # if you are here and this import fails - run:
         # git clone https://github.com/huggingface/pytorch-image-models.git
@@ -871,6 +877,8 @@ def fsdp_main():
             print(
                 f"FSDP Activation Checkpointing? = {cfg.fsdp_activation_checkpointing}"
             )
+        if cfg.hf_t5_checkpointing:
+            print(f"HF Activation Checkpointing? = {cfg.hf_t5_checkpointing}")
 
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params\n")
         if cfg.print_memory_summary:

@@ -44,7 +44,8 @@ class train_config(base_config):
     ddp_use_gradient_view: bool = False
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
+    hf_t5_checkpointing: bool = True
 
     # checkpoint models
     save_model_checkpoint: bool = False

@@ -30,6 +30,9 @@ class base_config:
     ddp_bucket_size: float = 25
     ddp_use_gradient_view: bool = False
 
+    # t5 specific
+    hf_t5_checkpointing: bool = False
+
     # stats
     print_memory_summary: bool = False
     print_training_loss_data: bool = False
