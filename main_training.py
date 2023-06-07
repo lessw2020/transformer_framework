@@ -296,7 +296,7 @@ def fsdp_main():
                 use_mqa = cfg.use_multi_query_attention
                 print(f"**** Use MQA = {use_mqa}")
             except:
-                print(f"failed to load pattn blocks params!")
+                # TODO - make this error appropriate per model ...print(f"failed to load pattn blocks params!")
                 pass
             if use_parallel:
                 model = config.build_model(
