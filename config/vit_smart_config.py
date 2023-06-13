@@ -28,8 +28,8 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # training - set total_steps = None to run epochs,
     #  otherwise step count is used and breaks.
-    total_steps_to_run: int = None
-    num_epochs: int = 4
+    total_steps_to_run: int = 8
+    num_epochs: int = 2
 
     # Framework to run - DDP or FSDP.
     # DDP = False means using FSDP.

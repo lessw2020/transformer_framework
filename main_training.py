@@ -732,7 +732,7 @@ def fsdp_main():
     if cfg.run_profiler:
         print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
 
-    with maybe_run_profiler(cfg):
+    with maybe_run_profiler(cfg) as torch_profiler:
         for i in range(cfg.num_epochs):
             if rank == 0:
                 print(f"Epoch: {i} starting...")
