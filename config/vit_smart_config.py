@@ -52,6 +52,9 @@ class train_config(base_config):
 
     # use scaled dot product attention
     use_fused_attention: bool = True
+    
+    #use flop counter
+    flop_counter: bool = True
 
     # profile
     run_profiler: bool = False
@@ -298,6 +301,8 @@ def get_policy():
     else:
         return get_policy_base({ResPostBlock})
 
+def get_total_flops(mode):
+    return str(sum([v for _, v in mode.flop_counts["Global"].items()]))
 
 def fsdp_checkpointing(model):
     cfg = train_config()
@@ -330,7 +335,7 @@ def train(
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
 
     for batch_index, (batch) in enumerate(data_loader, start=1):
-        flop_counter = FlopCounterMode()
+        
         # print(f"{batch=}")
         if use_synthetic_data:
             inputs, targets = batch
@@ -350,12 +355,15 @@ def train(
             optimizer.zero_grad()
 
         t0 = time.perf_counter()
-        if batch_index == 3:
+        # counting the flops
+        if cfg.flop_counter and batch_index == 3:
+            flop_counter = FlopCounterMode()
             with flop_counter:
-            
                 outputs = model(inputs)
                 loss = loss_function(outputs, targets)
                 loss.backward()
+            get_total_flops(flop_counter)
+            
         else:
             outputs = model(inputs)
             loss = loss_function(outputs, targets)
