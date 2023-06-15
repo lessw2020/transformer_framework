@@ -13,7 +13,7 @@ from torch.distributed.fsdp import StateDictType
 from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
 import torchvision.transforms as tvt
-from torch.utils.flop_counter import FlopCounterMode
+from tflops_counter import FlopCounterMode
 
 # from vit_pytorch.deepvit import DeepViT, Residual
 # import torchvision.models as models
@@ -40,8 +40,8 @@ class train_config(base_config):
 
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
-        # "vit_large_patch16_224"
-        "vit_gigantic_patch14_224"
+        "vit_large_patch16_224"
+        # "vit_gigantic_patch14_224"
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
@@ -79,7 +79,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 8
+    batch_size_training: int = 12
     # validation
     run_validation: bool = True
     val_batch_size = 32
@@ -369,7 +369,7 @@ def train(
         # counting the flops
         flop_check_done = False
         if cfg.flop_counter and batch_index == 3 and not flop_check_done:
-            flop_counter = FlopCounterMode()
+            flop_counter = FlopCounterMode(rank=local_rank)
             with flop_counter:
                 outputs = model(inputs)
                 loss = loss_function(outputs, targets)
@@ -377,6 +377,8 @@ def train(
             TFlops = get_total_flops(flop_counter) / 1e12
             if local_rank == 0:
                 print(f"TFlops of the model is {TFlops:.4f}")
+            if stats:
+                stats["tflops"] = TFlops
             flop_check_done = True
 
         else:
