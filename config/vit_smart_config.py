@@ -39,7 +39,9 @@ class train_config(base_config):
     ddp_use_gradient_view: bool = False
 
     model_name = (
-        "vit_relpos_medium_patch16_rpn_224"  #
+        # "vit_relpos_medium_patch16_rpn_224"  #
+        # "vit_large_patch16_224"
+        "vit_gigantic_patch14_224"
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
