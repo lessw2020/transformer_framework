@@ -14,6 +14,7 @@ from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
 import torchvision.transforms as tvt
 from torch.utils.flop_counter import FlopCounterMode
+
 # from vit_pytorch.deepvit import DeepViT, Residual
 # import torchvision.models as models
 from models.vit import ViT, ViTEncoderBlock
@@ -38,12 +39,12 @@ class train_config(base_config):
     ddp_use_gradient_view: bool = False
 
     model_name = (
-        # "vit_relpos_medium_patch16_rpn_224"  #
+        "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
-        "631M"
-        "smartvit90"
+        # "631M"
+        # "smartvit90"
         # "631M"
         # "1B"
         # "1.8B"
@@ -51,8 +52,7 @@ class train_config(base_config):
         # "22B"
     )
 
-
-    use_timm = False
+    use_timm = True
     use_parallel_attention: bool = False
 
     # only relevant if use_parallel_attention True
@@ -60,8 +60,8 @@ class train_config(base_config):
 
     # use scaled dot product attention
     use_fused_attention: bool = True
-    
-    #use flop counter
+
+    # use flop counter
     flop_counter: bool = True
 
     # profile
@@ -309,8 +309,10 @@ def get_policy():
     else:
         return get_policy_base({ResPostBlock})
 
+
 def get_total_flops(mode):
-    return (sum([v for _, v in mode.flop_counts["Global"].items()]))
+    return sum([v for _, v in mode.flop_counts["Global"].items()])
+
 
 def fsdp_checkpointing(model):
     cfg = train_config()
@@ -343,7 +345,6 @@ def train(
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
 
     for batch_index, (batch) in enumerate(data_loader, start=1):
-        
         # print(f"{batch=}")
         if use_synthetic_data:
             inputs, targets = batch
@@ -371,15 +372,16 @@ def train(
                 outputs = model(inputs)
                 loss = loss_function(outputs, targets)
                 loss.backward()
-            TFlops = get_total_flops(flop_counter)/ 10e12
-            print(f"TFlops of the model is {TFlops}")
-            flop_check_done = True 
-            
+            TFlops = get_total_flops(flop_counter) / 10e12
+            if local_rank == 0:
+                print(f"TFlops of the model is {TFlops:.4f}")
+            flop_check_done = True
+
         else:
             outputs = model(inputs)
             loss = loss_function(outputs, targets)
             loss.backward()
-            
+
         mini_batch_time = time.perf_counter() - t0
 
         if optimizer:
