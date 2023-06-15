@@ -13,7 +13,7 @@ from torch.distributed.fsdp import StateDictType
 from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
 import torchvision.transforms as tvt
-
+from torch.utils.flop_counter import FlopCounterMode
 # from vit_pytorch.deepvit import DeepViT, Residual
 # import torchvision.models as models
 from models.vit import ViT, ViTEncoderBlock
@@ -38,14 +38,14 @@ class train_config(base_config):
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
-        # "631M"
-        "1B"
+        "631M"
+        # "1B"
         # "1.8B"
         # "4B"
         # "22B"
     )
 
-    use_parallel_attention: bool = False
+    use_parallel_attention: bool = True
 
     # only relevant if use_parallel_attention True
     use_multi_query_attention: bool = True
@@ -58,10 +58,10 @@ class train_config(base_config):
     profile_folder: str = "tp_fsdp/profile_tracing"
 
     # use deferred init
-    use_deferred_init: bool = True
+    use_deferred_init: bool = False
 
     # use TP
-    use_tp: bool = True
+    use_tp: bool = False
 
     # image size
     image_size: int = 224
@@ -330,6 +330,7 @@ def train(
     loss_function = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing_amount)
 
     for batch_index, (batch) in enumerate(data_loader, start=1):
+        flop_counter = FlopCounterMode()
         # print(f"{batch=}")
         if use_synthetic_data:
             inputs, targets = batch
@@ -349,9 +350,17 @@ def train(
             optimizer.zero_grad()
 
         t0 = time.perf_counter()
-        outputs = model(inputs)
-        loss = loss_function(outputs, targets)
-        loss.backward()
+        if batch_index == 3:
+            with flop_counter:
+            
+                outputs = model(inputs)
+                loss = loss_function(outputs, targets)
+                loss.backward()
+        else:
+            outputs = model(inputs)
+            loss = loss_function(outputs, targets)
+            loss.backward()
+            
         mini_batch_time = time.perf_counter() - t0
 
         if optimizer:
