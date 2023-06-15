@@ -302,7 +302,7 @@ def get_policy():
         return get_policy_base({ResPostBlock})
 
 def get_total_flops(mode):
-    return str(sum([v for _, v in mode.flop_counts["Global"].items()]))
+    return (sum([v for _, v in mode.flop_counts["Global"].items()]))
 
 def fsdp_checkpointing(model):
     cfg = train_config()
@@ -362,7 +362,8 @@ def train(
                 outputs = model(inputs)
                 loss = loss_function(outputs, targets)
                 loss.backward()
-            get_total_flops(flop_counter)
+            TFlops = get_total_flops(flop_counter)/ 10e12
+            print(f"TFlops of the model is {TFlops}")
             
         else:
             outputs = model(inputs)
