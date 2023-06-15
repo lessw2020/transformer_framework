@@ -356,7 +356,8 @@ def train(
 
         t0 = time.perf_counter()
         # counting the flops
-        if cfg.flop_counter and batch_index == 3:
+        flop_check_done = False
+        if cfg.flop_counter and batch_index == 3 and not flop_check_done:
             flop_counter = FlopCounterMode()
             with flop_counter:
                 outputs = model(inputs)
@@ -364,6 +365,7 @@ def train(
                 loss.backward()
             TFlops = get_total_flops(flop_counter)/ 10e12
             print(f"TFlops of the model is {TFlops}")
+            flop_check_done = True 
             
         else:
             outputs = model(inputs)
