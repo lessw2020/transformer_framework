@@ -79,7 +79,7 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 40
+    batch_size_training: int = 8
     # validation
     run_validation: bool = True
     val_batch_size = 32
@@ -374,7 +374,7 @@ def train(
                 outputs = model(inputs)
                 loss = loss_function(outputs, targets)
                 loss.backward()
-            TFlops = get_total_flops(flop_counter) / 10e12
+            TFlops = get_total_flops(flop_counter) / 1e12
             if local_rank == 0:
                 print(f"TFlops of the model is {TFlops:.4f}")
             flop_check_done = True
