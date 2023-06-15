@@ -35,6 +35,9 @@ import contextlib
 
 _none_context = contextlib.nullcontext()
 
+# add DDP support
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 
 # import optimizers
 
@@ -86,7 +89,7 @@ def init_empty_weights(include_buffers: bool = False):
     finally:
         nn.Module.register_parameter = old_register_parameter
         if include_buffers:
-            nn.Module.register_buffer = old_reg
+            nn.Module.register_buffer = old_register_buffer
 
 
 @torch.no_grad()
@@ -242,7 +245,7 @@ def fsdp_main():
     else:
         dataset = config.get_dataset()
 
-    if use_beans or use_pokemon or use_food:
+    if not cfg.use_synthetic_data:
         if rank == 0:
             import collections
 
@@ -274,8 +277,8 @@ def fsdp_main():
         pass  # means older config w/o timm support flag
 
     if not use_timm:
-        print("******************* bulding the model here ************")
-        use_deferred_init = True
+        print("***** building the model  ******")
+        use_deferred_init = False
         try:
             use_deferred_init = cfg.use_deferred_init
         except:
@@ -293,7 +296,7 @@ def fsdp_main():
                 use_mqa = cfg.use_multi_query_attention
                 print(f"**** Use MQA = {use_mqa}")
             except:
-                print(f"failed to load pattn blocks params!")
+                # TODO - make this error appropriate per model ...print(f"failed to load pattn blocks params!")
                 pass
             if use_parallel:
                 model = config.build_model(
@@ -311,6 +314,12 @@ def fsdp_main():
                 )
         print_memory_summary("vit", "cuda")
         time.sleep(2)
+
+        # TODO - we used to run HF checkpointing generically...adding this for now.
+        if cfg.hf_t5_checkpointing:
+            model.decoder.gradient_checkpointing = True
+            model.encoder.gradient_checkpointing = True
+
     elif use_timm:
         # if you are here and this import fails - run:
         # git clone https://github.com/huggingface/pytorch-image-models.git
@@ -503,19 +512,30 @@ def fsdp_main():
     if cfg.use_tp:
         fsdp_pg = twod_mesh.get_dim_groups()[0]
         process_group_fsdp = fsdp_pg
-    # ----- main FSDP init -----------
-    model = FSDP(
-        model,
-        process_group=process_group_fsdp,
-        auto_wrap_policy=my_auto_wrap_policy,
-        mixed_precision=mp_policy,
-        backward_prefetch=prefetch_policy,
-        sharding_strategy=cfg.sharding_strategy,
-        device_id=torch.cuda.current_device(),
-        forward_prefetch=cfg.forward_prefetch,
-        limit_all_gathers=False,
-        param_init_fn=my_init_fn,
-    )
+
+    # ----- main FSDP or DDP init -----------
+    if cfg.use_ddp:
+        model.to("cuda")
+        model = DDP(
+            model,
+            device_ids=[local_rank],
+            bucket_cap_mb=cfg.ddp_bucket_size,
+            gradient_as_bucket_view=cfg.ddp_use_gradient_view,
+        )
+
+    else:
+        model = FSDP(
+            model,
+            process_group=process_group_fsdp,
+            auto_wrap_policy=my_auto_wrap_policy,
+            mixed_precision=mp_policy,
+            backward_prefetch=prefetch_policy,
+            sharding_strategy=cfg.sharding_strategy,
+            device_id=torch.cuda.current_device(),
+            forward_prefetch=cfg.forward_prefetch,
+            limit_all_gathers=False,
+            param_init_fn=my_init_fn,
+        )
     print_memory_summary("vit", "cuda")
 
     time.sleep(2)
@@ -712,7 +732,7 @@ def fsdp_main():
     if cfg.run_profiler:
         print(f"Profiling active.  Traces will be saved at {cfg.profile_folder}")
 
-    with maybe_run_profiler(cfg):
+    with maybe_run_profiler(cfg) as torch_profiler:
         for i in range(cfg.num_epochs):
             if rank == 0:
                 print(f"Epoch: {i} starting...")
@@ -780,24 +800,26 @@ def fsdp_main():
             total_loss_curve = _stats["loss"]
             total_acc_curve = _stats["accuracy"]
             training_loss_curve = _stats["training_loss"]
-            print(f"Training loss data")
-            for i, loss in enumerate(training_loss_curve):
-                print(f"{loss}")
+
+            if cfg.print_training_loss_data:
+                print(f"Training loss data")
+                for i, loss in enumerate(training_loss_curve):
+                    print(f"{loss}")
 
             print(f"\nValidation loss data")
             for i, loss in enumerate(total_loss_curve):
                 print(f"{loss}")
 
-            print(f"Accuracy validation")
+            print(f"\nAccuracy validation")
             for i, accuracy in enumerate(total_acc_curve):
                 print(f"{accuracy}")
 
-            print(f"Training time average iter")
+            # print(f"Training time average iter")
             total_training_iter_times = _stats["training_iter_time"]
             denom = len(total_training_iter_times)
-            total_times = sum(total_training_iter_times)
-            average_iter = round(total_times / denom, 5)
-            print(f"\nAverage iter = {average_iter}")
+            # total_times = sum(total_training_iter_times)
+            # average_iter = round(total_times / denom, 5)
+            # print(f"\nAverage iter = {average_iter}")
 
             best_val_acc = 0
             if total_acc_curve:
@@ -814,7 +836,7 @@ def fsdp_main():
             stable_avg = round(stable_avg, 4)
             print(
                 Fore.GREEN
-                + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds, excluding {warmup_steps} steps"
+                + f"\n--> Step avg speed (in seconds) based on {total_steps_measured} steps: {stable_avg}\nexcluding {warmup_steps} steps as warmup"
             )
 
         if cfg.total_steps_to_run is not None:
@@ -830,10 +852,33 @@ def fsdp_main():
                 Fore.GREEN
                 + f"\n--> Step avg speed based on {total_steps_measured} steps: {stable_avg} seconds"
             )
+        try:
+            if cfg.use_deferred_init:
+                print(
+                    Fore.LIGHTBLUE_EX
+                    + f"\n ==>> This run used deferred init! \nIf you are training and seeing no/poor training results, \n pls set this to False in the config file.**\n"
+                )
+        except:
+            pass
+        training_framework = "DDP" if cfg.use_ddp else "FSDP"
+        print(Fore.GREEN + f"\nDist Training Framework used = {training_framework}\n")
+        if cfg.use_ddp:
+            print(
+                f"DDP settings:  \nddp_bucket_size={cfg.ddp_bucket_size},\nddp_use_gradient_view={cfg.ddp_use_gradient_view}\n"
+            )
         print(f"This was run with TensorParallel? = {cfg.use_tp}\n")
-        print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
-        print(f"Run with MQA? {cfg.use_multi_query_attention}\n")
+        try:
+            print(f"Run with Parallel Attention? {cfg.use_parallel_attention}")
+            print(f"Run with MQA? {cfg.use_multi_query_attention}\n")
+        except:
+            pass
         print(f"Batch size used = {cfg.batch_size_training}\n")
+        if not cfg.use_ddp:
+            print(
+                f"FSDP Activation Checkpointing? = {cfg.fsdp_activation_checkpointing}"
+            )
+        if cfg.hf_t5_checkpointing:
+            print(f"HF Activation Checkpointing? = {cfg.hf_t5_checkpointing}")
 
         print(Fore.LIGHTBLUE_EX + f"\n--> Model Size =  {num_params} M Params\n")
         if cfg.print_memory_summary:

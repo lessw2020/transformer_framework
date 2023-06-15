@@ -26,26 +26,34 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 
 @dataclass
 class train_config(base_config):
-    # model
-    # model_name = "90M"
+    # training - set total_steps = None to run epochs,
+    #  otherwise step count is used and breaks.
     total_steps_to_run: int = 8
-    # training
     num_epochs: int = 2
 
-    use_timm = False
+    # Framework to run - DDP or FSDP.
+    # DDP = False means using FSDP.
+    use_ddp: bool = False
+    ddp_bucket_size: float = 25
+    ddp_use_gradient_view: bool = False
+
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
         "631M"
+        "smartvit90"
+        # "631M"
         # "1B"
         # "1.8B"
         # "4B"
         # "22B"
     )
 
-    use_parallel_attention: bool = True
+
+    use_timm = False
+    use_parallel_attention: bool = False
 
     # only relevant if use_parallel_attention True
     use_multi_query_attention: bool = True
