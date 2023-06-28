@@ -25,6 +25,10 @@ class base_config:
     # ignores warmup steps for avg time calcs
     warmup_steps: int = 5
 
+    # FSDP
+    use_orig_params: bool = True
+    limit_all_gathers: bool = True
+
     # DDP
     use_ddp: bool = True
     ddp_bucket_size: float = 25
