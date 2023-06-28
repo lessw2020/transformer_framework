@@ -44,8 +44,11 @@ class train_config(base_config):
     ddp_use_gradient_view: bool = False
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = False
-    hf_t5_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = True
+    hf_t5_checkpointing: bool = False
+
+    # torch.compile
+    use_torch_compile: bool = True
 
     # checkpoint models
     save_model_checkpoint: bool = False

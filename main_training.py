@@ -552,6 +552,12 @@ def fsdp_main():
         if rank == 0:
             print(f"--> FSDP activation checkpointing in use")
 
+    if cfg.use_torch_compile:
+        # model = torch.compile(model)
+        model = torch._dynamo.optimize("inductor")(model)
+        if rank == 0:
+            print(f"--> Torch.compile in use")
+
     # print sharding plan?
     if rank == 0 and cfg.print_sharding_plan:
         print(model)
