@@ -42,7 +42,7 @@ class base_config:
     print_training_loss_data: bool = False
 
     # training
-    num_epochs: int = 2
+    num_epochs: int = 4
 
     model_weights_bf16: bool = False  # warning, True will  move model weights to BF16...use BFF_AdamW optimizer
 

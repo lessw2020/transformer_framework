@@ -29,8 +29,8 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # training - set total_steps = None to run epochs,
     #  otherwise step count is used and breaks.
-    total_steps_to_run: int = 8
-    num_epochs: int = 2
+    total_steps_to_run: int = None
+    num_epochs: int = 4
 
     # Framework to run - DDP or FSDP.
     # DDP = False means using FSDP.
@@ -40,28 +40,31 @@ class train_config(base_config):
 
     model_name = (
         # "vit_relpos_medium_patch16_rpn_224"  #
-        "vit_large_patch16_224"
+        # "vit_large_patch16_224"
         # "vit_gigantic_patch14_224"
         # "vit_relpos_base_patch16_rpn_224"
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
         # "631M"
         # "smartvit90"
-        # "631M"
+        "631M"
         # "1B"
         # "1.8B"
         # "4B"
         # "22B"
     )
 
-    use_timm = True
-    use_parallel_attention: bool = False
+    use_timm = False
+    use_parallel_attention: bool = True
 
     # only relevant if use_parallel_attention True
-    use_multi_query_attention: bool = True
+    use_multi_query_attention: bool = False
 
     # use scaled dot product attention
     use_fused_attention: bool = True
+
+    # torch.compile
+    use_torch_compile: bool = False
 
     # use flop counter
     flop_counter: bool = True
@@ -79,10 +82,10 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 12
+    batch_size_training: int = 64
     # validation
     run_validation: bool = True
-    val_batch_size = 32
+    val_batch_size = 24
 
     fsdp_activation_checkpointing: bool = True
 
