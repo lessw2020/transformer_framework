@@ -394,6 +394,7 @@ class ParallelAttentionBlock(nn.Module):
             version_check
         ), f"Parallel Attention Blocks requires PT 2.0+, you are running {torch.__version__}.\nPlease upgrade your PyTorch version."
 
+        assert use_group_query_attention, "gqa"
         self.num_heads = num_heads
         self.emb_dim = emb_dimension
         self.head_dim = head_dimension if head_dimension else emb_dimension // num_heads
@@ -436,12 +437,9 @@ class ParallelAttentionBlock(nn.Module):
         # previous init params, moved to internal defaults for streamlining
         normalization_layer = nn.LayerNorm
         self.mlp_activation = nn.SiLU()
-
-        
+   
         self.do_cross = do_cross
         self.num_q = 2 if do_cross else 1
-        
-        
 
         self.in_proj_dims = [
             self.head_dim * num_heads * self.num_q,
@@ -505,11 +503,12 @@ class ParallelAttentionBlock(nn.Module):
         rel_pos_bias: Optional[torch.Tensor] = None,
     ):
         """TODO:  if using do_cross, this will not work for nn.Sequential"""
-        _rank = dist.get_rank()
+        
+        #_rank = dist.get_rank()
 
-        def rank_print(msg):
-            if _rank == 0:
-                print(f"{msg}")
+        #def rank_print(msg):
+        #    if _rank == 0:
+        #        print(f"{msg}")
 
         # TODO: No kv cache support yet (add assert)
 
@@ -521,53 +520,23 @@ class ParallelAttentionBlock(nn.Module):
         q, k, v, inner_mlp, gate = torch.split(y, self.in_proj_dims, dim=-1)
 
         # b n nq h d
-        rank_print(f"start {q.shape=}")
-        rank_print(f"start {k.shape=}")
-        rank_print(f"start {v.shape=}")
-        # start q.shape=torch.Size([2, 257, 512])
-        # start k.shape=torch.Size([2, 257, 128])
-        # start v.shape=torch.Size([2, 257, 128])
-
-        # k.shape = torch.Size([2, 257, 128])
-
         q = q.view(batch_size, seq_len, self.num_q, self.num_heads, self.head_dim)
         # after view q.shape=torch.Size([2, 257, 1, 8, 64])
-        rank_print(f"after view {q.shape=}")
-        rank_print(f"{k.shape=}")
-        # RuntimeError: shape '[2, 257, 1, 64]'
-        # is invalid for input of size 65792
-        # q.shape=torch.Size([2, 257, 1, 8, 64])
-        # k.shape=torch.Size([2, 257, 128])
-
-        # group query expansion
-        # prev kv and deal with group query
-        rank_print(f"{self.kv_expansion_factor=}")
-    
-        #assert head is k, f"mismatch of heads in loop"
-        k = k.view(batch_size, seq_len, self.num_kv, self.head_dim) # b n hnum dimh
-        # bs, slen, n_kv_heads, head_dim = x.shape
-        rank_print(f" k post view  expansion {k.shape=}")
-        if self.use_variable_kv and self.num_kv > 1:
-            k = repeat_kv(
-                k, n_rep=self.kv_expansion_factor
-            )  
-        rank_print(f"head post repeat {k.shape=}")
-        k = k.transpose(2, 1)  # b hnum n dimh
-
-        v = v.view(batch_size, seq_len, self.num_kv, self.head_dim) # b n hnum dimh
-        # bs, slen, n_kv_heads, head_dim = x.shape
-        rank_print(f" v post view  expansion {v.shape=}")
-        if self.use_variable_kv and self.num_kv > 1:
-            v = repeat_kv(
-                v, n_rep=self.kv_expansion_factor
-            )  
-        rank_print(f"head post repeat {v.shape=}")
-        v = v.transpose(2, 1)  # b hnum n dimh
-
-        rank_print(f"k post transpose {k.shape=}")
-        rank_print(f"v post transpose {v.shape=}")
-        assert k.shape == v.shape, f"mismatched kv shapes"
         
+        # group query expansion
+        def kv_expansion(head):
+            
+            head = head.view(batch_size, seq_len, self.num_kv, self.head_dim) # b n hnum dimh
+            # bs, slen, n_kv_heads, head_dim = x.shape
+            if self.use_variable_kv and self.num_kv > 1:
+                head = repeat_kv(
+                    head, n_rep=self.kv_expansion_factor
+                )  
+            return head.transpose(2, 1)  # b hnum n dimh
+        
+        k = kv_expansion(k)
+        v = kv_expansion(v)
+         
         if self.do_cross:
             # b hnum n dimh
             cq = q[:, :, 1].transpose(2, 1)
@@ -578,17 +547,6 @@ class ParallelAttentionBlock(nn.Module):
             q = self.q_norm(q)
             k = self.k_norm(k)
 
-        '''if self.use_variable_kv and self.num_kv == 1:
-            v = v.unsqueeze(1)  # b 1 n dimh
-        else:
-            v = v.view(batch_size, seq_len, 2, self.head_dim)
-            print(f"fv pre {v.shape=}")
-            v = repeat_kv(v, n_rep=4)  # self.num_kv)
-            print(f"post {v.shape=}")
-
-            v = v.transpose(2, 1)  # b hnum n dimh
-        '''
-        print(f"-=-=-=-=-=-=- {q.shape=}, {k.shape=}, {v.shape=}")
 
         # Merge rel pos bias and mask into single float mask
         if rel_pos_bias is None:
@@ -612,16 +570,11 @@ class ParallelAttentionBlock(nn.Module):
             dropout_p=self.attention_dropout.p,
         )
 
-        print(f"final_attn from sdpa {final_attn.shape=}")
-
         final_attn = (
             final_attn.transpose(2, 1)
             .contiguous()
             .view(batch_size, seq_len, self.head_dim * self.num_heads)
         )
-
-        print(f"final_attn after transpose {final_attn.shape=}")
-        # assert False, "stop"
 
         # swiglu
         activated_mlp = self.mlp_activation(inner_mlp) * gate

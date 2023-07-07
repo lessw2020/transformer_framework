@@ -59,7 +59,7 @@ class train_config(base_config):
 
     # only relevant if use_parallel_attention True
     use_group_query_attention: bool = True
-    num_heads_group_query_attn: int = 2
+    num_heads_group_query_attn: int = 4
 
     # use scaled dot product attention
     use_fused_attention: bool = True
