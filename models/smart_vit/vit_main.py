@@ -409,7 +409,8 @@ class ParallelAttentionBlock(nn.Module):
         self.group_num_kv = num_heads_group_query_attention
         self.num_kv = self.group_num_kv if self.use_variable_kv else self.num_heads
         self.kv_head_dims = self.head_dim * self.num_kv
-        self.kv_expansion_factor = self.num_heads / self.group_num_kv
+        self.kv_expansion_factor = int(self.num_heads / self.group_num_kv)
+        assert self.kv_expansion_factor > 0, f"kv expansion factor must be positive integer, got {self.kv_expansion_factor=}"
 
         
         self.mlp_hidden_dim = int(mlp_expansion_ratio * self.emb_dim)
@@ -538,28 +539,35 @@ class ParallelAttentionBlock(nn.Module):
         # q.shape=torch.Size([2, 257, 1, 8, 64])
         # k.shape=torch.Size([2, 257, 128])
 
-        k = k.view(
-            batch_size,
-            seq_len,
-            2,  # self.num_heads,
-            self.head_dim,
-        )  # b n hnum dimh
-
+        # group query expansion
+        # prev kv and deal with group query
+        rank_print(f"{self.kv_expansion_factor=}")
+    
+        #assert head is k, f"mismatch of heads in loop"
+        k = k.view(batch_size, seq_len, self.num_kv, self.head_dim) # b n hnum dimh
         # bs, slen, n_kv_heads, head_dim = x.shape
         rank_print(f" k post view  expansion {k.shape=}")
-
-        # deal with group query
-        rank_print(f"{self.kv_expansion_factor=}")
         if self.use_variable_kv and self.num_kv > 1:
             k = repeat_kv(
-                k, n_rep=4
-            )  # self.num_kv) # TODO - divide num_heads / head_dim
-        rank_print(f"k post repeat {k.shape=}")
-
+                k, n_rep=self.kv_expansion_factor
+            )  
+        rank_print(f"head post repeat {k.shape=}")
         k = k.transpose(2, 1)  # b hnum n dimh
-        rank_print(f"k post transpose {k.shape=}")
-        #
 
+        v = v.view(batch_size, seq_len, self.num_kv, self.head_dim) # b n hnum dimh
+        # bs, slen, n_kv_heads, head_dim = x.shape
+        rank_print(f" v post view  expansion {v.shape=}")
+        if self.use_variable_kv and self.num_kv > 1:
+            v = repeat_kv(
+                v, n_rep=self.kv_expansion_factor
+            )  
+        rank_print(f"head post repeat {v.shape=}")
+        v = v.transpose(2, 1)  # b hnum n dimh
+
+        rank_print(f"k post transpose {k.shape=}")
+        rank_print(f"v post transpose {v.shape=}")
+        assert k.shape == v.shape, f"mismatched kv shapes"
+        
         if self.do_cross:
             # b hnum n dimh
             cq = q[:, :, 1].transpose(2, 1)
@@ -570,7 +578,7 @@ class ParallelAttentionBlock(nn.Module):
             q = self.q_norm(q)
             k = self.k_norm(k)
 
-        if self.use_variable_kv and self.num_kv == 1:
+        '''if self.use_variable_kv and self.num_kv == 1:
             v = v.unsqueeze(1)  # b 1 n dimh
         else:
             v = v.view(batch_size, seq_len, 2, self.head_dim)
@@ -579,8 +587,8 @@ class ParallelAttentionBlock(nn.Module):
             print(f"post {v.shape=}")
 
             v = v.transpose(2, 1)  # b hnum n dimh
-
-        print(f"{q.shape=}, {k.shape=}, {v.shape=}")
+        '''
+        print(f"-=-=-=-=-=-=- {q.shape=}, {k.shape=}, {v.shape=}")
 
         # Merge rel pos bias and mask into single float mask
         if rel_pos_bias is None:
