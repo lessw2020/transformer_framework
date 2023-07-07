@@ -394,7 +394,6 @@ class ParallelAttentionBlock(nn.Module):
             version_check
         ), f"Parallel Attention Blocks requires PT 2.0+, you are running {torch.__version__}.\nPlease upgrade your PyTorch version."
 
-        assert use_group_query_attention, "gqa"
         self.num_heads = num_heads
         self.emb_dim = emb_dimension
         self.head_dim = head_dimension if head_dimension else emb_dimension // num_heads
