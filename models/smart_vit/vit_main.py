@@ -328,29 +328,48 @@ class ResPostBlock(nn.Module):
         return x
 
 
-class RMSNorm(torch.nn.Module):
-    def __init__(self, dim: int, eps: float = 1e-6):
-        super().__init__()
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from packaging import version
+from typing import Optional
+import math
 
-    def forward(self, x):
-        output = self._norm(x.float()).type_as(x)
-        return output * self.weight
+
+def rank_print(_rank, msg):
+    if _rank == 0:
+        print(f"{msg}")
+
+
+def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
+    """torch.repeat_interleave(x, dim=2, repeats=n_rep)"""
+    _rank = dist.get_rank()
+
+    rank_print(_rank, f"{x.shape=}")
+
+    bs, slen, n_kv_heads, head_dim = x.shape
+
+    if n_rep == 1:
+        return x
+    return (
+        x[:, :, :, None, :]
+        .expand(bs, slen, n_kv_heads, n_rep, head_dim)
+        .reshape(bs, slen, n_kv_heads * n_rep, head_dim)
+    )
 
 
 class ParallelAttentionBlock(nn.Module):
     """
-    Transformer layer multi-head attention and MLP, in a parallelized fashion rather than sequential,
-    with optional attention masking.
-    Inspired by PaLM:  https://arxiv.org/abs/2204.02311
+        Transformer layer multi-head attention and MLP, in a parallelized fashion rather than sequential,
+        with optional attention masking.
+        Inspired by PaLM:  https://arxiv.org/abs/2204.02311
 
-    args & options TODO
-    * We use SwiGLU for the activation function
-
+        args & options TODO
+        * We use SwiGLU for the activation function
+    num_heads_group_query_attn=num_heads_group_query_attn,
+            num_classes=input_num_classes,
     """
 
     def __init__(
@@ -362,13 +381,13 @@ class ParallelAttentionBlock(nn.Module):
         qk_normalization: bool = True,
         projection_dropout: float = 0.0,
         attention_dropout: float = 0.0,
-        use_multi_query_attention: bool = True,
-        use_in_projection_bias: bool = False,
-        use_out_projection_bias: bool = False,
+        use_group_query_attention: bool = False,
+        num_heads_group_query_attention: int = 1,
+        use_in_projection_bias: bool = True,
+        use_out_projection_bias: bool = True,
         do_cross: bool = False,
         use_weight_init: bool = True,
         num_layers: int = 1,
-        use_rms_norm: bool = False,
     ):
         super().__init__()
 
@@ -405,17 +424,22 @@ class ParallelAttentionBlock(nn.Module):
         self.use_out_projection_bias = use_out_projection_bias
 
         # previous init params, moved to internal defaults for streamlining
-        normalization_layer = RMSNorm if use_rms_norm else nn.LayerNorm
+        normalization_layer = nn.LayerNorm
         self.mlp_activation = nn.SiLU()
 
-        self.single_kv = use_multi_query_attention
+        self.use_variable_kv = use_group_query_attention
+        self.group_num_kv = num_heads_group_query_attention
         self.do_cross = do_cross
         self.num_q = 2 if do_cross else 1
 
+        self.num_kv = self.group_num_kv if self.use_variable_kv else self.num_heads
+
+        self.kv_head_dims = self.head_dim * self.num_kv
+
         self.in_proj_dims = [
             self.head_dim * num_heads * self.num_q,
-            self.head_dim if self.single_kv else self.head_dim * num_heads,
-            self.head_dim if self.single_kv else self.head_dim * num_heads,
+            self.kv_head_dims,
+            self.kv_head_dims,
             self.mlp_hidden_dim,
             self.mlp_hidden_dim,
         ]  # q, k, v, mlp, gate
@@ -428,7 +452,7 @@ class ParallelAttentionBlock(nn.Module):
 
         if do_cross:
             self.c_fused_dims = [
-                self.head_dim if self.single_kv else self.head_dim * num_heads,
+                self.kv_head_dims
             ] * 2  # k and v projections from cross-input
             self.c_in_proj = nn.Linear(
                 emb_dimension, sum(self.c_fused_dims), bias=use_in_projection_bias
@@ -474,6 +498,11 @@ class ParallelAttentionBlock(nn.Module):
         rel_pos_bias: Optional[torch.Tensor] = None,
     ):
         """TODO:  if using do_cross, this will not work for nn.Sequential"""
+        _rank = dist.get_rank()
+
+        def rank_print(msg):
+            if _rank == 0:
+                print(f"{msg}")
 
         # TODO: No kv cache support yet (add assert)
 
@@ -485,10 +514,44 @@ class ParallelAttentionBlock(nn.Module):
         q, k, v, inner_mlp, gate = torch.split(y, self.in_proj_dims, dim=-1)
 
         # b n nq h d
+        rank_print(f"start {q.shape=}")
+        rank_print(f"start {k.shape=}")
+        rank_print(f"start {v.shape=}")
+        # start q.shape=torch.Size([2, 257, 512])
+        # start k.shape=torch.Size([2, 257, 128])
+        # start v.shape=torch.Size([2, 257, 128])
+
+        # k.shape = torch.Size([2, 257, 128])
+
         q = q.view(batch_size, seq_len, self.num_q, self.num_heads, self.head_dim)
+        # after view q.shape=torch.Size([2, 257, 1, 8, 64])
+        rank_print(f"after view {q.shape=}")
+        rank_print(f"{k.shape=}")
+        # RuntimeError: shape '[2, 257, 1, 64]'
+        # is invalid for input of size 65792
+        # q.shape=torch.Size([2, 257, 1, 8, 64])
+        # k.shape=torch.Size([2, 257, 128])
+
         k = k.view(
-            batch_size, seq_len, 1 if self.single_kv else self.num_heads, self.head_dim
+            batch_size,
+            seq_len,
+            2,  # self.num_heads,
+            self.head_dim,
         )  # b n hnum dimh
+
+        # bs, slen, n_kv_heads, head_dim = x.shape
+        rank_print(f" k post view  expansion {k.shape=}")
+
+        # deal with group query
+        if self.use_variable_kv and self.num_kv > 1:
+            k = repeat_kv(
+                k, n_rep=4
+            )  # self.num_kv) # TODO - divide num_heads / head_dim
+        rank_print(f"k post repeat {k.shape=}")
+
+        k = k.transpose(2, 1)  # b hnum n dimh
+        rank_print(f"k post transpose {k.shape=}")
+        #
 
         if self.do_cross:
             # b hnum n dimh
@@ -500,14 +563,17 @@ class ParallelAttentionBlock(nn.Module):
             q = self.q_norm(q)
             k = self.k_norm(k)
 
-        if self.single_kv:
+        if self.use_variable_kv and self.num_kv == 1:
             v = v.unsqueeze(1)  # b 1 n dimh
         else:
-            v = v.view(batch_size, seq_len, self.num_heads, self.head_dim).transpose(
-                2, 1
-            )  # b hnum n dimh
+            v = v.view(batch_size, seq_len, 2, self.head_dim)
+            print(f"fv pre {v.shape=}")
+            v = repeat_kv(v, n_rep=4)  # self.num_kv)
+            print(f"post {v.shape=}")
 
-        k = k.transpose(2, 1)  # b hnum n dimh
+            v = v.transpose(2, 1)  # b hnum n dimh
+
+        print(f"{q.shape=}, {k.shape=}, {v.shape=}")
 
         # Merge rel pos bias and mask into single float mask
         if rel_pos_bias is None:
@@ -531,11 +597,16 @@ class ParallelAttentionBlock(nn.Module):
             dropout_p=self.attention_dropout.p,
         )
 
+        print(f"final_attn from sdpa {final_attn.shape=}")
+
         final_attn = (
             final_attn.transpose(2, 1)
             .contiguous()
             .view(batch_size, seq_len, self.head_dim * self.num_heads)
         )
+
+        print(f"final_attn after transpose {final_attn.shape=}")
+        # assert False, "stop"
 
         # swiglu
         activated_mlp = self.mlp_activation(inner_mlp) * gate
@@ -554,14 +625,14 @@ class ParallelAttentionBlock(nn.Module):
             ck = ck.view(
                 batch_size,
                 c_len,
-                1 if self.single_kv else self.num_heads,
+                self.num_kv,  # if self.use_variable_kv else self.num_heads,
                 self.head_dim,
             )
             if self.kq_norm:
                 cq = self.c_q_norm(cq)
                 ck = self.c_k_norm(ck)
 
-            if self.single_kv:
+            if self.use_variable_kv and self.num_kv == 1:
                 cv = cv.unsqueeze(1)  # b 1 n d
             else:
                 cv = cv.view(
@@ -629,7 +700,8 @@ class VisionTransformer(nn.Module):
         input_size=224,
         use_fused_attention: Optional[bool] = True,
         use_upper_fusion: Optional[bool] = True,
-        use_multi_query_attention: Optional[bool] = False,
+        use_group_query_attention: Optional[bool] = False,
+        num_heads_group_query_attention: Optional[int] = 1,
     ):
         """
         Args:
@@ -718,7 +790,8 @@ class VisionTransformer(nn.Module):
                         mlp_expansion_ratio=mlp_ratio,
                         projection_dropout=proj_drop_rate,
                         attention_dropout=attn_drop_rate,
-                        use_multi_query_attention=use_multi_query_attention,
+                        use_group_query_attention=use_group_query_attention,
+                        num_heads_group_query_attention=num_heads_group_query_attention,
                         num_layers=depth,
                     )
                     for i in range(depth)
@@ -959,10 +1032,15 @@ def resize_pos_embed(
 def build_smart_vit(model_params):
     # need to improve this but works for now
     print(f"{model_params}")
+
     use_parallel = model_params.get("use_parallel_attention", False)
     use_fused_attention = model_params.get("use_fused_attention", False)
-    # use_upper_fusion = model_params.get("use_upper_fusion", False)
-    use_mqa = model_params.get("use_multi_query_attention", False)
+    if not use_fused_attention:
+        assert False, "not using fused attention..remove this is desired."
+
+    use_gqa = model_params.get("use_group_query_attention", False)
+    num_heads_group_query_attention = model_params.get("num_heads_group_query_attn", 1)
+
     input_num_classes = model_params.get("num_classes", None)
     assert input_num_classes is not None, f"Failed to get num_classes for ViT creation"
     print(f"Num classes = {input_num_classes}")
@@ -971,9 +1049,8 @@ def build_smart_vit(model_params):
         print(f"Building with Parallel Layers Attention")
         block_function = ParallelAttentionBlock
         del model_params["use_parallel_attention"]  # models don't understand this
-        # use_upper_fusion = use_upper_fusion
-        use_multi_query_attention = use_mqa
-        del model_params["use_multi_query_attention"]
+        del model_params["num_heads_group_query_attn"]
+        del model_params["use_group_query_attention"]
 
     else:
         print(f"Building with Sequential Attention")
@@ -987,7 +1064,8 @@ def build_smart_vit(model_params):
         no_embed_class=True,
         # use_upper_fusion=use_upper_fusion,
         use_fused_attention=use_fused_attention,
-        use_multi_query_attention=use_multi_query_attention,
+        use_group_query_attention=use_gqa,
+        num_heads_group_query_attention=num_heads_group_query_attention,
         num_classes=input_num_classes,
     )
 

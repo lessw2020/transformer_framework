@@ -29,7 +29,7 @@ NUM_CLASSES = 1000  # default to imagenet, updates in dataset selection
 class train_config(base_config):
     # training - set total_steps = None to run epochs,
     #  otherwise step count is used and breaks.
-    total_steps_to_run: int = None
+    total_steps_to_run: int = 8
     num_epochs: int = 4
 
     # Framework to run - DDP or FSDP.
@@ -46,8 +46,8 @@ class train_config(base_config):
         # "maxxvitv2_rmlp_base_rw_224"
         # "smartvit90"
         # "631M"
-        # "smartvit90"
-        "631M"
+        "smartvit90"
+        # "631M"
         # "1B"
         # "1.8B"
         # "4B"
@@ -58,7 +58,8 @@ class train_config(base_config):
     use_parallel_attention: bool = True
 
     # only relevant if use_parallel_attention True
-    use_multi_query_attention: bool = False
+    use_group_query_attention: bool = True
+    num_heads_group_query_attn: int = 2
 
     # use scaled dot product attention
     use_fused_attention: bool = True
@@ -66,8 +67,11 @@ class train_config(base_config):
     # torch.compile
     use_torch_compile: bool = False
 
+    # optimizer
+    use_optimizer_overlap: bool = True
+
     # use flop counter
-    flop_counter: bool = True
+    flop_counter: bool = False
 
     # profile
     run_profiler: bool = False
@@ -82,12 +86,12 @@ class train_config(base_config):
     # image size
     image_size: int = 224
 
-    batch_size_training: int = 64
+    batch_size_training: int = 2
     # validation
     run_validation: bool = True
-    val_batch_size = 24
+    val_batch_size = 16
 
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
 
     # use synthetic data
     use_synthetic_data: bool = False
@@ -150,10 +154,6 @@ class train_config(base_config):
 def build_model(
     model_size: str,
     layernorm_eps_in: float = 1e-6,
-    use_parallel_attention=True,
-    use_upper_fusion=True,
-    use_fused_attention=True,
-    use_multi_query_attention=False,
 ):
     local_cfg = train_config()
     print(f"{local_cfg.NUM_CLASSES=}")
@@ -162,7 +162,7 @@ def build_model(
     if model_size == "smartvit90":
         model_args = {
             "patch_size": 14,
-            "embed_dim": 1024,
+            "embed_dim": 512,
             "depth": 8,
             "num_heads": 8,
             "num_classes": NUM_CLASSES,
@@ -221,16 +221,12 @@ def build_model(
         }
 
     # core model args
-    # model_args["layernorm_eps"] = layernorm_eps_in
 
     # current control over parallel vs sequential attention blocks
-    if use_parallel_attention:
-        model_args["use_parallel_attention"] = True
-    if use_fused_attention:
-        model_args["use_fused_attention"] = True
-    if use_upper_fusion:
-        model_args["use_upper_fusion"] = True
-    model_args["use_multi_query_attention"] = use_multi_query_attention
+    model_args["use_parallel_attention"] = local_cfg.use_parallel_attention
+    model_args["use_fused_attention"] = local_cfg.use_fused_attention
+    model_args["use_group_query_attention"] = local_cfg.use_group_query_attention
+    model_args["num_heads_group_query_attn"] = local_cfg.num_heads_group_query_attn
 
     assert model_args.get(
         "image_size"

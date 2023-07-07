@@ -30,13 +30,16 @@ class train_config(base_config):
     # google/t5-v1_1-xxl #8b
     # t5-11b
 
-    model_name = "t5-small"
+    model_name = "t5-large"
 
     # important - if you want trackable loss stats, please ensure you use real data:
     use_real_data = True
     use_synthetic_data: bool = False
 
     use_deferred_init: bool = False
+
+    # optimizer
+    use_optimizer_overlap: bool = True
 
     # DDP
     use_ddp: bool = False
@@ -48,7 +51,7 @@ class train_config(base_config):
     hf_t5_checkpointing: bool = False
 
     # torch.compile
-    use_torch_compile: bool = True
+    use_torch_compile: bool = False
 
     # checkpoint models
     save_model_checkpoint: bool = False

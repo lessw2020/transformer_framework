@@ -16,6 +16,11 @@ from torch.distributed.fsdp import (
     StateDictType,
 )
 
+# optimizer overlap
+from torch.distributed.fsdp.api import CPUOffload
+from torch.distributed.optim import _apply_optimizer_in_backward
+
+
 import model_checkpointing
 
 import torch.distributed as dist
@@ -301,16 +306,10 @@ def fsdp_main():
             if use_parallel:
                 model = config.build_model(
                     cfg.model_name,
-                    use_parallel_attention=use_parallel,
-                    # use_upper_fusion=use_upper_fusion,
-                    use_fused_attention=use_fused_attention,
-                    use_multi_query_attention=use_mqa,
                 )
             else:
                 model = config.build_model(
                     cfg.model_name,
-                    use_parallel_attention=False,
-                    use_fused_attention=use_fused_attention,
                 )
         print_memory_summary("vit", "cuda")
         time.sleep(2)
@@ -509,6 +508,11 @@ def fsdp_main():
 
     process_group_fsdp = None
 
+    # optimizer overlap
+    # offload_policy = None
+    # if cfg.use_optimizer_overlap:
+    #    offload_policy = CPUOffload(offload_params=True)
+
     if cfg.use_tp:
         fsdp_pg = twod_mesh.get_dim_groups()[0]
         process_group_fsdp = fsdp_pg
@@ -536,6 +540,7 @@ def fsdp_main():
             use_orig_params=cfg.use_orig_params,
             limit_all_gathers=cfg.limit_all_gathers,
             param_init_fn=my_init_fn,
+            # cpu_offload=offload_policy,
         )
     print_memory_summary("vit", "cuda")
 
@@ -675,6 +680,21 @@ def fsdp_main():
             print(f"Running with DAdapt optimizer")
     elif cfg.optimizer == "AdamW":
         use_fused_optimizer = cfg.use_fused_optimizer
+        optim_kwargs = {
+            "lr": 0.0005,
+            "weight_decay": weight_decay,
+            "fused": use_fused_optimizer,
+        }
+
+        if cfg.use_optimizer_overlap:
+            rank_print(rank, f"Using Optimizer Overlap! ")
+
+            _apply_optimizer_in_backward(
+                optimizer_class=torch.optim.AdamW,
+                params=model.parameters(),
+                optimizer_kwargs=optim_kwargs,
+                register_hook=False,
+            )
 
         optimizer = torch.optim.AdamW(
             model.parameters(),
@@ -682,6 +702,7 @@ def fsdp_main():
             weight_decay=weight_decay,
             fused=use_fused_optimizer,
         )
+
         if rank == 0:
             print(
                 f"Running with AdamW optimizer, with fusion set to {use_fused_optimizer}"
