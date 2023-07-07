@@ -344,11 +344,10 @@ def rank_print(_rank, msg):
 
 
 def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
-    """torch.repeat_interleave(x, dim=2, repeats=n_rep)"""
-    _rank = dist.get_rank()
-
-    rank_print(_rank, f"{x.shape=}")
-
+    """expands kv_heads to match q num_heads
+    via 
+    torch.repeat_interleave(x, dim=2, repeats=n_rep)"""
+    
     bs, slen, n_kv_heads, head_dim = x.shape
 
     if n_rep == 1:
@@ -368,8 +367,7 @@ class ParallelAttentionBlock(nn.Module):
 
         args & options TODO
         * We use SwiGLU for the activation function
-    num_heads_group_query_attn=num_heads_group_query_attn,
-            num_classes=input_num_classes,
+    
     """
 
     def __init__(
@@ -403,6 +401,17 @@ class ParallelAttentionBlock(nn.Module):
             self.emb_dim % self.num_heads == 0
         ), f"dimensions {self.emb_dim.shape} must be evenly divisible by num_heads {num_heads=}"
 
+        # group query attn
+        if use_group_query_attention:
+            assert self.num_heads % num_heads_group_query_attention ==0, f"num_mha_heads {self.num_heads} not evenly divisible by num_heads_group_query_attention {num_heads_group_query_attention}"
+        
+        self.use_variable_kv = use_group_query_attention
+        self.group_num_kv = num_heads_group_query_attention
+        self.num_kv = self.group_num_kv if self.use_variable_kv else self.num_heads
+        self.kv_head_dims = self.head_dim * self.num_kv
+        self.kv_expansion_factor = self.num_heads / self.group_num_kv
+
+        
         self.mlp_hidden_dim = int(mlp_expansion_ratio * self.emb_dim)
 
         self.qk_norm: bool = qk_normalization
@@ -427,14 +436,11 @@ class ParallelAttentionBlock(nn.Module):
         normalization_layer = nn.LayerNorm
         self.mlp_activation = nn.SiLU()
 
-        self.use_variable_kv = use_group_query_attention
-        self.group_num_kv = num_heads_group_query_attention
+        
         self.do_cross = do_cross
         self.num_q = 2 if do_cross else 1
-
-        self.num_kv = self.group_num_kv if self.use_variable_kv else self.num_heads
-
-        self.kv_head_dims = self.head_dim * self.num_kv
+        
+        
 
         self.in_proj_dims = [
             self.head_dim * num_heads * self.num_q,
@@ -543,6 +549,7 @@ class ParallelAttentionBlock(nn.Module):
         rank_print(f" k post view  expansion {k.shape=}")
 
         # deal with group query
+        rank_print(f"{self.kv_expansion_factor=}")
         if self.use_variable_kv and self.num_kv > 1:
             k = repeat_kv(
                 k, n_rep=4
