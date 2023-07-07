@@ -391,7 +391,7 @@ class ParallelAttentionBlock(nn.Module):
         qk_normalization: bool = True,
         projection_dropout: float = 0.0,
         attention_dropout: float = 0.0,
-        use_group_query_attention: bool = False,
+        use_group_query_attention: bool = True,
         num_heads_group_query_attention: int = 1,
         use_in_projection_bias: bool = True,
         use_out_projection_bias: bool = True,
