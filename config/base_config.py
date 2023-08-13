@@ -13,6 +13,7 @@ from torch.distributed.fsdp import (
 )
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 import torch
+import torch.distributed as dist
 
 
 @dataclass
@@ -30,7 +31,7 @@ class base_config:
     limit_all_gathers: bool = True
 
     # DDP
-    use_ddp: bool = True
+    use_ddp: bool = False
     ddp_bucket_size: float = 25
     ddp_use_gradient_view: bool = False
 
@@ -74,7 +75,7 @@ class base_config:
     print_sharding_plan: bool = False
 
     run_profiler: bool = False
-    profile_folder: str = "fsdp/profile_tracing"
+    profile_folder: str = "fsdp_no_ac/profile_tracing"
 
     # disable forward_prefetch since it currently doesn't work with activation
     # checkpointing for several cases
@@ -87,10 +88,10 @@ class base_config:
     num_workers_dataloader: int = 2
 
     # training
-    batch_size_training: int = 16
+    batch_size_training: int = 32
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = False
+    fsdp_activation_checkpointing: bool = True
 
     # parallel_attention related:
     use_fused_attention: bool = False
@@ -140,13 +141,36 @@ def fsdp_checkpointing_base(model, blocks):
     """apply activation checkpointing to model
     returns None as model is updated directly
     """
+
     non_reentrant_wrapper = functools.partial(
         checkpoint_wrapper,
         # offload_to_cpu=False,
         checkpoint_impl=CheckpointImpl.NO_REENTRANT,
     )
-    check_fn = lambda submodule: isinstance(submodule, blocks)
+
+    def selective_checkpointing(submodule, every_xth_item: int = 0):
+        """enables selective checkpointing of candidate layers.
+        Usage:
+        every_xth_item controls which items to checkpoint.
+        None, 0 == checkpointing filtering not active, checkpoint all instances
+        1 == checkpointing every one (all).
+        2 == checkpoint every 2nd one
+        3 == checkpoint every 3rd one
+        4 = checkpoint every 4th one, etc.
+        """
+        selective_checkpointing.__dict__.setdefault("_count", 0)
+
+        if isinstance(submodule, blocks):
+            selective_checkpointing._count += 1
+            if (
+                not every_xth_item
+                or selective_checkpointing._count % every_xth_item == 0
+            ):
+                return True
+        return False
 
     apply_activation_checkpointing(
-        model, checkpoint_wrapper_fn=non_reentrant_wrapper, check_fn=check_fn
+        model,
+        checkpoint_wrapper_fn=non_reentrant_wrapper,
+        check_fn=selective_checkpointing,
     )
