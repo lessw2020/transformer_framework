@@ -43,7 +43,7 @@ class train_config(base_config):
     # mixed precision
     use_mixed_precision: bool = True
     # checkpoint models
-    save_model_checkpoint: bool = False
+    save_model_checkpoint: bool = True
     # only for local dist
     single_file_per_rank = True
 

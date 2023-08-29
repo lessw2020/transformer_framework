@@ -138,7 +138,7 @@ def fsdp_main():
         param_dtype = torch.bfloat16,
         reduce_dtype = torch.bfloat16,
         buffer_dtype = torch.bfloat16,
-        keep_casted_gradients = True
+        keep_low_precision_grads= True,
     )
 
     mp_policy = None
