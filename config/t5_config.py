@@ -34,7 +34,7 @@ class train_config(base_config):
     # google/t5-v1_1-xxl #8b
     # t5-11b
 
-    model_name = "t5-small"
+    model_name = "t5-base"
 
     # important - if you want trackable loss stats, please ensure you use real data:
     use_real_data = True
@@ -50,7 +50,7 @@ class train_config(base_config):
     # FSDP
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.HYBRID_SHARD
-    replica_group_size = None
+    replica_group_size = 2
     sharding_group_size = 2
 
     # activation checkpointing

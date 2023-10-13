@@ -866,15 +866,16 @@ def fsdp_main():
             warmup_steps = cfg.warmup_steps
             iters_to_avg = total_training_iter_times[warmup_steps:]
 
-            stable_sum = sum(iters_to_avg)
-            # print(f"len iters_to_avg = {len(iters_to_avg)}")
-            total_steps_measured = denom - warmup_steps
-            stable_avg = stable_sum / total_steps_measured
-            stable_avg = round(stable_avg, 4)
-            print(
-                Fore.GREEN
-                + f"\n--> Step avg speed (in seconds) based on {total_steps_measured} steps: {stable_avg}\nexcluding {warmup_steps} steps as warmup"
-            )
+            if cfg.total_steps_to_run is None:
+                stable_sum = sum(iters_to_avg)
+                # print(f"len iters_to_avg = {len(iters_to_avg)}")
+                total_steps_measured = denom - warmup_steps
+                stable_avg = stable_sum / total_steps_measured
+                stable_avg = round(stable_avg, 4)
+                print(
+                    Fore.GREEN
+                    + f"\n--> Step avg speed (in seconds) based on {total_steps_measured} steps: {stable_avg}\nexcluding {warmup_steps} steps as warmup"
+                )
 
         if cfg.total_steps_to_run is not None:
             warmup_steps = cfg.warmup_steps
