@@ -50,6 +50,7 @@ class train_config(base_config):
     # FSDP
     # sharding policy
     sharding_strategy: ShardingStrategy = ShardingStrategy.HYBRID_SHARD
+    # below are only relevant for HSDP/SDDP (HYBRID_SHARD, _HYBRID_SHARD_ZERO2)
     replica_group_size = 2
     sharding_group_size = 2
 
