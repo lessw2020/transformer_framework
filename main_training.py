@@ -161,12 +161,6 @@ def setup_tasks(rank, world_size, cfg):
     setup_environ_flags(cfg, rank)
 
 
-# wrapper to avoid cluttering with if rank==0...
-def rank_print(rank, x):
-    if rank == 0:
-        print(x)
-
-
 def zero_print(rank, x):
     if rank == 0:
         print(x)
@@ -182,6 +176,11 @@ def fsdp_main():
     local_rank = int(os.environ["LOCAL_RANK"])
     rank = int(os.environ["RANK"])
     world_size = int(os.environ["WORLD_SIZE"])
+
+    # wrapper to avoid cluttering with if rank==0...
+    def rank_print(msg):
+        if rank == 0:
+            print(f"{msg}")
 
     torch.cuda.manual_seed(cfg.seed + local_rank)
     torch.manual_seed(cfg.seed + local_rank)
@@ -524,9 +523,40 @@ def fsdp_main():
         )
 
     else:
+        # ----- FSDP Init --------------------
+        _global_device_mesh = None
+        # handle scaling groups
+        from torch.distributed.fsdp import ShardingStrategy as sharding
+        from sharding_groups_helper import create_device_mesh
+
+        if cfg.sharding_strategy in [
+            sharding.HYBRID_SHARD,
+            sharding._HYBRID_SHARD_ZERO2,
+        ]:
+            sharding_group_size = None
+            replica_group_size = None
+
+            if cfg.sharding_group_size:
+                rank_print(f"{cfg.sharding_group_size=}")
+                sharding_group_size = cfg.sharding_group_size
+
+            if cfg.replica_group_size:
+                replica_group_size = replica_group_size
+                rank_print(f"{replica_group_size=}")
+
+            _global_device_mesh = create_device_mesh(
+                replica_group_size, sharding_group_size
+            )
+            rank_print(f"{_global_device_mesh=}")
+
         model = FSDP(
             model,
-            process_group=process_group_fsdp,
+            device_mesh=_global_device_mesh
+            if _global_device_mesh is not None
+            else None,
+            process_group=process_group_fsdp
+            if process_group_fsdp is not None
+            else None,
             auto_wrap_policy=my_auto_wrap_policy,
             mixed_precision=mp_policy,
             backward_prefetch=prefetch_policy,

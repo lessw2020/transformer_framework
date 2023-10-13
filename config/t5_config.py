@@ -14,6 +14,10 @@ from transformers import (
 from transformers.models.t5.modeling_t5 import T5Block
 import datasets_grammar as dg
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
+from torch.distributed.fsdp import (
+    ShardingStrategy,
+    BackwardPrefetch,
+)
 
 
 @dataclass
@@ -42,6 +46,12 @@ class train_config(base_config):
     use_ddp: bool = False
     ddp_bucket_size: float = 25
     ddp_use_gradient_view: bool = False
+
+    # FSDP
+    # sharding policy
+    sharding_strategy: ShardingStrategy = ShardingStrategy.HYBRID_SHARD
+    replica_group_size = None
+    sharding_group_size = 2
 
     # activation checkpointing
     fsdp_activation_checkpointing: bool = True

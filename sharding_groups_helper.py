@@ -13,7 +13,7 @@ def create_device_mesh(
     use init_device_mesh directly if desired.
     Provides some automation:
     1 - If no sharding group size, will default to gpus per node (same as HSDP default)
-    2 - If no replica group size, Will auto-create replica group size based on sharding group size and available world GPUs.
+    2 - If no replica group size, will auto-create replica group size based on sharding group size and available world GPUs.
 
     Usage:
     1 - generate device mesh
