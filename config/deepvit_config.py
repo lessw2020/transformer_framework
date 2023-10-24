@@ -35,6 +35,9 @@ class train_config(base_config):
     # 3B
     # 8B
 
+    # training
+    batch_size_training: int = 192
+
     # use synthetic data
     use_synthetic_data: bool = True
     train_data_path = "datasets_vision/imagenette320/train"
@@ -43,8 +46,17 @@ class train_config(base_config):
     # mixed precision
     use_mixed_precision: bool = True
 
+    # activation checkpointing
+    fsdp_activation_checkpointing: bool = True
+    hf_t5_checkpointing: bool = False
+
+    # torch.compile
+    use_torch_compile: bool = True
+
+    use_deferred_init: bool = False
+
     # checkpoint models
-    save_model_checkpoint: bool = True
+    save_model_checkpoint: bool = False
     # only for local dist
     single_file_per_rank = True
 
@@ -70,7 +82,7 @@ class train_config(base_config):
     checkpoint_model_filename: str = "deepvit--1.pt"
 
 
-def build_model(model_size: str):
+def build_model(model_size: str, **kwargs):
     model_args = dict()
     if model_size == "60M":
         model_args = {
@@ -130,7 +142,7 @@ def build_model(model_size: str):
             "depth": 118,
             "heads": 16,
             "mlp_dim": 2048,
-            "dropout": 0.1,
+            "dropout": 0.0,
             "emb_dropout": 0.1,
         }
     if model_size == "1.5B":
@@ -279,6 +291,10 @@ def train(
     total_steps_to_run,
     use_synthetic_data=True,
     use_label_singular=False,
+    use_parallel_attention=False,
+    use_fused_attention=True,
+    stats=None,
+    lr_scheduler=None,
 ):
     cfg = train_config()
     loss_function = torch.nn.CrossEntropyLoss()

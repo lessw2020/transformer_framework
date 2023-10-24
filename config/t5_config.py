@@ -49,13 +49,13 @@ class train_config(base_config):
 
     # FSDP
     # sharding policy
-    sharding_strategy: ShardingStrategy = ShardingStrategy.HYBRID_SHARD
+    sharding_strategy: ShardingStrategy = ShardingStrategy.FULL_SHARD
     # below are only relevant for HSDP/SDDP (HYBRID_SHARD, _HYBRID_SHARD_ZERO2)
     replica_group_size = 2
     sharding_group_size = 2
 
     # activation checkpointing
-    fsdp_activation_checkpointing: bool = True
+    fsdp_activation_checkpointing: bool = False
     hf_t5_checkpointing: bool = False
 
     # torch.compile

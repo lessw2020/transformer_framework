@@ -1,3 +1,6 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+
 from torch.distributed._shard.sharded_tensor import ShardedTensor
 from torch.distributed._tensor import DTensor, mesh_resources, Replicate, sharding_prop
 from torch.distributed._tensor.device_mesh import init_device_mesh
@@ -10,7 +13,8 @@ def create_device_mesh(
     device=None,
 ):
     """wrapper function for creating a device mesh - partially for educational purposes, you can simply
-    use init_device_mesh directly if desired.
+    use *init_device_mesh* api directly if desired.
+
     Provides some automation:
     1 - If no sharding group size, will default to gpus per node (same as HSDP default)
     2 - If no replica group size, will auto-create replica group size based on sharding group size and available world GPUs.
