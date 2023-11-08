@@ -11,7 +11,7 @@ from torch import distributed as dist
 from torch.distributed.fsdp import StateDictType
 from torch.utils.data import Dataset
 from torch.utils.data.distributed import DistributedSampler
-from vit_pytorch.deepvit import DeepViT, Residual
+from vit_pytorch.deepvit import DeepViT, Transformer
 import torchvision.models as models
 
 from .base_config import base_config, fsdp_checkpointing_base, get_policy_base
@@ -273,11 +273,11 @@ def get_dataset(train=True):
 
 
 def get_policy():
-    return get_policy_base({Residual})
+    return get_policy_base({Transformer})
 
 
 def fsdp_checkpointing(model):
-    return fsdp_checkpointing_base(model, Residual)
+    return fsdp_checkpointing_base(model, Transformer)
 
 
 def train(

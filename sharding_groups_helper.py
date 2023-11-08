@@ -2,7 +2,7 @@
 # All rights reserved.
 
 from torch.distributed._shard.sharded_tensor import ShardedTensor
-from torch.distributed._tensor import DTensor, mesh_resources, Replicate, sharding_prop
+from torch.distributed._tensor import DTensor, Replicate, sharding_prop
 from torch.distributed._tensor.device_mesh import init_device_mesh
 import os
 
